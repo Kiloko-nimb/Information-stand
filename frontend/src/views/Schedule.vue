@@ -217,34 +217,41 @@ export default {
   bottom: 2rem;
   left: 2rem;
   padding: 1.2rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: white;
-  border: none;
-  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
   font-size: 1.3rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1000;
 }
 
 .back-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 h1 {
   font-size: 2rem;
   margin-bottom: 2rem;
-  color: #2c3e50;
+  color: white;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .search-panel {
-  background: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-radius: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   margin-bottom: 2rem;
 }
 
@@ -315,25 +322,33 @@ h1 {
 .loading, .no-results {
   text-align: center;
   padding: 3rem;
-  color: #7f8c8d;
+  color: white;
   font-size: 1.2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .groups-list {
-  background: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-radius: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   margin-bottom: 2rem;
 }
 
 .groups-list h2 {
   margin: 0 0 1.5rem 0;
-  color: #2c3e50;
+  color: white;
   font-size: 1.5rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .groups-grid {
@@ -361,9 +376,12 @@ h1 {
 }
 
 .schedule-results {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
@@ -396,33 +414,34 @@ h1 {
 .schedule-row {
   display: grid;
   grid-template-columns: 140px 60px 1fr 250px 100px;
-  border-bottom: 1px solid #ecf0f1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transition: background-color 0.2s;
 }
 
 .schedule-row:hover:not(.header-row) {
-  background-color: #f8f9fa;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .schedule-row.current-lesson {
-  background-color: #e3f2fd;
-  border-left: 4px solid #2196f3;
+  background-color: rgba(52, 152, 219, 0.2);
+  border-left: 4px solid #3498db;
 }
 
 .header-row {
-  background: #f8f9fa;
+  background: rgba(255, 255, 255, 0.2);
   font-weight: 600;
-  color: #2c3e50;
+  color: white;
   position: sticky;
   top: 0;
   z-index: 10;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .cell {
   padding: 1rem;
   display: flex;
   align-items: center;
-  border-right: 1px solid #ecf0f1;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cell:last-child {
@@ -431,7 +450,7 @@ h1 {
 
 .time-cell {
   justify-content: center;
-  background: #fafbfc;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .time-range {
@@ -443,32 +462,32 @@ h1 {
 
 .time-start, .time-end {
   font-weight: 600;
-  color: #3498db;
+  color: white;
   font-size: 0.95rem;
 }
 
 .time-separator {
-  color: #bdc3c7;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.8rem;
 }
 
 .lesson-cell {
   justify-content: center;
-  background: #fafbfc;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .lesson-number {
   font-weight: 700;
   font-size: 1.2rem;
-  color: #7f8c8d;
-  background: white;
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 2px solid #ecf0f1;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .subject-cell {
@@ -477,12 +496,12 @@ h1 {
 
 .subject-name {
   font-weight: 500;
-  color: #2c3e50;
+  color: white;
   line-height: 1.4;
 }
 
 .teacher-cell {
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .teacher-name {
@@ -492,15 +511,16 @@ h1 {
 .room-cell {
   justify-content: center;
   font-weight: 600;
-  color: #e74c3c;
-  background: #fafbfc;
+  color: #ff6b6b;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .room-number {
-  background: #fff5f5;
+  background: rgba(255, 107, 107, 0.2);
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
-  border: 1px solid #fee;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
 }
 
 @media (max-width: 1200px) {

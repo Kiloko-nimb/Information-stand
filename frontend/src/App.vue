@@ -56,13 +56,16 @@ export default {
 }
 
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   padding: 1.5rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 .header-content {
@@ -74,17 +77,30 @@ export default {
 .logo {
   height: 60px;
   width: auto;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-  background: white;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  background: rgba(255, 255, 255, 0.95);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
+  transition: transform 0.3s;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.app-header h1 {
+  text-shadow: 0 2px 15px rgba(0,0,0,0.3);
+  font-weight: 600;
 }
 
 .offline-indicator {
-  background: #e74c3c;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  background: rgba(231, 76, 60, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(231, 76, 60, 0.5);
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
 }
 
 .app-content {

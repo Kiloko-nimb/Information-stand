@@ -20,7 +20,8 @@
       "Bash(curl -s http://localhost:8000/api/v1/schedule/groups)",
       "Bash(npm run:*)",
       "Bash(curl -s http://localhost:5173)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(python3:*)"
     ]
   }
 }

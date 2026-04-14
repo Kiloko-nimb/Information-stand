@@ -94,27 +94,31 @@ export default {
   bottom: 2rem;
   left: 2rem;
   padding: 1.2rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: white;
-  border: none;
-  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
   font-size: 1.3rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1000;
 }
 
 .back-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 h1 {
   font-size: 2rem;
   margin-bottom: 2rem;
-  color: #2c3e50;
+  color: white;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .search-panel {
@@ -123,16 +127,34 @@ h1 {
 
 .search-panel input {
   width: 100%;
-  padding: 1rem;
-  border: 2px solid #ecf0f1;
-  border-radius: 4px;
+  padding: 1.2rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
   font-size: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+}
+
+.search-panel input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.search-panel input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
 }
 
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #7f8c8d;
+  color: white;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .staff-grid {
@@ -142,31 +164,37 @@ h1 {
 }
 
 .staff-card {
-  background: white;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
   padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  transition: transform 0.3s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s;
 }
 
 .staff-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .staff-info h3 {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
-  color: #2c3e50;
+  color: white;
+  font-weight: 600;
 }
 
 .position {
-  color: #3498db;
+  color: rgba(255, 255, 255, 0.95);
   font-weight: bold;
   margin-bottom: 0.3rem;
 }
 
 .department, .room {
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
 }

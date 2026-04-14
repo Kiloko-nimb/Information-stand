@@ -92,35 +92,42 @@ export default {
   bottom: 2rem;
   left: 2rem;
   padding: 1.2rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: white;
-  border: none;
-  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
   font-size: 1.3rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1000;
 }
 
 .back-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 h1 {
   font-size: 2rem;
   margin-bottom: 2rem;
-  color: #2c3e50;
+  color: white;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .map-controls {
-  background: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 25px;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .floor-selector {
@@ -132,18 +139,20 @@ h1 {
 .floor-selector button {
   flex: 1;
   padding: 1rem;
-  border: 2px solid #ecf0f1;
-  background: white;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: white;
+  border-radius: 15px;
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s;
 }
 
 .floor-selector button.active {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .room-search {
@@ -154,27 +163,52 @@ h1 {
 .room-search input {
   flex: 1;
   padding: 1rem;
-  border: 2px solid #ecf0f1;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
   font-size: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: white;
+  transition: all 0.3s;
+}
+
+.room-search input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.room-search input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .room-search button {
   padding: 1rem 2rem;
-  background: #3498db;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
   color: white;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.room-search button:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
 }
 
 .map-container {
-  background: white;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
   padding: 2rem;
   min-height: 600px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .map-placeholder {
@@ -184,36 +218,41 @@ h1 {
   justify-content: center;
   height: 100%;
   min-height: 500px;
-  border: 2px dashed #ecf0f1;
-  border-radius: 4px;
-  color: #7f8c8d;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: white;
 }
 
 .map-placeholder p {
   font-size: 1.2rem;
   margin: 0.5rem 0;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .hint {
   font-size: 0.9rem !important;
-  color: #95a5a6;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .room-info {
-  background: white;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 25px;
   margin-top: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .room-info h3 {
-  color: #2c3e50;
+  color: white;
   margin-bottom: 1rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
 .room-info p {
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.5rem;
 }
 </style>

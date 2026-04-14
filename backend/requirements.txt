@@ -20,3 +20,9 @@ alembic==1.13.1
 # Utils
 python-dateutil==2.8.2
 aiofiles==23.2.1
+
+# News parsing
+beautifulsoup4==4.12.3
+requests==2.31.0
+APScheduler==3.10.4
+lxml==5.1.0
