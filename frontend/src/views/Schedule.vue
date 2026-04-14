@@ -6,6 +6,25 @@
 
     <h1>Расписание занятий</h1>
 
+    <div class="date-carousel">
+      <button class="carousel-arrow" @click="previousDay">‹</button>
+      <div class="date-cards-container">
+        <div class="date-cards">
+          <button
+            v-for="(day, index) in dateRange"
+            :key="index"
+            :class="['date-card', { active: isSelectedDate(day) }]"
+            @click="selectDate(day)"
+          >
+            <div class="date-day">{{ formatDayName(day) }}</div>
+            <div class="date-number">{{ formatDayNumber(day) }}</div>
+            <div class="date-month">{{ formatMonthName(day) }}</div>
+          </button>
+        </div>
+      </div>
+      <button class="carousel-arrow" @click="nextDay">›</button>
+    </div>
+
     <div class="search-panel">
       <div class="search-tabs">
         <button
@@ -55,42 +74,45 @@
     <div v-else-if="scheduleData.length > 0" class="schedule-results">
       <div class="schedule-header">
         <h2>{{ searchType === 'group' ? `Группа: ${searchQuery}` : `Преподаватель: ${searchQuery}` }}</h2>
-        <div class="schedule-date">{{ formatDate(scheduleData[0]?.date) }}</div>
+        <div class="schedule-date">{{ formatDate(selectedDate) }}</div>
       </div>
 
-      <div class="schedule-grid">
-        <div class="schedule-row header-row">
-          <div class="cell time-cell">Время</div>
-          <div class="cell lesson-cell">№</div>
-          <div class="cell subject-cell">Предмет</div>
-          <div class="cell teacher-cell">Преподаватель</div>
-          <div class="cell room-cell">Кабинет</div>
-        </div>
-
+      <div class="timeline-container">
         <div
           v-for="item in scheduleData"
           :key="item.id"
-          class="schedule-row"
+          class="timeline-item"
           :class="{ 'current-lesson': isCurrentLesson(item) }"
         >
-          <div class="cell time-cell">
-            <div class="time-range">
+          <div class="timeline-marker">
+            <div class="lesson-badge">{{ item.lesson_number }}</div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="lesson-time">
               <span class="time-start">{{ formatTime(item.time_start) }}</span>
-              <span class="time-separator">-</span>
+              <span class="time-separator">—</span>
               <span class="time-end">{{ formatTime(item.time_end) }}</span>
             </div>
-          </div>
-          <div class="cell lesson-cell">
-            <span class="lesson-number">{{ item.lesson_number }}</span>
-          </div>
-          <div class="cell subject-cell">
-            <div class="subject-name">{{ item.subject }}</div>
-          </div>
-          <div class="cell teacher-cell">
-            <span class="teacher-name">{{ item.teacher_name || '-' }}</span>
-          </div>
-          <div class="cell room-cell">
-            <span class="room-number">{{ item.room_number || '-' }}</span>
+            <div class="lesson-card">
+              <div class="lesson-header">
+                <h3 class="lesson-subject">{{ item.subject }}</h3>
+                <span class="lesson-type">{{ item.lesson_type || 'Лекция' }}</span>
+              </div>
+              <div class="lesson-details">
+                <div class="lesson-detail">
+                  <span class="detail-icon">👨‍🏫</span>
+                  <span class="detail-text">{{ item.teacher_name || 'Не указан' }}</span>
+                </div>
+                <div class="lesson-detail">
+                  <span class="detail-icon">📍</span>
+                  <span class="detail-text">Кабинет {{ item.room_number || '—' }}</span>
+                  <button v-if="item.room_number" class="show-on-map-btn" @click="showRoomOnMap(item.room_number)">
+                    Показать на карте
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -115,6 +137,64 @@ export default {
     const availableGroups = ref([])
     const loading = ref(false)
     const searched = ref(false)
+    const selectedDate = ref(new Date())
+    const dateRange = ref([])
+
+    const generateDateRange = () => {
+      const dates = []
+      const today = new Date()
+      for (let i = -1; i <= 5; i++) {
+        const date = new Date(today)
+        date.setDate(today.getDate() + i)
+        dates.push(date)
+      }
+      dateRange.value = dates
+    }
+
+    const formatDayName = (date) => {
+      const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(today.getDate() + 1)
+
+      if (date.toDateString() === today.toDateString()) return 'Сегодня'
+      if (date.toDateString() === tomorrow.toDateString()) return 'Завтра'
+      return days[date.getDay()]
+    }
+
+    const formatDayNumber = (date) => {
+      return date.getDate()
+    }
+
+    const formatMonthName = (date) => {
+      const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+      return months[date.getMonth()]
+    }
+
+    const isSelectedDate = (date) => {
+      return date.toDateString() === selectedDate.value.toDateString()
+    }
+
+    const selectDate = (date) => {
+      selectedDate.value = date
+      if (searchQuery.value.trim()) {
+        search()
+      }
+    }
+
+    const previousDay = () => {
+      const newDate = new Date(selectedDate.value)
+      newDate.setDate(newDate.getDate() - 1)
+      selectedDate.value = newDate
+      generateDateRange()
+    }
+
+    const nextDay = () => {
+      const newDate = new Date(selectedDate.value)
+      newDate.setDate(newDate.getDate() + 1)
+      selectedDate.value = newDate
+      generateDateRange()
+    }
 
     const loadGroups = async () => {
       try {
@@ -157,15 +237,20 @@ export default {
       return timeStr.substring(0, 5)
     }
 
-    const formatDate = (dateStr) => {
-      if (!dateStr) return ''
-      const date = new Date(dateStr)
-      return date.toLocaleDateString('ru-RU', {
+    const formatDate = (date) => {
+      if (!date) return ''
+      const d = date instanceof Date ? date : new Date(date)
+      return d.toLocaleDateString('ru-RU', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       })
+    }
+
+    const showRoomOnMap = (roomNumber) => {
+      alert(`Навигация к кабинету ${roomNumber}.\n\nЭта функция откроет карту с маршрутом до кабинета.`)
+      // В будущем: this.$router.push({ path: '/map', query: { room: roomNumber } })
     }
 
     const isCurrentLesson = (lesson) => {
@@ -185,6 +270,7 @@ export default {
 
     onMounted(() => {
       loadGroups()
+      generateDateRange()
     })
 
     return {
@@ -198,7 +284,17 @@ export default {
       selectGroup,
       formatTime,
       formatDate,
-      isCurrentLesson
+      isCurrentLesson,
+      dateRange,
+      selectedDate,
+      formatDayName,
+      formatDayNumber,
+      formatMonthName,
+      isSelectedDate,
+      selectDate,
+      previousDay,
+      nextDay,
+      showRoomOnMap
     }
   }
 }
@@ -242,6 +338,109 @@ h1 {
   margin-bottom: 2rem;
   color: white;
   text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.date-carousel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  border-radius: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.carousel-arrow {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.1);
+}
+
+.date-cards-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.date-cards {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 0.5rem 0;
+  scrollbar-width: none;
+}
+
+.date-cards::-webkit-scrollbar {
+  display: none;
+}
+
+.date-card {
+  min-width: 120px;
+  padding: 1.2rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.date-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.date-card.active {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.5) 0%, rgba(41, 128, 185, 0.5) 100%);
+  border-color: rgba(52, 152, 219, 0.8);
+  box-shadow: 0 8px 30px rgba(52, 152, 219, 0.4);
+  transform: scale(1.05);
+}
+
+.date-day {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.date-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.date-month {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  text-transform: uppercase;
 }
 
 .search-panel {
@@ -404,6 +603,194 @@ h1 {
   font-size: 1rem;
   opacity: 0.9;
   text-transform: capitalize;
+}
+
+.timeline-container {
+  padding: 2rem;
+  position: relative;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.timeline-item:last-child .timeline-line {
+  display: none;
+}
+
+.timeline-item.current-lesson {
+  animation: highlight 2s ease-in-out infinite;
+}
+
+@keyframes highlight {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lesson-badge {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  z-index: 2;
+}
+
+.timeline-item.current-lesson .lesson-badge {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 30px rgba(245, 87, 108, 0.6);
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.timeline-line {
+  width: 4px;
+  flex: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+  margin-top: 0.5rem;
+  min-height: 80px;
+  border-radius: 2px;
+}
+
+.timeline-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lesson-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.time-start, .time-end {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.time-separator {
+  opacity: 0.6;
+  margin: 0 0.3rem;
+}
+
+.lesson-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+}
+
+.lesson-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(10px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.timeline-item.current-lesson .lesson-card {
+  background: rgba(245, 87, 108, 0.2);
+  border-color: rgba(245, 87, 108, 0.5);
+  box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
+}
+
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.lesson-subject {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  line-height: 1.3;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.lesson-type {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+}
+
+.lesson-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.lesson-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: white;
+}
+
+.detail-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+}
+
+.detail-text {
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.show-on-map-btn {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: rgba(52, 152, 219, 0.3);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(52, 152, 219, 0.5);
+  border-radius: 10px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.show-on-map-btn:hover {
+  background: rgba(52, 152, 219, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
 }
 
 .schedule-grid {

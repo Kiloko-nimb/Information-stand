@@ -16,6 +16,13 @@
         >
           {{ floor }} этаж
         </button>
+        <button
+          :class="{ active: currentFloor === 'territory' }"
+          @click="currentFloor = 'territory'"
+          class="territory-btn"
+        >
+          🌳 Территория (Двор)
+        </button>
       </div>
 
       <div class="room-search">
@@ -29,7 +36,51 @@
     </div>
 
     <div class="map-container">
-      <div class="map-placeholder">
+      <div v-if="currentFloor === 'territory'" class="territory-map">
+        <h2>Территория колледжа</h2>
+        <div class="territory-legend">
+          <div class="legend-item">
+            <span class="legend-icon">🚬</span>
+            <span>Специально оборудованное место для курения</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">☕</span>
+            <span>Точки питания рядом</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">🅿️</span>
+            <span>Парковка</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-icon">🚪</span>
+            <span>Входы в здание</span>
+          </div>
+        </div>
+        <div class="territory-content">
+          <div class="territory-placeholder">
+            <p>Интерактивная карта территории</p>
+            <div class="territory-points">
+              <div class="point smoking-area">
+                <span class="point-icon">🚬</span>
+                <span class="point-label">Место для курения</span>
+              </div>
+              <div class="point food-point">
+                <span class="point-icon">☕</span>
+                <span class="point-label">Кофейня "Бодрость" (50м)</span>
+              </div>
+              <div class="point food-point">
+                <span class="point-icon">🌯</span>
+                <span class="point-label">Шаурма "У Ашота" (100м)</span>
+              </div>
+              <div class="point parking">
+                <span class="point-icon">🅿️</span>
+                <span class="point-label">Парковка для посетителей</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="map-placeholder">
         <p>Здесь будет интерактивная карта {{ currentFloor }} этажа</p>
         <p class="hint">SVG карта с возможностью zoom и построения маршрута</p>
       </div>
@@ -153,6 +204,141 @@ h1 {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.floor-selector button.territory-btn {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.3) 0%, rgba(39, 174, 96, 0.3) 100%);
+  border-color: rgba(46, 204, 113, 0.5);
+}
+
+.floor-selector button.territory-btn.active {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.5) 0%, rgba(39, 174, 96, 0.5) 100%);
+  border-color: rgba(46, 204, 113, 0.8);
+  box-shadow: 0 4px 20px rgba(46, 204, 113, 0.3);
+}
+
+.territory-map {
+  width: 100%;
+}
+
+.territory-map h2 {
+  color: white;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.territory-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: white;
+  font-size: 1rem;
+}
+
+.legend-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+}
+
+.territory-content {
+  min-height: 500px;
+}
+
+.territory-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: white;
+}
+
+.territory-placeholder > p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.territory-points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+  padding: 2rem;
+}
+
+.point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.point:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.point-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+}
+
+.point-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  color: white;
+}
+
+.smoking-area {
+  border-color: rgba(231, 76, 60, 0.5);
+}
+
+.smoking-area:hover {
+  border-color: rgba(231, 76, 60, 0.8);
+  box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+.food-point {
+  border-color: rgba(241, 196, 15, 0.5);
+}
+
+.food-point:hover {
+  border-color: rgba(241, 196, 15, 0.8);
+  box-shadow: 0 8px 25px rgba(241, 196, 15, 0.3);
+}
+
+.parking {
+  border-color: rgba(52, 152, 219, 0.5);
+}
+
+.parking:hover {
+  border-color: rgba(52, 152, 219, 0.8);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
 }
 
 .room-search {

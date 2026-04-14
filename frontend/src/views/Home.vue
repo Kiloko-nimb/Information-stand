@@ -67,36 +67,33 @@
           <div class="date">{{ currentDate }}</div>
         </div>
 
-        <div class="widget news-widget">
-          <h3>📰 Новости колледжа</h3>
-          <div v-if="newsLoading" class="news-loading">
-            Загрузка новостей...
+        <div class="widget applicant-widget">
+          <h3>🎓 Абитуриенту 2026</h3>
+          <div class="countdown-timer">
+            <div class="countdown-label">До начала приемной кампании осталось:</div>
+            <div class="countdown-value">{{ daysUntilAdmission }} дней</div>
           </div>
-          <div v-else-if="newsError" class="news-error">
-            Не удалось загрузить новости
-          </div>
-          <div v-else-if="newsList.length === 0" class="news-empty">
-            Новостей пока нет
-          </div>
-          <div v-else class="news-items">
-            <div
-              v-for="newsItem in newsList"
-              :key="newsItem.id"
-              class="news-card"
-            >
-              <div class="news-icon">{{ newsItem.icon }}</div>
-              <div class="news-content">
-                <h4>{{ newsItem.title }}</h4>
-                <p>{{ newsItem.description }}</p>
-              </div>
-            </div>
+          <div class="applicant-actions">
+            <button class="applicant-btn" @click="showPassingScores">
+              <span class="btn-icon">📊</span>
+              <span class="btn-text">Проходные баллы</span>
+            </button>
+            <button class="applicant-btn" @click="showSpecialties">
+              <span class="btn-icon">🎯</span>
+              <span class="btn-text">Специальности</span>
+            </button>
+            <button class="applicant-btn" @click="showApplicationQR">
+              <span class="btn-icon">📱</span>
+              <span class="btn-text">Подать документы</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="ticker">
-        <div class="ticker-content">
-          ⚠️ Внимание! 15 мая состоится день открытых дверей • 📢 Запись на подготовительные курсы открыта • 🎉 Поздравляем победителей регионального хакатона • 📅 Расписание экзаменов доступно в разделе "Расписание"
+      <div class="fun-facts-widget">
+        <div class="fun-fact">
+          <span class="fact-icon">💡</span>
+          <span class="fact-text">{{ currentFact }}</span>
         </div>
       </div>
 
@@ -131,7 +128,6 @@
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { generateQRCode } from '../utils/qrGenerator'
-import { fetchNews, cacheNews, getCachedNews, isCacheValid } from '../services/newsService'
 
 export default {
   name: 'Home',
@@ -141,10 +137,19 @@ export default {
     const qrWebsite = ref('')
     const qrFeedback = ref('')
     const accessibilityMode = ref(false)
-    const newsList = ref([])
-    const newsLoading = ref(false)
-    const newsError = ref(false)
+    const daysUntilAdmission = ref(0)
+    const currentFact = ref('')
+    const facts = [
+      '🤖 В стенах ККРИТ проложено более 50 километров витой пары. Этого хватит, чтобы обмотать колледж 100 раз!',
+      '☕ Во время регионального хакатона наши студенты выпили 120 литров кофе за 24 часа',
+      '💾 Суммарный объем кода, который пишут наши студенты за один семестр, превышает код управления космическим шаттлом',
+      '🏆 85% наших выпускников находят работу по специальности еще до получения диплома',
+      '🏃 От входа до кабинета 415 ровно 342 шага. Мы проверяли',
+      '📡 В колледже работает более 500 компьютеров, объединенных в единую сеть',
+      '🎓 ККРИТ выпустил более 15 000 специалистов за всю историю существования'
+    ]
     let timeInterval = null
+    let factInterval = null
 
     const updateDateTime = () => {
       const now = new Date()
@@ -170,64 +175,105 @@ export default {
       accessibilityMode.value = !accessibilityMode.value
     }
 
-    const loadNews = async () => {
-      newsLoading.value = true
-      newsError.value = false
+    const calculateDaysUntilAdmission = () => {
+      const admissionDate = new Date('2026-06-20')
+      const today = new Date()
+      const diffTime = admissionDate - today
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      daysUntilAdmission.value = diffDays > 0 ? diffDays : 0
+    }
 
-      try {
-        // Пытаемся загрузить с сервера
-        const news = await fetchNews(3)
-        newsList.value = news
+    const rotateFact = () => {
+      const randomIndex = Math.floor(Math.random() * facts.length)
+      currentFact.value = facts[randomIndex]
+    }
 
-        // Кэшируем для offline-режима
-        cacheNews(news)
-      } catch (error) {
-        console.error('Ошибка загрузки новостей:', error)
+    const showPassingScores = () => {
+      const modal = document.createElement('div')
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;'
+      modal.innerHTML = `
+        <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:2.5rem;border-radius:25px;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <h2 style="color:white;margin-bottom:1.5rem;font-size:2rem;text-align:center;">📊 Проходные баллы 2025</h2>
+          <div style="background:rgba(255,255,255,0.15);padding:2rem;border-radius:20px;margin-bottom:1.5rem;">
+            <p style="color:rgba(255,255,255,0.95);line-height:1.8;font-size:1.1rem;text-align:center;">
+              Проходные баллы формируются по результатам конкурса аттестатов.<br><br>
+              <strong style="color:#ffd700;">Средний балл аттестата 2025:</strong><br>
+              Бюджетные места: от 3.8 до 4.5<br>
+              Платные места: от 3.0<br><br>
+              <span style="font-size:0.95rem;opacity:0.9;">Точные проходные баллы будут известны после завершения приемной кампании</span>
+            </p>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:1rem 2rem;background:rgba(255,255,255,0.25);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:15px;cursor:pointer;font-size:1.1rem;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">Закрыть</button>
+        </div>
+      `
+      document.body.appendChild(modal)
+      modal.onclick = (e) => { if (e.target === modal) modal.remove() }
+    }
 
-        // Пытаемся загрузить из кэша
-        const cachedNews = getCachedNews()
-        if (cachedNews && isCacheValid()) {
-          newsList.value = cachedNews
-          console.log('Загружены новости из кэша')
-        } else {
-          // Если кэш пустой или устарел, показываем заглушки
-          newsError.value = true
-          newsList.value = [
-            {
-              id: 1,
-              icon: '🎓',
-              title: 'День открытых дверей',
-              description: '15 мая 2026 года приглашаем абитуриентов'
-            },
-            {
-              id: 2,
-              icon: '🏆',
-              title: 'Победа в конкурсе',
-              description: 'Студенты заняли 1 место в региональном хакатоне'
-            },
-            {
-              id: 3,
-              icon: '📚',
-              title: 'Новые специальности',
-              description: 'Открыт набор на направление "Искусственный интеллект"'
-            }
-          ]
-        }
-      } finally {
-        newsLoading.value = false
-      }
+    const showSpecialties = () => {
+      const modal = document.createElement('div')
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
+      modal.innerHTML = `
+        <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:2.5rem;border-radius:25px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <h2 style="color:white;margin-bottom:2rem;font-size:2rem;text-align:center;">Специальности ККРИТ 2026</h2>
+
+          <div style="background:rgba(255,255,255,0.15);padding:1.5rem;border-radius:20px;margin-bottom:1.5rem;">
+            <h3 style="color:#fff;margin-bottom:1rem;font-size:1.3rem;">📍 пр. Красноярский рабочий, 156</h3>
+            <div style="color:rgba(255,255,255,0.95);line-height:1.8;font-size:1rem;">
+              <strong style="color:#ffd700;">Бюджет:</strong><br>
+              • 38.02.01 Экономика и бухгалтерский учет (25 мест)<br>
+              • 38.02.07 Банковское дело (25 мест)<br><br>
+              <strong style="color:#ffd700;">Платно:</strong><br>
+              • 09.02.09 Веб-разработка (25 мест)<br>
+              • 09.02.10 Разработка компьютерных игр, AR/VR (25 мест)<br>
+              • 09.02.11 Разработка ПО (25 мест)<br>
+              • 09.02.13 Искусственный интеллект (25 мест)
+            </div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.15);padding:1.5rem;border-radius:20px;margin-bottom:1.5rem;">
+            <h3 style="color:#fff;margin-bottom:1rem;font-size:1.3rem;">📍 пр. Свободный, 67</h3>
+            <div style="color:rgba(255,255,255,0.95);line-height:1.8;font-size:1rem;">
+              <strong style="color:#ffd700;">Бюджет:</strong><br>
+              • 09.02.01 Компьютерные системы и комплексы (50 мест)<br>
+              • 09.02.06 Сетевое и системное администрирование (50 мест)<br>
+              • 10.02.05 Информационная безопасность (25 мест)<br>
+              • 11.02.16 Монтаж электронных приборов (50 мест)<br><br>
+              <strong style="color:#ffd700;">Платно:</strong><br>
+              • 20.02.04 Пожарная безопасность (50 мест)
+            </div>
+          </div>
+
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:1rem;padding:1rem 2rem;background:rgba(255,255,255,0.25);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:15px;cursor:pointer;font-size:1.1rem;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">Закрыть</button>
+        </div>
+      `
+      document.body.appendChild(modal)
+      modal.onclick = (e) => { if (e.target === modal) modal.remove() }
+    }
+
+    const showApplicationQR = async () => {
+      const qr = await generateQRCode('https://kraskrit.ru/abitur/')
+      const modal = document.createElement('div')
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;'
+      modal.innerHTML = `<div style="background:white;padding:2rem;border-radius:20px;text-align:center;"><h2 style="margin-bottom:1rem;">Подать документы онлайн</h2><img src="${qr}" style="width:300px;height:300px;"/><p style="margin-top:1rem;">Отсканируйте QR-код</p><button onclick="this.parentElement.parentElement.remove()" style="margin-top:1rem;padding:0.8rem 2rem;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;">Закрыть</button></div>`
+      document.body.appendChild(modal)
     }
 
     onMounted(() => {
       updateDateTime()
       timeInterval = setInterval(updateDateTime, 1000)
       generateQRCodes()
-      loadNews()
+      calculateDaysUntilAdmission()
+      rotateFact()
+      factInterval = setInterval(rotateFact, 18000) // Меняем факт каждые 18 секунд
     })
 
     onUnmounted(() => {
       if (timeInterval) {
         clearInterval(timeInterval)
+      }
+      if (factInterval) {
+        clearInterval(factInterval)
       }
     })
 
@@ -238,9 +284,11 @@ export default {
       qrFeedback,
       accessibilityMode,
       toggleAccessibilityMode,
-      newsList,
-      newsLoading,
-      newsError
+      daysUntilAdmission,
+      currentFact,
+      showPassingScores,
+      showSpecialties,
+      showApplicationQR
     }
   }
 }
@@ -586,66 +634,126 @@ h1 {
   text-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.news-widget h3 {
-  font-size: 1.6rem;
+.applicant-widget {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+}
+
+.applicant-widget h3 {
+  font-size: 1.8rem;
   color: white;
   margin-bottom: 1.5rem;
   text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  font-weight: 700;
 }
 
-.news-items {
+.countdown-timer {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.countdown-label {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+}
+
+.countdown-value {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.applicant-actions {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.news-card {
+.applicant-btn {
   display: flex;
+  align-items: center;
   gap: 1rem;
-  padding: 1.2rem;
-  background: rgba(255, 255, 255, 0.15);
+  padding: 1.2rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  color: white;
+  cursor: pointer;
   transition: all 0.3s;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: left;
 }
 
-.news-card:hover {
+.applicant-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
   transform: translateX(8px);
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-.news-icon {
-  font-size: 2.2rem;
-  flex-shrink: 0;
+.btn-icon {
+  font-size: 2rem;
   filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
 }
 
-.news-content h4 {
-  font-size: 1.05rem;
+.btn-text {
+  flex: 1;
+}
+
+.fun-facts-widget {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all 0.5s ease;
+}
+
+.fun-fact {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fact-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  flex-shrink: 0;
+}
+
+.fact-text {
+  font-size: 1.15rem;
   color: white;
-  margin: 0 0 0.3rem 0;
-  font-weight: 600;
+  line-height: 1.6;
+  font-weight: 500;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.news-content p {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-}
-
-.news-loading,
-.news-error,
-.news-empty {
-  text-align: center;
-  padding: 2rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-}
-
-.news-error {
-  color: rgba(255, 200, 200, 0.9);
+/* Скрываем виджет с фактами в режиме доступности */
+.home.accessibility-active .fun-facts-widget {
+  display: none;
 }
 
 .ticker {

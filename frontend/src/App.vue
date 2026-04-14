@@ -2,7 +2,9 @@
   <div id="app">
     <header class="app-header">
       <div class="header-content">
-        <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
+        <router-link to="/" class="logo-link">
+          <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
+        </router-link>
         <h1>ККРИТ - Интерактивный стенд</h1>
       </div>
       <div v-if="!isOnline" class="offline-indicator">
@@ -72,6 +74,29 @@ export default {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  border-radius: 12px;
+  transition: all 0.3s;
+  min-width: 80px;
+  min-height: 80px;
+  justify-content: center;
+}
+
+.logo-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.logo-link:active {
+  transform: scale(0.95);
 }
 
 .logo {
