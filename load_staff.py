@@ -1,12 +1,16 @@
 """
 Скрипт для загрузки педагогического состава в БД
 """
+import os
 import sys
-sys.path.append('backend')
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
 from docx import Document
-from backend.app.core.database import SessionLocal
-from backend.app.models.staff import Staff
+
+from app.core.database import SessionLocal
+from app.models.staff import Staff
+
 
 def parse_and_load_staff():
     """Парсит DOCX и загружает данные в БД"""

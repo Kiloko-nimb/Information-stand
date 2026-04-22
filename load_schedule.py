@@ -1,13 +1,17 @@
 """
 Скрипт для загрузки расписания в БД
 """
+import os
 import sys
-sys.path.append('backend')
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+
+from datetime import datetime, time
 
 import pdfplumber
-from datetime import datetime, time
-from backend.app.core.database import SessionLocal
-from backend.app.models.schedule import Schedule
+
+from app.core.database import SessionLocal
+from app.models.schedule import Schedule
 
 # Время пар
 LESSON_TIMES = {
