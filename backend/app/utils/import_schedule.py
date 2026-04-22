@@ -1,6 +1,19 @@
+"""
+Импорт расписания из Excel (.xlsx) или PDF (.pdf) в БД.
+
+Публичное API:
+- ``import_schedule_from_excel(file_path, date_str)`` — импорт из Excel.
+- ``import_schedule_from_pdf(file_path, date_str)`` — импорт из PDF.
+- ``import_schedule(file_path, date_str=None)`` — автоматический выбор
+  парсера по расширению файла.
+"""
+import argparse
+import os
+from datetime import date, datetime, time
+
 import pandas as pd
-from datetime import datetime, time
-from sqlalchemy.orm import Session
+import pdfplumber
+
 from app.core.database import SessionLocal
 from app.models.schedule import Schedule
 
@@ -44,16 +57,30 @@ REGULAR_SCHEDULE = {
     14: ("19:50", "20:35"), # 7 пара - слот 2
 }
 
+# Время пар для PDF-файла (одна пара = один номер)
+PDF_LESSON_TIMES = {
+    1: (time(8, 10), time(8, 55)),
+    2: (time(9, 0), time(9, 45)),
+    3: (time(9, 50), time(10, 35)),
+    4: (time(10, 45), time(11, 30)),
+    5: (time(11, 35), time(12, 20)),
+    6: (time(13, 0), time(13, 45)),
+    7: (time(13, 50), time(14, 35)),
+}
+
+
 def get_time_slots_for_day(day_of_week: int) -> dict:
     """Возвращает расписание звонков в зависимости от дня недели"""
     return MONDAY_SCHEDULE if day_of_week == 1 else REGULAR_SCHEDULE
+
 
 def parse_time(time_str):
     """Парсинг времени из строки"""
     try:
         return datetime.strptime(time_str, "%H:%M").time()
-    except:
+    except Exception:
         return None
+
 
 def clean_text(text):
     """Очистка текста от лишних символов"""
@@ -61,21 +88,24 @@ def clean_text(text):
         return None
     return str(text).strip()
 
+
+def _parse_date(date_str: str) -> date:
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
+
+
 def import_schedule_from_excel(file_path: str, date_str: str = "2026-04-13"):
     """
-    Импорт расписания из Excel файла
+    Импорт расписания из Excel файла.
 
     Args:
-        file_path: путь к Excel файлу
-        date_str: дата в формате YYYY-MM-DD
+        file_path: путь к Excel файлу.
+        date_str: дата в формате YYYY-MM-DD.
     """
     db = SessionLocal()
 
     try:
-        # Парсим дату
-        schedule_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        schedule_date = _parse_date(date_str)
 
-        # Читаем все листы Excel файла
         excel_file = pd.ExcelFile(file_path)
         print(f"Найдено листов: {len(excel_file.sheet_names)}")
 
@@ -119,7 +149,7 @@ def import_schedule_from_excel(file_path: str, date_str: str = "2026-04-13"):
 
                 try:
                     lesson_num = int(float(lesson_num))
-                except:
+                except Exception:
                     continue
 
                 # Получаем время из расписания по номеру строки
@@ -190,14 +220,137 @@ def import_schedule_from_excel(file_path: str, date_str: str = "2026-04-13"):
     finally:
         db.close()
 
+
+def _parse_pdf_cell(cell_text):
+    """Парсит ячейку расписания из PDF."""
+    if not cell_text or cell_text.strip() == "":
+        return None
+
+    lines = [line.strip() for line in cell_text.split('\n') if line.strip()]
+    if len(lines) < 2:
+        return None
+
+    subject = lines[0]
+    teacher = lines[-1] if len(lines) > 1 else ""
+
+    # Ищем номер кабинета (короткая строка с цифрами)
+    room = ""
+    for line in lines:
+        if any(ch.isdigit() for ch in line) and len(line) < 10:
+            room = line
+            break
+
+    return {'subject': subject, 'teacher': teacher, 'room': room}
+
+
+def import_schedule_from_pdf(file_path: str, date_str: str = "2026-04-13"):
+    """
+    Импорт расписания из PDF (одна страница = один день).
+
+    Args:
+        file_path: путь к PDF-файлу.
+        date_str: дата в формате YYYY-MM-DD.
+    """
+    schedule_date = _parse_date(date_str)
+    day_of_week = schedule_date.weekday() + 1
+
+    db = SessionLocal()
+
+    try:
+        with pdfplumber.open(file_path) as pdf:
+            page = pdf.pages[0]
+            tables = page.extract_tables()
+
+            if not tables:
+                print("Таблицы не найдены")
+                return
+
+            table = tables[0]
+            headers = table[0]
+            # Пропускаем первые 2 колонки (номер пары, время)
+            groups = [h.strip() for h in headers[2:] if h and h.strip()]
+
+            print(f"Найдено групп: {len(groups)}")
+
+            # Удаляем старое расписание на эту дату
+            db.query(Schedule).filter(Schedule.date == schedule_date).delete()
+
+            lesson_number = 0
+            records_added = 0
+
+            for row in table[2:]:  # Пропускаем заголовки
+                if not row or len(row) < 3:
+                    continue
+
+                if row[0] and row[0].strip().isdigit():
+                    lesson_number = int(row[0].strip())
+
+                if lesson_number == 0 or lesson_number not in PDF_LESSON_TIMES:
+                    continue
+
+                for i, cell in enumerate(row[2:]):
+                    if i >= len(groups):
+                        break
+
+                    data = _parse_pdf_cell(cell)
+                    if not data:
+                        continue
+
+                    time_start, time_end = PDF_LESSON_TIMES[lesson_number]
+
+                    db.add(Schedule(
+                        group_name=groups[i],
+                        teacher_name=data['teacher'],
+                        subject=data['subject'],
+                        room_number=data['room'],
+                        day_of_week=day_of_week,
+                        lesson_number=lesson_number,
+                        time_start=time_start,
+                        time_end=time_end,
+                        date=schedule_date,
+                        lesson_type="Занятие",
+                    ))
+                    records_added += 1
+
+            db.commit()
+            total = db.query(Schedule).count()
+            print(f"[OK] Добавлено {records_added} записей; всего в БД: {total}")
+
+    except Exception as e:
+        db.rollback()
+        print(f"[ERROR] Ошибка импорта PDF: {e}")
+        raise
+    finally:
+        db.close()
+
+
+def import_schedule(file_path: str, date_str: str = "2026-04-13"):
+    """
+    Универсальный импорт расписания. Выбирает парсер по расширению файла.
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext in {".xlsx", ".xls"}:
+        return import_schedule_from_excel(file_path, date_str)
+    if ext == ".pdf":
+        return import_schedule_from_pdf(file_path, date_str)
+    raise ValueError(
+        f"Неподдерживаемое расширение файла: {ext!r}. Ожидается .xlsx, .xls или .pdf."
+    )
+
+
+def _main():
+    parser = argparse.ArgumentParser(
+        description="Импорт расписания из Excel или PDF в БД."
+    )
+    parser.add_argument("file", help="Путь к файлу расписания (.xlsx / .xls / .pdf)")
+    parser.add_argument(
+        "--date",
+        default="2026-04-13",
+        help="Дата расписания в формате YYYY-MM-DD (по умолчанию 2026-04-13)",
+    )
+    args = parser.parse_args()
+    import_schedule(args.file, args.date)
+
+
 if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) < 2:
-        print("Использование: python import_schedule.py <путь_к_файлу.xlsx> [дата YYYY-MM-DD]")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
-    date_str = sys.argv[2] if len(sys.argv) > 2 else "2026-04-13"
-
-    import_schedule_from_excel(file_path, date_str)
+    _main()
