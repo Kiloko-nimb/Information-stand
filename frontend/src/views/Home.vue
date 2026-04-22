@@ -37,9 +37,11 @@
           <div class="contact-item">
             <span class="icon">💬</span>
             <div>
-              <strong>У Вас остались вопросы?</strong>
-              <p>8 (391) 218-14-99</p>
-              <p>priem@kraskrit.ru</p>
+              <strong>Приемная комиссия 2026:</strong>
+              <p>8-929-332-29-43</p>
+              <p>8-933-327-02-09</p>
+              <p>8-391-298-46-46</p>
+              <p class="additional-info">kraskritpk@yandex.ru</p>
             </div>
           </div>
           <div class="contact-item">
@@ -146,7 +148,8 @@ export default {
       '🏆 85% наших выпускников находят работу по специальности еще до получения диплома',
       '🏃 От входа до кабинета 415 ровно 342 шага. Мы проверяли',
       '📡 В колледже работает более 500 компьютеров, объединенных в единую сеть',
-      '🎓 ККРИТ выпустил более 15 000 специалистов за всю историю существования'
+      '🎓 ККРИТ выпустил более 15 000 специалистов за всю историю существования',
+      '🚌 До корпуса на пр. Свободный, 67 можно доехать на 10 маршрутах: автобусы №2, 5, 26, 32, 34, 51, 52, 53, 71, 76, 85, 87 и троллейбусы №5, 6'
     ]
     let timeInterval = null
     let factInterval = null
@@ -176,7 +179,7 @@ export default {
     }
 
     const calculateDaysUntilAdmission = () => {
-      const admissionDate = new Date('2026-06-20')
+      const admissionDate = new Date('2026-06-15') // Прием документов начинается 15 июня
       const today = new Date()
       const diffTime = admissionDate - today
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
@@ -254,9 +257,28 @@ export default {
     const showApplicationQR = async () => {
       const qr = await generateQRCode('https://kraskrit.ru/abitur/')
       const modal = document.createElement('div')
-      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;'
-      modal.innerHTML = `<div style="background:white;padding:2rem;border-radius:20px;text-align:center;"><h2 style="margin-bottom:1rem;">Подать документы онлайн</h2><img src="${qr}" style="width:300px;height:300px;"/><p style="margin-top:1rem;">Отсканируйте QR-код</p><button onclick="this.parentElement.parentElement.remove()" style="margin-top:1rem;padding:0.8rem 2rem;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;">Закрыть</button></div>`
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;'
+      modal.innerHTML = `
+        <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:2.5rem;border-radius:25px;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <h2 style="color:white;margin-bottom:1.5rem;font-size:2rem;text-align:center;">📱 Подать документы</h2>
+          <div style="background:rgba(255,255,255,0.15);padding:2rem;border-radius:20px;margin-bottom:1.5rem;text-align:center;">
+            <img src="${qr}" style="width:250px;height:250px;margin-bottom:1.5rem;"/>
+            <p style="color:white;font-size:1.1rem;line-height:1.6;margin-bottom:1rem;">
+              <strong style="color:#ffd700;">Прием документов:</strong><br>
+              с 15 июня по 14 августа 2026<br><br>
+              <strong style="color:#ffd700;">Адрес приемной комиссии:</strong><br>
+              пр. Свободный, 67<br><br>
+              <strong style="color:#ffd700;">Телефоны:</strong><br>
+              8-929-332-29-43<br>
+              8-933-327-02-09<br>
+              8-391-298-46-46
+            </p>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:1rem 2rem;background:rgba(255,255,255,0.25);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:15px;cursor:pointer;font-size:1.1rem;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">Закрыть</button>
+        </div>
+      `
       document.body.appendChild(modal)
+      modal.onclick = (e) => { if (e.target === modal) modal.remove() }
     }
 
     onMounted(() => {

@@ -24,108 +24,193 @@
           🌳 Территория (Двор)
         </button>
       </div>
-
-      <div class="room-search">
-        <input
-          v-model="roomSearch"
-          placeholder="Введите номер кабинета"
-          @keyup.enter="findRoom"
-        />
-        <button @click="findRoom">Найти</button>
-      </div>
     </div>
 
     <div class="map-container">
-      <div v-if="currentFloor === 'territory'" class="territory-map">
-        <h2>Территория колледжа</h2>
-        <div class="territory-legend">
-          <div class="legend-item">
-            <span class="legend-icon">🚬</span>
-            <span>Специально оборудованное место для курения</span>
+      <!-- 1 этаж - Интерактивный компонент -->
+      <template v-if="currentFloor === 1">
+        <MapFloor2 />
+      </template>
+
+      <!-- 2 этаж - SVG Карта -->
+      <template v-else-if="currentFloor === 2">
+        <div class="svg-floor-map" @wheel.prevent="handleWheel">
+          <div
+            class="svg-map-wrapper"
+            :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})` }"
+            @mousedown="startPan"
+          >
+            <img src="/floor2.svg" alt="План 2 этажа" class="floor-svg-img" draggable="false" />
           </div>
-          <div class="legend-item">
-            <span class="legend-icon">☕</span>
-            <span>Точки питания рядом</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-icon">🅿️</span>
-            <span>Парковка</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-icon">🚪</span>
-            <span>Входы в здание</span>
+          <div class="zoom-controls">
+            <button @click="zoom(0.1)" title="Приблизить">+</button>
+            <button @click="zoom(-0.1)" title="Отдалить">−</button>
+            <button @click="resetView" title="Сбросить">⟳</button>
           </div>
         </div>
-        <div class="territory-content">
-          <div class="territory-placeholder">
-            <p>Интерактивная карта территории</p>
-            <div class="territory-points">
-              <div class="point smoking-area">
-                <span class="point-icon">🚬</span>
-                <span class="point-label">Место для курения</span>
-              </div>
-              <div class="point food-point">
-                <span class="point-icon">☕</span>
-                <span class="point-label">Кофейня "Бодрость" (50м)</span>
-              </div>
-              <div class="point food-point">
-                <span class="point-icon">🌯</span>
-                <span class="point-label">Шаурма "У Ашота" (100м)</span>
-              </div>
-              <div class="point parking">
-                <span class="point-icon">🅿️</span>
-                <span class="point-label">Парковка для посетителей</span>
+      </template>
+
+      <!-- 3 этаж - SVG Карта -->
+      <template v-else-if="currentFloor === 3">
+        <div class="svg-floor-map" @wheel.prevent="handleWheel">
+          <div
+            class="svg-map-wrapper"
+            :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})` }"
+            @mousedown="startPan"
+          >
+            <img src="/floor3.svg" alt="План 3 этажа" class="floor-svg-img" draggable="false" />
+          </div>
+          <div class="zoom-controls">
+            <button @click="zoom(0.1)" title="Приблизить">+</button>
+            <button @click="zoom(-0.1)" title="Отдалить">−</button>
+            <button @click="resetView" title="Сбросить">⟳</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- 4 этаж - SVG Карта -->
+      <template v-else-if="currentFloor === 4">
+        <div class="svg-floor-map" @wheel.prevent="handleWheel">
+          <div
+            class="svg-map-wrapper"
+            :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})` }"
+            @mousedown="startPan"
+          >
+            <img src="/floor4.svg" alt="План 4 этажа" class="floor-svg-img" draggable="false" />
+          </div>
+          <div class="zoom-controls">
+            <button @click="zoom(0.1)" title="Приблизить">+</button>
+            <button @click="zoom(-0.1)" title="Отдалить">−</button>
+            <button @click="resetView" title="Сбросить">⟳</button>
+          </div>
+        </div>
+      </template>
+
+      <!-- Территория -->
+      <template v-else-if="currentFloor === 'territory'">
+        <div class="territory-map">
+          <h2>Территория колледжа</h2>
+          <div class="territory-legend">
+            <div class="legend-item">
+              <span class="legend-icon">🚬</span>
+              <span>Специально оборудованное место для курения</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">☕</span>
+              <span>Точки питания рядом</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🅿️</span>
+              <span>Парковка</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-icon">🚪</span>
+              <span>Входы в здание</span>
+            </div>
+          </div>
+          <div class="territory-content">
+            <div class="territory-placeholder">
+              <p>Интерактивная карта территории</p>
+              <div class="territory-points">
+                <div class="point smoking-area">
+                  <span class="point-icon">🚬</span>
+                  <span class="point-label">Место для курения</span>
+                </div>
+                <div class="point food-point">
+                  <span class="point-icon">☕</span>
+                  <span class="point-label">Кофейня "Бодрость" (50м)</span>
+                </div>
+                <div class="point food-point">
+                  <span class="point-icon">🌯</span>
+                  <span class="point-label">Шаурма "У Ашота" (100м)</span>
+                </div>
+                <div class="point parking">
+                  <span class="point-icon">🅿️</span>
+                  <span class="point-label">Парковка для посетителей</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <div v-else class="map-placeholder">
-        <p>Здесь будет интерактивная карта {{ currentFloor }} этажа</p>
-        <p class="hint">SVG карта с возможностью zoom и построения маршрута</p>
-      </div>
-    </div>
+      </template>
 
-    <div v-if="selectedRoom" class="room-info">
-      <h3>Кабинет {{ selectedRoom.room_number }}</h3>
-      <p>{{ selectedRoom.room_type }}</p>
-      <p>Вместимость: {{ selectedRoom.capacity }} человек</p>
-      <p v-if="selectedRoom.equipment">Оборудование: {{ selectedRoom.equipment }}</p>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
-import api from '../services/api'
+import { ref, onMounted, onUnmounted } from 'vue'
+import MapFloor2 from '../components/MapFloor2.vue'
 
 export default {
   name: 'Map',
+  components: {
+    MapFloor2
+  },
   setup() {
     const floors = [1, 2, 3, 4]
     const currentFloor = ref(1)
-    const roomSearch = ref('')
-    const selectedRoom = ref(null)
+    const zoomLevel = ref(1)
+    const panX = ref(0)
+    const panY = ref(0)
+    const isPanning = ref(false)
+    const startX = ref(0)
+    const startY = ref(0)
 
-    const findRoom = async () => {
-      if (!roomSearch.value.trim()) return
-
-      try {
-        const response = await api.get(`/rooms/${roomSearch.value}`)
-        selectedRoom.value = response.data
-        currentFloor.value = response.data.floor
-      } catch (error) {
-        console.error('Кабинет не найден:', error)
-        selectedRoom.value = null
-      }
+    const zoom = (delta) => {
+      const next = zoomLevel.value + delta
+      if (next >= 0.5 && next <= 3) zoomLevel.value = Math.round(next * 10) / 10
     }
+
+    const handleWheel = (event) => {
+      const delta = event.deltaY > 0 ? -0.1 : 0.1
+      zoom(delta)
+    }
+
+    const resetView = () => {
+      zoomLevel.value = 1
+      panX.value = 0
+      panY.value = 0
+    }
+
+    const startPan = (event) => {
+      isPanning.value = true
+      startX.value = event.clientX - panX.value
+      startY.value = event.clientY - panY.value
+      document.body.style.cursor = 'grabbing'
+    }
+
+    const onMouseMove = (event) => {
+      if (!isPanning.value) return
+      panX.value = event.clientX - startX.value
+      panY.value = event.clientY - startY.value
+    }
+
+    const onMouseUp = () => {
+      isPanning.value = false
+      document.body.style.cursor = 'default'
+    }
+
+    onMounted(() => {
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    })
 
     return {
       floors,
       currentFloor,
-      roomSearch,
-      selectedRoom,
-      findRoom
+      zoomLevel,
+      zoom,
+      handleWheel,
+      panX,
+      panY,
+      startPan,
+      resetView
     }
   }
 }
@@ -341,51 +426,6 @@ h1 {
   box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
 }
 
-.room-search {
-  display: flex;
-  gap: 1rem;
-}
-
-.room-search input {
-  flex: 1;
-  padding: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 15px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  color: white;
-  transition: all 0.3s;
-}
-
-.room-search input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.room-search input:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.room-search button {
-  padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s;
-}
-
-.room-search button:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-2px);
-}
-
 .map-container {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(20px);
@@ -420,25 +460,70 @@ h1 {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.room-info {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 1.5rem;
-  border-radius: 25px;
-  margin-top: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+/* ── SVG Floor Map ── */
+.svg-floor-map {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.room-info h3 {
+.svg-map-wrapper {
+  transform-origin: center center;
+  transition: transform 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.svg-map-wrapper:active {
+  cursor: grabbing;
+}
+
+.floor-svg-img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.35));
+  user-select: none;
+}
+
+.zoom-controls {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.zoom-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   color: white;
-  margin-bottom: 1rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.room-info p {
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 0.5rem;
+.zoom-controls button:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
 }
 </style>

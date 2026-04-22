@@ -18,6 +18,9 @@
 
     <div v-else class="staff-grid">
       <div class="staff-card" v-for="person in staffList" :key="person.id">
+        <div class="staff-avatar">
+          <img :src="getAvatarUrl(person)" :alt="person.full_name" />
+        </div>
         <div class="staff-info">
           <h3>{{ person.full_name }}</h3>
           <p class="position">{{ person.position }}</p>
@@ -68,6 +71,17 @@ export default {
       }
     }
 
+    const getAvatarUrl = (person) => {
+      // Если есть фото, используем его
+      if (person.photo_url) {
+        return person.photo_url
+      }
+      
+      // Иначе генерируем аватарку с инициалами
+      const name = encodeURIComponent(person.full_name)
+      return `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=200&bold=true&font-size=0.4`
+    }
+
     onMounted(() => {
       loadStaff()
     })
@@ -76,7 +90,8 @@ export default {
       searchQuery,
       staffList,
       loading,
-      search
+      search,
+      getAvatarUrl
     }
   }
 }
@@ -172,12 +187,38 @@ h1 {
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   transition: all 0.4s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .staff-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
   background: rgba(255, 255, 255, 0.25);
+}
+
+.staff-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s;
+}
+
+.staff-card:hover .staff-avatar {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.staff-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .staff-info h3 {

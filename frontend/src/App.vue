@@ -19,20 +19,71 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'App',
   setup() {
     const isOnline = ref(navigator.onLine)
+    const router = useRouter()
+    
+    // Таймер бездействия для киоска
+    const INACTIVITY_TIMEOUT = 3 * 60 * 1000 // 3 минуты в миллисекундах
+    let inactivityTimer = null
+
+    const resetInactivityTimer = () => {
+      // Очищаем предыдущий таймер
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer)
+      }
+
+      // Устанавливаем новый таймер
+      inactivityTimer = setTimeout(() => {
+        // Возвращаемся на главную страницу только если мы не на ней
+        if (router.currentRoute.value.path !== '/') {
+          console.log('Таймер бездействия: возврат на главную')
+          router.push('/')
+        }
+      }, INACTIVITY_TIMEOUT)
+    }
+
+    const handleUserActivity = () => {
+      resetInactivityTimer()
+    }
 
     onMounted(() => {
+      // Слушатели онлайн/офлайн статуса
       window.addEventListener('online', () => {
         isOnline.value = true
       })
 
       window.addEventListener('offline', () => {
         isOnline.value = false
+      })
+
+      // Слушатели активности пользователя для киоска
+      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+      
+      events.forEach(event => {
+        document.addEventListener(event, handleUserActivity, true)
+      })
+
+      // Запускаем таймер при загрузке
+      resetInactivityTimer()
+    })
+
+    onUnmounted(() => {
+      // Очищаем таймер при размонтировании
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer)
+      }
+
+      // Удаляем слушатели активности
+      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+      
+      events.forEach(event => {
+        document.removeEventListener(event, handleUserActivity, true)
       })
     })
 

@@ -77,15 +77,37 @@
         <div class="schedule-date">{{ formatDate(selectedDate) }}</div>
       </div>
 
+      <div class="lesson-types-legend">
+        <div class="legend-item">
+          <div class="legend-badge badge-lecture"></div>
+          <span>ЛК — Лекция</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-badge badge-practice"></div>
+          <span>ПР — Практика</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-badge badge-lab"></div>
+          <span>ЛР — Лабораторная</span>
+        </div>
+      </div>
+
       <div class="timeline-container">
         <div
           v-for="item in scheduleData"
           :key="item.id"
           class="timeline-item"
-          :class="{ 'current-lesson': isCurrentLesson(item) }"
+          :class="{
+            'current-lesson': isCurrentLesson(item),
+            'lesson-lecture': getLessonTypeClass(item.lesson_type) === 'lecture',
+            'lesson-practice': getLessonTypeClass(item.lesson_type) === 'practice',
+            'lesson-lab': getLessonTypeClass(item.lesson_type) === 'lab'
+          }"
         >
           <div class="timeline-marker">
-            <div class="lesson-badge">{{ item.lesson_number }}</div>
+            <div class="lesson-badge" :class="'badge-' + getLessonTypeClass(item.lesson_type)">
+              {{ item.lesson_number }}
+            </div>
             <div class="timeline-line"></div>
           </div>
           <div class="timeline-content">
@@ -97,7 +119,9 @@
             <div class="lesson-card">
               <div class="lesson-header">
                 <h3 class="lesson-subject">{{ item.subject }}</h3>
-                <span class="lesson-type">{{ item.lesson_type || 'Лекция' }}</span>
+                <span class="lesson-type" :class="'type-' + getLessonTypeClass(item.lesson_type)">
+                  {{ formatLessonType(item.lesson_type) }}
+                </span>
               </div>
               <div class="lesson-details">
                 <div class="lesson-detail">
@@ -253,6 +277,22 @@ export default {
       // В будущем: this.$router.push({ path: '/map', query: { room: roomNumber } })
     }
 
+    const getLessonTypeClass = (lessonType) => {
+      if (!lessonType) return 'lecture'
+      const type = lessonType.toLowerCase()
+      if (type.includes('лаб') || type.includes('lab')) return 'lab'
+      if (type.includes('практ') || type.includes('practice')) return 'practice'
+      return 'lecture'
+    }
+
+    const formatLessonType = (lessonType) => {
+      if (!lessonType) return 'ЛК'
+      const type = lessonType.toLowerCase()
+      if (type.includes('лаб') || type.includes('lab')) return 'ЛР'
+      if (type.includes('практ') || type.includes('practice')) return 'ПР'
+      return 'ЛК'
+    }
+
     const isCurrentLesson = (lesson) => {
       const now = new Date()
       const currentTime = now.getHours() * 60 + now.getMinutes()
@@ -294,7 +334,9 @@ export default {
       selectDate,
       previousDay,
       nextDay,
-      showRoomOnMap
+      showRoomOnMap,
+      getLessonTypeClass,
+      formatLessonType
     }
   }
 }
@@ -605,6 +647,46 @@ h1 {
   text-transform: capitalize;
 }
 
+.lesson-types-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  margin: 1.5rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.legend-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.legend-badge.badge-lecture {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.legend-badge.badge-practice {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.legend-badge.badge-lab {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
 .timeline-container {
   padding: 2rem;
   position: relative;
@@ -653,6 +735,35 @@ h1 {
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
   border: 4px solid rgba(255, 255, 255, 0.3);
   z-index: 2;
+  transition: all 0.3s;
+}
+
+/* Цветовая кодировка по типам занятий */
+.lesson-badge.badge-lecture {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.lesson-badge.badge-practice {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+}
+
+.lesson-badge.badge-lab {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 4px 20px rgba(79, 172, 254, 0.4);
+}
+
+.timeline-item.lesson-lecture .timeline-line {
+  background: linear-gradient(180deg, rgba(102, 126, 234, 0.3) 0%, rgba(102, 126, 234, 0.1) 100%);
+}
+
+.timeline-item.lesson-practice .timeline-line {
+  background: linear-gradient(180deg, rgba(245, 87, 108, 0.3) 0%, rgba(245, 87, 108, 0.1) 100%);
+}
+
+.timeline-item.lesson-lab .timeline-line {
+  background: linear-gradient(180deg, rgba(79, 172, 254, 0.3) 0%, rgba(79, 172, 254, 0.1) 100%);
 }
 
 .timeline-item.current-lesson .lesson-badge {
@@ -748,6 +859,22 @@ h1 {
   font-weight: 600;
   color: white;
   white-space: nowrap;
+  transition: all 0.3s;
+}
+
+.lesson-type.type-lecture {
+  background: rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+}
+
+.lesson-type.type-practice {
+  background: rgba(245, 87, 108, 0.3);
+  border: 1px solid rgba(245, 87, 108, 0.5);
+}
+
+.lesson-type.type-lab {
+  background: rgba(79, 172, 254, 0.3);
+  border: 1px solid rgba(79, 172, 254, 0.5);
 }
 
 .lesson-details {

@@ -1,18 +1,26 @@
 from app.core.database import SessionLocal
 from app.models.schedule import Schedule
+from app.models.room import Room
+from app.models.staff import Staff
 
 db = SessionLocal()
-count = db.query(Schedule).count()
-print(f'Records in DB: {count}')
 
-if count > 0:
-    sample = db.query(Schedule).first()
-    print(f'Sample: {sample.group_name} - {sample.subject}')
+# Проверяем расписание
+schedule_count = db.query(Schedule).count()
+print(f'Записей в schedules: {schedule_count}')
 
-    # Show all groups
-    groups = db.query(Schedule.group_name).distinct().all()
-    print(f'\nGroups ({len(groups)}):')
-    for g in groups[:5]:
-        print(f'  - {g[0]}')
+# Проверяем аудитории
+rooms_count = db.query(Room).count()
+print(f'Записей в rooms: {rooms_count}')
+
+if rooms_count > 0:
+    print('\nПримеры аудиторий:')
+    rooms = db.query(Room).limit(10).all()
+    for room in rooms:
+        print(f'  {room.room_number} - Этаж {room.floor}, {room.room_type}, {room.building}')
+
+# Проверяем сотрудников
+staff_count = db.query(Staff).count()
+print(f'\nЗаписей в staff: {staff_count}')
 
 db.close()
