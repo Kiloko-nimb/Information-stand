@@ -37,8 +37,11 @@ python load_schedule.py 13.04.2026.pdf --date 2026-04-13
 Задай переменные окружения:
 
 ```bash
-# Обязательно: публичная ссылка на папку Яндекс.Диска.
-export YANDEX_DISK_PUBLIC_URL="https://disk.yandex.ru/d/XXXXXXXXXXXX"
+# Обязательно: публичная ссылка на папку Яндекс.Диска. Можно указать как
+# корень публичной папки, так и конкретный подкаталог — URL с подпапкой
+# автоматически распарсится (API Яндекс.Диска не принимает такой URL
+# напрямую, модуль разбивает его на public_key + path).
+export YANDEX_DISK_PUBLIC_URL="https://disk.yandex.ru/d/XXXXXXXXXXXX/корпус пр-т ... 156"
 
 # Опционально: куда сохранять скачанные файлы (по умолчанию data/schedule-downloads).
 export SCHEDULE_DOWNLOAD_DIR="data/schedule-downloads"
@@ -69,6 +72,10 @@ python -m app.services.yandex_disk \
 python -m app.services.yandex_disk \
   --url "https://disk.yandex.ru/d/XXXXX" \
   --dest data/schedule-downloads
+
+# Обход всех вложенных папок (архивы по месяцам и т.п.)
+python -m app.services.yandex_disk \
+  --url "https://disk.yandex.ru/d/XXXXX" --list-only --recursive
 ```
 
 ### Как распознаётся дата

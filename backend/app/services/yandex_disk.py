@@ -20,7 +20,8 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
+from urllib.parse import unquote, urlparse, urlunparse
 
 import requests
 
@@ -48,6 +49,36 @@ class YandexFile:
         return Path(self.name).suffix.lower()
 
 
+def split_public_url(public_url: str) -> Tuple[str, str]:
+    """
+    Разобрать публичную ссылку Яндекс.Диска на корневой public_key и
+    внутренний путь.
+
+    Публичные ссылки бывают двух видов:
+
+    - ``https://disk.yandex.ru/d/<token>`` — ссылка на корень публичной
+      папки. Внутренний путь в этом случае ``"/"``.
+    - ``https://disk.yandex.ru/d/<token>/<subfolder>/<file>`` — ссылка
+      на подпапку/файл внутри публичной папки. API Яндекс.Диска не
+      умеет принимать такую ссылку напрямую (вернёт 404), поэтому надо
+      разделить её на корневой ``public_key`` и ``path``.
+
+    Возвращает ``(public_key, path)``. ``path`` всегда начинается с ``/``.
+    """
+    parsed = urlparse(public_url)
+    # Путь первой публичной папки всегда вида "/d/<token>[/...]".
+    parts = parsed.path.split("/", 3)
+    # parts = ['', 'd', '<token>', '<rest>']
+    if len(parts) < 3 or parts[1] != "d":
+        return public_url, "/"
+    root_path = f"/{parts[1]}/{parts[2]}"
+    root_url = urlunparse(
+        (parsed.scheme, parsed.netloc, root_path, "", "", "")
+    )
+    inner = f"/{parts[3]}" if len(parts) == 4 and parts[3] else "/"
+    return root_url, unquote(inner)
+
+
 def parse_date_from_filename(name: str) -> Optional[date]:
     """Извлечь дату вида '13.04.2026' / '13-04-2026' / '13_04_2026'."""
     m = _DATE_RE.search(name)
@@ -65,39 +96,69 @@ def list_public_folder(
     *,
     session: Optional[requests.Session] = None,
     limit: int = 200,
+    recursive: bool = False,
 ) -> List[YandexFile]:
-    """Получить список файлов из публичной папки Яндекс.Диска."""
+    """Получить список файлов из публичной папки Яндекс.Диска.
+
+    ``public_url`` может указывать как на корень публичной папки, так и
+    на вложенный подкаталог — URL автоматически разобьётся на корень +
+    внутренний путь.
+
+    Если ``recursive=True``, обойдёт все вложенные папки. По умолчанию
+    берутся файлы только из указанной папки.
+    """
     sess = session or requests.Session()
-    resp = sess.get(
-        _PUBLIC_API,
-        params={"public_key": public_url, "limit": limit},
-        timeout=15,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    items = data.get("_embedded", {}).get("items", [])
+    public_key, inner_path = split_public_url(public_url)
+
     result: List[YandexFile] = []
-    for item in items:
-        if item.get("type") != "file":
+    to_visit: List[str] = [inner_path]
+    seen: set[str] = set()
+
+    while to_visit:
+        current = to_visit.pop(0)
+        if current in seen:
             continue
-        name = item.get("name", "")
-        if Path(name).suffix.lower() not in _SUPPORTED_EXTS:
-            continue
-        try:
-            modified = datetime.fromisoformat(
-                item.get("modified", "").replace("Z", "+00:00")
-            )
-        except ValueError:
-            modified = datetime.utcnow()
-        result.append(
-            YandexFile(
-                name=name,
-                path=item.get("path", "/"),
-                size=item.get("size", 0),
-                modified=modified,
-                parsed_date=parse_date_from_filename(name),
-            )
+        seen.add(current)
+
+        resp = sess.get(
+            _PUBLIC_API,
+            params={
+                "public_key": public_key,
+                "path": current,
+                "limit": limit,
+            },
+            timeout=15,
         )
+        resp.raise_for_status()
+        data = resp.json()
+        items = data.get("_embedded", {}).get("items", [])
+        for item in items:
+            item_type = item.get("type")
+            if item_type == "dir":
+                if recursive:
+                    to_visit.append(item.get("path", "/"))
+                continue
+            if item_type != "file":
+                continue
+            name = item.get("name", "")
+            if Path(name).suffix.lower() not in _SUPPORTED_EXTS:
+                continue
+            try:
+                modified = datetime.fromisoformat(
+                    item.get("modified", "").replace("Z", "+00:00")
+                )
+            except ValueError:
+                modified = datetime.utcnow()
+            result.append(
+                YandexFile(
+                    name=name,
+                    path=item.get("path", "/"),
+                    size=item.get("size", 0),
+                    modified=modified,
+                    parsed_date=parse_date_from_filename(name),
+                )
+            )
+
     return result
 
 
@@ -110,9 +171,10 @@ def download_file(
 ) -> Path:
     """Скачать файл из публичной папки по внутреннему пути."""
     sess = session or requests.Session()
+    public_key, _ = split_public_url(public_url)
     resp = sess.get(
         _DOWNLOAD_API,
-        params={"public_key": public_url, "path": file_path},
+        params={"public_key": public_key, "path": file_path},
         timeout=15,
     )
     resp.raise_for_status()
@@ -137,6 +199,7 @@ def sync_folder(
     download_dir: Path,
     *,
     session: Optional[requests.Session] = None,
+    recursive: bool = False,
 ) -> List[tuple[YandexFile, Path]]:
     """
     Скачать все файлы с распознанной датой из публичной папки.
@@ -146,7 +209,7 @@ def sync_folder(
     (проверка по имени и размеру).
     """
     sess = session or requests.Session()
-    files = list_public_folder(public_url, session=sess)
+    files = list_public_folder(public_url, session=sess, recursive=recursive)
     results: List[tuple[YandexFile, Path]] = []
     for f in files:
         if f.parsed_date is None:
@@ -167,6 +230,8 @@ def sync_folder(
 def sync_and_import(
     public_url: str,
     download_dir: Path,
+    *,
+    recursive: bool = False,
 ) -> List[tuple[date, Path, int]]:
     """
     Скачать и импортировать все расписания из публичной папки.
@@ -178,7 +243,7 @@ def sync_and_import(
     from app.utils.import_schedule import import_schedule
 
     summary: List[tuple[date, Path, int]] = []
-    for f, local in sync_folder(public_url, download_dir):
+    for f, local in sync_folder(public_url, download_dir, recursive=recursive):
         try:
             added = import_schedule(
                 str(local), f.parsed_date.strftime("%Y-%m-%d")
@@ -212,6 +277,11 @@ def _main():
         action="store_true",
         help="Только показать список файлов, ничего не скачивать.",
     )
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Обходить вложенные подпапки (архивы по месяцам и т.п.).",
+    )
     args = parser.parse_args()
 
     if not args.url:
@@ -223,12 +293,13 @@ def _main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     if args.list_only:
-        for f in list_public_folder(args.url):
-            print(f"{f.parsed_date or '??':10}  {f.size:>10}  {f.name}")
+        for f in list_public_folder(args.url, recursive=args.recursive):
+            print(f"{str(f.parsed_date) if f.parsed_date else '??':10}  "
+                  f"{f.size:>10}  {f.name}")
         return
 
     dest = Path(args.dest)
-    summary = sync_and_import(args.url, dest)
+    summary = sync_and_import(args.url, dest, recursive=args.recursive)
     print(f"Готово. Обработано файлов: {len(summary)}")
     for day, path, added in summary:
         print(f"  {day.isoformat()}  {path.name}  +{added} записей")

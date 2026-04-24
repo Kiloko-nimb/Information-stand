@@ -55,13 +55,23 @@ def _clean(value) -> Optional[str]:
     """Нормализовать содержимое ячейки: убрать NaN, пробелы, многострочность."""
     if value is None:
         return None
-    if isinstance(value, float) and pd.isna(value):
-        return None
+    # pandas nullable-string dtype и обычные float-NaN: всё через pd.isna.
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        pass
     text = str(value).strip()
-    if not text or text.lower() == "nan":
+    if not text:
         return None
-    # Заменяем переносы строк одним пробелом и схлопываем множественные пробелы.
+    # <NA> от pandas StringDtype после astype("string"), либо текстовое "nan".
+    if text in ("<NA>", "NA", "nan", "NaN", "None"):
+        return None
+    # Переносы строк → пробел, схлопываем множественные пробелы.
     text = re.sub(r"\s+", " ", text.replace("\r", " ").replace("\n", " "))
+    # Служебные строки из PDF типа "_______ _____" (подчёркнутый пустой шаблон).
+    if re.fullmatch(r"[\s_\-–—]+", text):
+        return None
     return text or None
 
 
@@ -291,25 +301,15 @@ def import_schedule_from_excel(
         db.close()
 
 
-def _parse_pdf_cell(cell_text: Optional[str]) -> Optional[dict]:
-    """Разобрать ячейку расписания из PDF в {subject, teacher, room}."""
-    if not cell_text:
-        return None
-    text = _clean(cell_text)
-    if not text:
-        return None
+def _table_to_dataframe(table: List[List[Optional[str]]]) -> pd.DataFrame:
+    """Конвертировать таблицу из pdfplumber в pandas DataFrame.
 
-    # В PDF часто номер кабинета идёт отдельной короткой строкой — попробуем
-    # вычленить его. Но если формат разный — просто парсим как Excel-ячейку.
-    subject, teacher = _split_subject_and_teacher(text)
-    # Пробуем найти отдельное короткое поле-номер кабинета.
-    room_match = re.search(r"\b(\d{2,4}[А-ЯЁа-яё/]*)\b\s*$", subject)
-    room: Optional[str] = None
-    if room_match:
-        room = room_match.group(1)
-        subject = subject[: room_match.start()].strip()
-
-    return {"subject": subject, "teacher": teacher, "room": room}
+    Структура таблицы в PDF расписания идентична Excel: первая строка —
+    заголовки (Пара / Расписание звонков / группа / Ауд. / группа / Ауд. / …),
+    дальше по строкам слоты пар. Приводим к одному типу данных (str), чтобы
+    дальше прогнать тот же парсер, что и для Excel.
+    """
+    return pd.DataFrame(table).astype("string")
 
 
 def import_schedule_from_pdf(
@@ -317,6 +317,10 @@ def import_schedule_from_pdf(
 ) -> int:
     """
     Импорт расписания из PDF.
+
+    PDF-таблицы ККРИТ имеют ту же структуру, что и Excel
+    (Пара / Расписание звонков / группа1 / Ауд1 / группа2 / Ауд2 / …),
+    поэтому используем тот же парсер пар и ту же регулярку для ФИО.
 
     Args:
         file_path: путь к PDF.
@@ -343,60 +347,71 @@ def import_schedule_from_pdf(
             if not pdf.pages:
                 print("Файл PDF пуст")
                 return 0
-            page = pdf.pages[0]
-            tables = page.extract_tables()
 
-            if not tables:
+            # Собираем таблицы со всех страниц PDF. В расписании ККРИТ это
+            # обычно 1 страница с 2 таблицами (как 2 листа Excel), но на
+            # всякий случай поддерживаем многостраничные PDF.
+            all_tables: List[List[List[Optional[str]]]] = []
+            for page in pdf.pages:
+                for table in page.extract_tables() or []:
+                    if table and len(table) >= 2 and len(table[0]) >= 3:
+                        all_tables.append(table)
+
+            if not all_tables:
                 print("Таблицы в PDF не найдены")
                 return 0
+            print(f"Найдено таблиц: {len(all_tables)}")
 
-            table = tables[0]
-            headers = table[0]
-            # Пропускаем первые 2 колонки (номер пары, время).
-            groups = [h.strip() for h in headers[2:] if h and h.strip()]
-            print(f"Найдено групп: {len(groups)}")
-
+            # Очищаем старое расписание на эту дату — повторный импорт
+            # идемпотентен.
             db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
-            lesson_number = 0
-            for row in table[2:]:
-                if not row or len(row) < 3:
+            total_groups = 0
+            for table_index, table in enumerate(all_tables):
+                df = _table_to_dataframe(table)
+                if df.empty:
                     continue
 
-                first = (row[0] or "").strip()
-                if first.isdigit():
-                    lesson_number = int(first)
+                groups = _collect_group_columns(df.iloc[0])
+                total_groups += len(groups)
+                print(f"  Таблица {table_index}: найдено групп {len(groups)}")
 
-                pair_timing: Optional[PairTiming] = bell_by_number.get(
-                    lesson_number
-                )
-                if pair_timing is None:
-                    continue
-
-                for i, cell in enumerate(row[2:]):
-                    if i >= len(groups):
-                        break
-                    data = _parse_pdf_cell(cell)
-                    if not data:
-                        continue
-                    db.add(
-                        Schedule(
-                            group_name=groups[i],
-                            teacher_name=data["teacher"],
-                            subject=data["subject"],
-                            room_number=data["room"],
-                            day_of_week=day_of_week,
-                            lesson_number=lesson_number,
-                            time_start=pair_timing.start,
-                            time_end=pair_timing.end,
-                            date=schedule_date,
-                            lesson_type=_infer_lesson_type(data["subject"]),
-                        )
+                for lesson_number, slots in _iter_pair_rows(df):
+                    pair_timing: Optional[PairTiming] = bell_by_number.get(
+                        lesson_number
                     )
-                    records_added += 1
+                    if pair_timing is None:
+                        continue
+
+                    for group_name, subj_col, room_col in groups:
+                        extracted = _extract_lesson_for_group(
+                            slots, subj_col, room_col
+                        )
+                        if extracted is None:
+                            continue
+                        subject, teacher, room = extracted
+
+                        db.add(
+                            Schedule(
+                                group_name=group_name,
+                                teacher_name=teacher,
+                                subject=subject,
+                                room_number=room,
+                                day_of_week=day_of_week,
+                                lesson_number=lesson_number,
+                                time_start=pair_timing.start,
+                                time_end=pair_timing.end,
+                                date=schedule_date,
+                                lesson_type=_infer_lesson_type(subject),
+                            )
+                        )
+                        records_added += 1
 
             db.commit()
-            print(f"[OK] Импортировано из PDF: {records_added} записей")
+            print(
+                f"[OK] Импортировано из PDF: {records_added} записей "
+                f"({total_groups} групп в {len(all_tables)} таблицах)"
+            )
             return records_added
 
     except Exception as e:

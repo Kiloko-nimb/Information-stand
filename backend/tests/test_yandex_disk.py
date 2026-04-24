@@ -37,6 +37,29 @@ def test_parse_date_invalid_date():
     assert yandex_disk.parse_date_from_filename("32.02.2026.pdf") is None
 
 
+def test_split_public_url_root():
+    root, inner = yandex_disk.split_public_url("https://disk.yandex.ru/d/abc123")
+    assert root == "https://disk.yandex.ru/d/abc123"
+    assert inner == "/"
+
+
+def test_split_public_url_subfolder():
+    root, inner = yandex_disk.split_public_url(
+        "https://disk.yandex.ru/d/abc123/корпус%20156"
+    )
+    assert root == "https://disk.yandex.ru/d/abc123"
+    # URL-decoded:
+    assert inner == "/корпус 156"
+
+
+def test_split_public_url_deep_subfolder():
+    root, inner = yandex_disk.split_public_url(
+        "https://disk.yandex.ru/d/abc123/sub/nested/file.pdf"
+    )
+    assert root == "https://disk.yandex.ru/d/abc123"
+    assert inner == "/sub/nested/file.pdf"
+
+
 class _FakeResponse:
     def __init__(self, payload: dict | None = None, content: bytes = b""):
         self._payload = payload or {}
