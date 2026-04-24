@@ -97,43 +97,51 @@ export default {
 }
 </script>
 
+
 <style scoped>
 .staff {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 1rem 0 6rem;
   position: relative;
 }
 
+/* ── Плавающая кнопка «На главную» ── */
 .back-button {
   position: fixed;
   bottom: 2rem;
   left: 2rem;
-  padding: 1.2rem 2rem;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  font-size: 1.3rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
   z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .back-button:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.35);
+  transform: translateX(-4px);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
 }
 
 h1 {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: white;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.5rem;
+  color: var(--text);
 }
 
 .search-panel {
@@ -142,101 +150,133 @@ h1 {
 
 .search-panel input {
   width: 100%;
-  padding: 1.2rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   font-size: 1rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  color: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
 }
 
 .search-panel input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-dim);
 }
 
 .search-panel input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+  border-color: var(--accent-border);
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .loading {
   text-align: center;
-  padding: 2rem;
-  color: white;
-  font-size: 1.2rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  padding: 3rem;
+  color: var(--text-muted);
+  font-size: 1.1rem;
 }
 
 .staff-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
 }
 
 .staff-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  transition: all 0.4s;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.staff-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--accent-gradient);
+  opacity: 0.1;
+  transition: opacity var(--transition);
 }
 
 .staff-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-4px);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-lg);
+}
+
+.staff-card:hover::before {
+  opacity: 0.18;
 }
 
 .staff-avatar {
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   overflow: hidden;
   margin-bottom: 1rem;
-  border: 3px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s;
+  border: 3px solid var(--bg-base);
+  box-shadow: 0 0 0 1px var(--border-strong), var(--shadow-sm);
+  transition: transform var(--transition);
+  position: relative;
+  z-index: 1;
+  background: var(--bg-raised);
 }
 
 .staff-card:hover .staff-avatar {
   transform: scale(1.05);
-  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .staff-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+.staff-info {
+  position: relative;
+  z-index: 1;
 }
 
 .staff-info h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  color: white;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+  line-height: 1.3;
 }
 
 .position {
-  color: rgba(255, 255, 255, 0.95);
-  font-weight: bold;
-  margin-bottom: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0 0 0.25rem;
+  line-height: 1.4;
 }
 
-.department, .room {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
+.department {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.4;
 }
 </style>

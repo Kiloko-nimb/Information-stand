@@ -216,129 +216,155 @@ export default {
 }
 </script>
 
+
 <style scoped>
 .map {
-  max-width: 1400px;
+  max-width: 1500px;
   margin: 0 auto;
+  padding: 1rem 0 6rem;
   position: relative;
 }
 
+/* ── Плавающая кнопка «На главную» ── */
 .back-button {
   position: fixed;
   bottom: 2rem;
   left: 2rem;
-  padding: 1.2rem 2rem;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  font-size: 1.3rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
   z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .back-button:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.35);
+  transform: translateX(-4px);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
 }
 
 h1 {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: white;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.5rem;
+  color: var(--text);
 }
 
+/* ── Панель управления ── */
 .map-controls {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 1.5rem;
-  border-radius: 25px;
-  margin-bottom: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0.75rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 
 .floor-selector {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .floor-selector button {
   flex: 1;
-  padding: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  color: white;
-  border-radius: 15px;
+  min-width: 110px;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: var(--radius);
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+}
+
+.floor-selector button:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text);
 }
 
 .floor-selector button.active {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: var(--accent-gradient);
+  color: #0b0d1c;
+  border-color: transparent;
+  box-shadow: var(--shadow-sm), var(--accent-glow);
 }
 
 .floor-selector button.territory-btn {
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.3) 0%, rgba(39, 174, 96, 0.3) 100%);
-  border-color: rgba(46, 204, 113, 0.5);
+  background: rgba(52, 211, 153, 0.10);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+}
+
+.floor-selector button.territory-btn:hover {
+  background: rgba(52, 211, 153, 0.18);
+  border-color: rgba(52, 211, 153, 0.55);
 }
 
 .floor-selector button.territory-btn.active {
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.5) 0%, rgba(39, 174, 96, 0.5) 100%);
-  border-color: rgba(46, 204, 113, 0.8);
-  box-shadow: 0 4px 20px rgba(46, 204, 113, 0.3);
+  background: linear-gradient(135deg, #34d399, #22d3ee);
+  color: #0b0d1c;
+  border-color: transparent;
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.4);
 }
 
+/* ── Территория ── */
 .territory-map {
   width: 100%;
 }
 
 .territory-map h2 {
-  color: white;
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  font-family: var(--font-display);
+  color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.25rem;
 }
 
 .territory-legend {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  color: white;
-  font-size: 1rem;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .legend-icon {
-  font-size: 1.8rem;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+  font-size: 1.5rem;
 }
 
 .territory-content {
-  min-height: 500px;
+  min-height: 480px;
 }
 
 .territory-placeholder {
@@ -346,95 +372,95 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  color: white;
+  min-height: 480px;
+  border: 1px dashed var(--border-hover);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  padding: 2rem;
 }
 
 .territory-placeholder > p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  color: var(--text);
 }
 
 .territory-points {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
   width: 100%;
   max-width: 900px;
-  padding: 2rem;
 }
 
 .point {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.8rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
   cursor: pointer;
 }
 
 .point:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transform: translateY(-3px);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
 }
 
 .point-icon {
-  font-size: 3rem;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  font-size: 2.25rem;
 }
 
 .point-label {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
   text-align: center;
-  color: white;
+  color: var(--text);
 }
 
 .smoking-area {
-  border-color: rgba(231, 76, 60, 0.5);
+  border-color: rgba(244, 63, 94, 0.30);
 }
 
 .smoking-area:hover {
-  border-color: rgba(231, 76, 60, 0.8);
-  box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+  border-color: rgba(244, 63, 94, 0.55);
+  box-shadow: 0 6px 24px rgba(244, 63, 94, 0.15);
 }
 
 .food-point {
-  border-color: rgba(241, 196, 15, 0.5);
+  border-color: rgba(251, 191, 36, 0.30);
 }
 
 .food-point:hover {
-  border-color: rgba(241, 196, 15, 0.8);
-  box-shadow: 0 8px 25px rgba(241, 196, 15, 0.3);
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 6px 24px rgba(251, 191, 36, 0.15);
 }
 
 .parking {
-  border-color: rgba(52, 152, 219, 0.5);
+  border-color: rgba(34, 211, 238, 0.30);
 }
 
 .parking:hover {
-  border-color: rgba(52, 152, 219, 0.8);
-  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+  border-color: rgba(34, 211, 238, 0.55);
+  box-shadow: 0 6px 24px rgba(34, 211, 238, 0.15);
 }
 
+/* ── Контейнер карты ── */
 .map-container {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  padding: 2rem;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
   min-height: 600px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow);
 }
 
 .map-placeholder {
@@ -443,38 +469,38 @@ h1 {
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 500px;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  color: white;
+  min-height: 480px;
+  border: 1px dashed var(--border-hover);
+  border-radius: var(--radius);
+  color: var(--text-muted);
 }
 
 .map-placeholder p {
-  font-size: 1.2rem;
-  margin: 0.5rem 0;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  font-size: 1.05rem;
+  margin: 0.4rem 0;
+  color: var(--text);
 }
 
 .hint {
-  font-size: 0.9rem !important;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem !important;
+  color: var(--text-dim) !important;
 }
 
 /* ── SVG Floor Map ── */
 .svg-floor-map {
   position: relative;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: var(--radius);
   min-height: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface);
 }
 
 .svg-map-wrapper {
   transform-origin: center center;
-  transition: transform 0.25s ease;
+  transition: transform 0.25s var(--ease);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -489,15 +515,17 @@ h1 {
   max-width: 100%;
   height: auto;
   display: block;
-  border-radius: 12px;
-  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.35));
+  border-radius: var(--radius-sm);
+  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.4));
   user-select: none;
+  background: #fff;
 }
 
+/* ── Контролы зума ── */
 .zoom-controls {
   position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  bottom: 1.25rem;
+  right: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -508,22 +536,24 @@ h1 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(12px);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  color: white;
-  font-size: 1.4rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 1.25rem;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transition: background var(--transition), transform var(--transition), border-color var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .zoom-controls button:hover {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.1);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  transform: scale(1.08);
 }
 </style>

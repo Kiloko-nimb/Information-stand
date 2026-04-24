@@ -195,18 +195,18 @@ export default {
       const modal = document.createElement('div')
       modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:2.5rem;border-radius:25px;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-          <h2 style="color:white;margin-bottom:1.5rem;font-size:2rem;text-align:center;">📊 Проходные баллы 2025</h2>
-          <div style="background:rgba(255,255,255,0.15);padding:2rem;border-radius:20px;margin-bottom:1.5rem;">
-            <p style="color:rgba(255,255,255,0.95);line-height:1.8;font-size:1.1rem;text-align:center;">
+        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:600px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
+          <h2 style="color:#eceef5;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📊 Проходные баллы 2025</h2>
+          <div style="background:rgba(255,255,255,0.04);padding:1.75rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(255,255,255,0.08);">
+            <p style="color:rgba(236,238,245,0.88);line-height:1.7;font-size:1rem;text-align:center;margin:0;">
               Проходные баллы формируются по результатам конкурса аттестатов.<br><br>
-              <strong style="color:#ffd700;">Средний балл аттестата 2025:</strong><br>
+              <strong style="color:#fbbf24;">Средний балл аттестата 2025:</strong><br>
               Бюджетные места: от 3.8 до 4.5<br>
               Платные места: от 3.0<br><br>
-              <span style="font-size:0.95rem;opacity:0.9;">Точные проходные баллы будут известны после завершения приемной кампании</span>
+              <span style="font-size:0.9rem;color:rgba(236,238,245,0.55);">Точные проходные баллы будут известны после завершения приемной кампании</span>
             </p>
           </div>
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:1rem 2rem;background:rgba(255,255,255,0.25);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:15px;cursor:pointer;font-size:1.1rem;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">Закрыть</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -217,16 +217,16 @@ export default {
       const modal = document.createElement('div')
       modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:2.5rem;border-radius:25px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-          <h2 style="color:white;margin-bottom:2rem;font-size:2rem;text-align:center;">Специальности ККРИТ 2026</h2>
+        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
+          <h2 style="color:#eceef5;margin:0 0 1.75rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">Специальности ККРИТ 2026</h2>
 
-          <div style="background:rgba(255,255,255,0.15);padding:1.5rem;border-radius:20px;margin-bottom:1.5rem;">
-            <h3 style="color:#fff;margin-bottom:1rem;font-size:1.3rem;">📍 пр. Красноярский рабочий, 156</h3>
-            <div style="color:rgba(255,255,255,0.95);line-height:1.8;font-size:1rem;">
-              <strong style="color:#ffd700;">Бюджет:</strong><br>
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.15rem;font-weight:700;">📍 пр. Красноярский рабочий, 156</h3>
+            <div style="color:rgba(236,238,245,0.82);line-height:1.75;font-size:0.95rem;">
+              <strong style="color:#fbbf24;">Бюджет:</strong><br>
               • 38.02.01 Экономика и бухгалтерский учет (25 мест)<br>
               • 38.02.07 Банковское дело (25 мест)<br><br>
-              <strong style="color:#ffd700;">Платно:</strong><br>
+              <strong style="color:#fbbf24;">Платно:</strong><br>
               • 09.02.09 Веб-разработка (25 мест)<br>
               • 09.02.10 Разработка компьютерных игр, AR/VR (25 мест)<br>
               • 09.02.11 Разработка ПО (25 мест)<br>
@@ -234,20 +234,20 @@ export default {
             </div>
           </div>
 
-          <div style="background:rgba(255,255,255,0.15);padding:1.5rem;border-radius:20px;margin-bottom:1.5rem;">
-            <h3 style="color:#fff;margin-bottom:1rem;font-size:1.3rem;">📍 пр. Свободный, 67</h3>
-            <div style="color:rgba(255,255,255,0.95);line-height:1.8;font-size:1rem;">
-              <strong style="color:#ffd700;">Бюджет:</strong><br>
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.15rem;font-weight:700;">📍 пр. Свободный, 67</h3>
+            <div style="color:rgba(236,238,245,0.82);line-height:1.75;font-size:0.95rem;">
+              <strong style="color:#fbbf24;">Бюджет:</strong><br>
               • 09.02.01 Компьютерные системы и комплексы (50 мест)<br>
               • 09.02.06 Сетевое и системное администрирование (50 мест)<br>
               • 10.02.05 Информационная безопасность (25 мест)<br>
               • 11.02.16 Монтаж электронных приборов (50 мест)<br><br>
-              <strong style="color:#ffd700;">Платно:</strong><br>
+              <strong style="color:#fbbf24;">Платно:</strong><br>
               • 20.02.04 Пожарная безопасность (50 мест)
             </div>
           </div>
 
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:1rem;padding:1rem 2rem;background:rgba(255,255,255,0.25);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:15px;cursor:pointer;font-size:1.1rem;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">Закрыть</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:0.75rem;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -259,22 +259,22 @@ export default {
       const modal = document.createElement('div')
       modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);padding:2.5rem;border-radius:25px;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-          <h2 style="color:white;margin-bottom:1.5rem;font-size:2rem;text-align:center;">📱 Подать документы</h2>
-          <div style="background:rgba(255,255,255,0.15);padding:2rem;border-radius:20px;margin-bottom:1.5rem;text-align:center;">
-            <img src="${qr}" style="width:250px;height:250px;margin-bottom:1.5rem;"/>
-            <p style="color:white;font-size:1.1rem;line-height:1.6;margin-bottom:1rem;">
-              <strong style="color:#ffd700;">Прием документов:</strong><br>
+        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:600px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
+          <h2 style="color:#eceef5;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📱 Подать документы</h2>
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.5rem;text-align:center;border:1px solid rgba(255,255,255,0.08);">
+            <img src="${qr}" style="width:240px;height:240px;margin-bottom:1.25rem;border-radius:14px;background:#fff;padding:8px;"/>
+            <p style="color:rgba(236,238,245,0.88);font-size:1rem;line-height:1.7;margin:0;">
+              <strong style="color:#fbbf24;">Прием документов:</strong><br>
               с 15 июня по 14 августа 2026<br><br>
-              <strong style="color:#ffd700;">Адрес приемной комиссии:</strong><br>
+              <strong style="color:#fbbf24;">Адрес приемной комиссии:</strong><br>
               пр. Свободный, 67<br><br>
-              <strong style="color:#ffd700;">Телефоны:</strong><br>
+              <strong style="color:#fbbf24;">Телефоны:</strong><br>
               8-929-332-29-43<br>
               8-933-327-02-09<br>
               8-391-298-46-46
             </p>
           </div>
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:1rem 2rem;background:rgba(255,255,255,0.25);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:15px;cursor:pointer;font-size:1.1rem;font-weight:600;transition:all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">Закрыть</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -316,241 +316,382 @@ export default {
 }
 </script>
 
+
 <style scoped>
 .home {
-  text-align: center;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 1rem;
   position: relative;
-}
-
-.top-section,
-.middle-section,
-.bottom-section {
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-bottom: 5rem;
 }
 
 .top-section {
-  opacity: 1;
-  transform: translateY(0);
+  text-align: center;
+  padding: 3rem 0 2rem;
+  transition: all 0.6s var(--ease);
 }
 
 .middle-section {
   min-height: 0;
-  transition: min-height 0.8s ease;
+  transition: min-height 0.6s var(--ease);
 }
 
 .bottom-section {
   transform: translateY(0);
 }
 
-/* Виджет времени в верхней секции (скрыт по умолчанию) */
-.datetime-widget-top {
-  display: none;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 30px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  margin: 2rem auto;
-  max-width: 400px;
-  color: white;
-  text-align: center;
-}
-
+/* ── Заголовок ── */
 h1 {
-  font-size: 2.8rem;
-  color: white;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  margin-bottom: 1rem;
-  font-weight: 700;
-  transition: all 0.8s ease;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #ffffff 0%, #c4c6d8 50%, #8b7bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .subtitle {
-  font-size: 1.3rem;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  margin-bottom: 3rem;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  color: var(--text-muted);
+  max-width: 640px;
+  margin: 0 auto 2rem;
   font-weight: 500;
-  transition: all 0.8s ease;
+  line-height: 1.5;
 }
 
+/* ── Единая карточка / «стекло» ── */
+.widget,
+.contact-info,
+.fun-facts-widget,
+.datetime-widget-top {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.widget:hover,
+.contact-info:hover,
+.fun-facts-widget:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+}
+
+/* ── Контакты ── */
 .contact-info {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 30px;
-  padding: 3.5rem;
-  margin-bottom: 3rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 380px;
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.contact-info:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.2);
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow);
 }
 
 .contact-info h2 {
-  font-size: 2rem;
-  color: white;
-  margin-bottom: 2rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text);
+}
+
+.contact-info h2::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-pill);
 }
 
 .contact-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  gap: 1.25rem;
   text-align: left;
 }
 
 .contact-item {
   display: flex;
-  gap: 1.2rem;
+  gap: 1rem;
   align-items: flex-start;
-  padding: 1.2rem;
-  border-radius: 8px;
-  transition: background 0.3s;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: background var(--transition), border-color var(--transition);
 }
 
 .contact-item:hover {
-  background: rgba(102, 126, 234, 0.05);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
 }
 
 .contact-item .icon {
-  font-size: 3rem;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  font-size: 2rem;
+  flex-shrink: 0;
 }
 
 .contact-item strong {
   display: block;
-  color: white;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
 }
 
 .contact-item p {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-muted);
   margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.6;
-}
-
-.contact-item a {
-  color: #3498db;
-  text-decoration: none;
-}
-
-.contact-item a:hover {
-  text-decoration: underline;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .additional-info {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.8) !important;
-  font-style: italic;
+  font-size: 0.85rem !important;
+  color: var(--text-dim) !important;
 }
 
+/* ── QR-коды ── */
 .qr-codes {
   display: flex;
   flex-direction: row;
-  gap: 2rem;
-  margin-top: 1.2rem;
-  justify-content: flex-start;
-  align-items: flex-start;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
 }
 
 .qr-item {
   text-align: center;
-  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .qr-code {
-  width: 130px;
-  height: 130px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 18px;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-sm);
   padding: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition);
 }
 
 .qr-code:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transform: scale(1.04);
 }
 
 .qr-label {
-  font-size: 0.9rem;
-  margin-top: 0.6rem;
-  color: white !important;
-  font-weight: 600;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-weight: 500;
   line-height: 1.3;
   max-width: 130px;
 }
 
-.qr-hint {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.95) !important;
-  margin-top: 1rem;
-  font-style: normal;
+/* ── Нижние виджеты ── */
+.bottom-widgets {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.widget {
+  padding: 1.75rem;
+  box-shadow: var(--shadow);
+}
+
+.datetime-widget {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(139, 123, 255, 0.08), rgba(34, 211, 238, 0.06));
+}
+
+.time {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.date {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
   font-weight: 500;
 }
 
+.datetime-widget-top {
+  display: none;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 420px;
+  text-align: center;
+}
+
+/* ── Абитуриент-виджет ── */
+.applicant-widget {
+  background: linear-gradient(135deg, rgba(139, 123, 255, 0.12), rgba(244, 114, 182, 0.08));
+  border-color: rgba(139, 123, 255, 0.25);
+}
+
+.applicant-widget h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+
+.countdown-timer {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.countdown-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.countdown-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--accent-gradient-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.applicant-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.applicant-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.applicant-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  transform: translateX(4px);
+}
+
+.btn-icon {
+  font-size: 1.5rem;
+}
+
+.btn-text {
+  flex: 1;
+}
+
+/* ── Fun facts ── */
+.fun-facts-widget {
+  padding: 1.25rem 1.75rem;
+  margin: 1.5rem 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.fun-fact {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  animation: fadeIn 0.6s var(--ease);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fact-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.fact-text {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.home.accessibility-active .fun-facts-widget {
+  display: none;
+}
+
+/* ── Главные карточки / навигация ── */
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
   margin-top: 2rem;
-  margin-bottom: 3rem;
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateY(0);
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 35px;
-  padding: 3rem 2.5rem;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   position: relative;
+  padding: 2.5rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow);
   overflow: hidden;
-  min-height: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  min-height: 260px;
   justify-content: center;
 }
 
 .feature-card::before {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 8px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.8) 100%);
-  transform: scaleX(0);
-  transition: transform 0.4s;
+  inset: 0;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+  mix-blend-mode: overlay;
 }
 
 .feature-card::after {
@@ -559,411 +700,167 @@ h1 {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.feature-card:hover::before {
-  transform: scaleX(1);
-}
-
-.feature-card:hover::after {
-  opacity: 1;
+  height: 2px;
+  background: var(--accent-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-slow);
 }
 
 .feature-card:hover {
-  transform: translateY(-12px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-4px);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-lg), var(--accent-glow);
+}
+
+.feature-card:hover::before {
+  opacity: 0.05;
+}
+
+.feature-card:hover::after {
+  transform: scaleX(1);
 }
 
 .feature-icon {
-  font-size: 5.5rem;
-  margin-bottom: 1.2rem;
-  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2));
-  transition: transform 0.4s;
-  z-index: 1;
+  font-size: 4rem;
+  margin-bottom: 1.25rem;
+  transition: transform var(--transition-slow);
+  filter: drop-shadow(0 4px 12px rgba(139, 123, 255, 0.3));
 }
 
 .feature-card:hover .feature-icon {
-  transform: scale(1.15) rotate(5deg);
+  transform: scale(1.1) rotate(-4deg);
 }
 
 .feature-card h2 {
-  font-size: 2.2rem;
-  margin-bottom: 0.8rem;
-  color: white;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
   font-weight: 700;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  z-index: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+  color: var(--text);
 }
 
 .feature-card p {
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 1.15rem;
-  line-height: 1.6;
-  text-shadow: 0 1px 5px rgba(0,0,0,0.1);
-  z-index: 1;
-}
-
-.bottom-widgets {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 2rem;
-  margin: 3rem 0;
-}
-
-.widget {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 30px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s;
-}
-
-.widget:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.datetime-widget {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.time {
-  font-size: 3.8rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.date {
-  font-size: 1.3rem;
-  opacity: 0.95;
-  text-transform: capitalize;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.applicant-widget {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
-}
-
-.applicant-widget h3 {
-  font-size: 1.8rem;
-  color: white;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  font-weight: 700;
-}
-
-.countdown-timer {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.countdown-label {
+  color: var(--text-muted);
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 0.8rem;
-  font-weight: 500;
+  line-height: 1.5;
+  max-width: 280px;
 }
 
-.countdown-value {
-  font-size: 3rem;
-  font-weight: 800;
-  color: white;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.applicant-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.applicant-btn {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.2rem 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 15px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 1.05rem;
-  font-weight: 600;
-  text-align: left;
-}
-
-.applicant-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: translateX(8px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.btn-icon {
-  font-size: 2rem;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
-}
-
-.btn-text {
-  flex: 1;
-}
-
-.fun-facts-widget {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  padding: 1.5rem 2rem;
-  margin: 2rem 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  transition: all 0.5s ease;
-}
-
-.fun-fact {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  animation: fadeIn 0.8s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fact-icon {
-  font-size: 3rem;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
-  flex-shrink: 0;
-}
-
-.fact-text {
-  font-size: 1.15rem;
-  color: white;
-  line-height: 1.6;
-  font-weight: 500;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-/* Скрываем виджет с фактами в режиме доступности */
-.home.accessibility-active .fun-facts-widget {
-  display: none;
-}
-
+/* ── Ticker (если используется) ── */
 .ticker {
-  background: rgba(44, 62, 80, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 1.2rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 1rem 0;
   overflow: hidden;
   margin: 2rem 0;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius);
 }
 
 .ticker-content {
   display: inline-block;
   white-space: nowrap;
   animation: scroll 30s linear infinite;
-  font-size: 1.15rem;
+  font-size: 1rem;
   padding-left: 100%;
   font-weight: 500;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  color: var(--text-muted);
 }
 
 @keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
+/* ── Плавающая кнопка доступности ── */
 .accessibility-button {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  width: 75px;
-  height: 75px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  font-size: 2.8rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 1.75rem;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition-slow), background var(--transition), box-shadow var(--transition);
   z-index: 1000;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .accessibility-button:hover {
-  transform: scale(1.15) rotate(10deg);
-  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .accessibility-button.active {
-  background: rgba(39, 174, 96, 0.3);
-  border-color: rgba(39, 174, 96, 0.6);
-  box-shadow: 0 8px 32px rgba(39, 174, 96, 0.4);
-}
-
-.accessibility-button.active:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--success-soft);
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: var(--shadow), 0 0 24px rgba(52, 211, 153, 0.3);
 }
 
 /* ========== РЕЖИМ ДОСТУПНОСТИ ========== */
+.home.accessibility-active .top-section { order: 1; margin-bottom: 1.5rem; padding-top: 1.5rem; }
+.home.accessibility-active .datetime-widget-top { display: block; animation: slideDown 0.6s var(--ease); }
+.home.accessibility-active h1 { font-size: clamp(1.75rem, 3vw, 2.2rem); margin-bottom: 0.5rem; }
+.home.accessibility-active .subtitle { font-size: 1rem; margin-bottom: 1rem; }
 
-/* Верхняя секция - зона чтения */
-.home.accessibility-active .top-section {
-  order: 1;
-  margin-bottom: 2rem;
-}
-
-.home.accessibility-active .datetime-widget-top {
-  display: block;
-  animation: slideDown 0.8s ease;
-}
-
-.home.accessibility-active h1 {
-  font-size: 2.2rem;
-  margin-bottom: 0.8rem;
-}
-
-.home.accessibility-active .subtitle {
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Средняя секция - декоративное пространство */
 .home.accessibility-active .middle-section {
   order: 2;
-  min-height: 15vh;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 70%);
+  min-height: 12vh;
+  background: radial-gradient(ellipse at center, rgba(139,123,255,0.08) 0%, transparent 70%);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Нижняя секция - зона действий */
-.home.accessibility-active .bottom-section {
-  order: 3;
-  animation: slideUp 0.8s ease;
-}
+.home.accessibility-active .bottom-section { order: 3; animation: slideUp 0.6s var(--ease); }
+.home.accessibility-active .bottom-widgets { display: none; }
+.home.accessibility-active .ticker { display: none; }
 
-/* Скрываем виджеты времени и новостей из нижней секции */
-.home.accessibility-active .bottom-widgets {
-  display: none;
-}
-
-/* Скрываем бегущую строку */
-.home.accessibility-active .ticker {
-  display: none;
-}
-
-/* Контакты с QR-кодами опускаются вниз */
 .home.accessibility-active .contact-info {
   order: 1;
-  margin-bottom: 2rem;
-  padding: 2rem;
-  min-height: auto;
-  animation: slideUp 0.8s ease;
+  margin-bottom: 1.5rem;
+  padding: 1.75rem;
+  animation: slideUp 0.6s var(--ease);
 }
 
 .home.accessibility-active .contact-info h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1.2rem;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
 }
 
-.home.accessibility-active .contact-grid {
-  gap: 1.2rem;
-}
+.home.accessibility-active .contact-grid { gap: 1rem; }
+.home.accessibility-active .contact-item { padding: 0.9rem; }
+.home.accessibility-active .features { order: 2; margin-top: 0; margin-bottom: 6rem; gap: 1.25rem; }
+.home.accessibility-active .feature-card { min-height: 220px; padding: 2rem 1.5rem; }
+.home.accessibility-active .feature-icon { font-size: 3.25rem; }
+.home.accessibility-active .feature-card h2 { font-size: 1.5rem; }
+.home.accessibility-active .feature-card p { font-size: 0.95rem; }
 
-.home.accessibility-active .contact-item {
-  padding: 0.8rem;
-}
-
-/* Главные кнопки остаются внизу */
-.home.accessibility-active .features {
-  order: 2;
-  margin-top: 0;
-  margin-bottom: 6rem;
-  gap: 1.5rem;
-}
-
-.home.accessibility-active .feature-card {
-  min-height: 260px;
-  padding: 2.5rem 2rem;
-}
-
-.home.accessibility-active .feature-icon {
-  font-size: 5rem;
-}
-
-.home.accessibility-active .feature-card h2 {
-  font-size: 2rem;
-}
-
-.home.accessibility-active .feature-card p {
-  font-size: 1.05rem;
-}
-
-/* Анимации */
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .bottom-widgets { grid-template-columns: 1fr; }
+  .contact-info { padding: 1.75rem; }
 }
 </style>

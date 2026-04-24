@@ -342,80 +342,89 @@ export default {
 }
 </script>
 
+
 <style scoped>
 .schedule {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem 0 6rem;
   position: relative;
 }
 
+/* ── Плавающая кнопка «На главную» ── */
 .back-button {
   position: fixed;
   bottom: 2rem;
   left: 2rem;
-  padding: 1.2rem 2rem;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  font-size: 1.3rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
   z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .back-button:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.35);
+  transform: translateX(-4px);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
 }
 
+/* ── Заголовок ── */
 h1 {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: white;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.5rem;
+  color: var(--text);
 }
 
+/* ── Карусель дат ── */
 .date-carousel {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 1.5rem;
-  border-radius: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 
 .carousel-arrow {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  font-size: 2rem;
-  width: 50px;
-  height: 50px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.5rem;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
 .carousel-arrow:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: scale(1.1);
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  transform: scale(1.08);
 }
 
 .date-cards-container {
@@ -425,10 +434,10 @@ h1 {
 
 .date-cards {
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
   scrollbar-width: none;
 }
 
@@ -437,656 +446,535 @@ h1 {
 }
 
 .date-card {
-  min-width: 120px;
-  padding: 1.2rem 1rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+  min-width: 110px;
+  padding: 0.9rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  color: white;
+  gap: 0.2rem;
+  color: var(--text);
   flex-shrink: 0;
 }
 
 .date-card:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
 }
 
 .date-card.active {
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.5) 0%, rgba(41, 128, 185, 0.5) 100%);
-  border-color: rgba(52, 152, 219, 0.8);
-  box-shadow: 0 8px 30px rgba(52, 152, 219, 0.4);
-  transform: scale(1.05);
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #0b0d1c;
+  box-shadow: var(--accent-glow);
 }
 
 .date-day {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  opacity: 0.9;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.date-card.active .date-day {
+  color: rgba(11, 13, 28, 0.72);
 }
 
 .date-number {
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .date-month {
-  font-size: 0.85rem;
-  opacity: 0.8;
+  font-size: 0.75rem;
+  color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
+.date-card.active .date-month {
+  color: rgba(11, 13, 28, 0.68);
+}
+
+/* ── Панель поиска ── */
 .search-panel {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 2rem;
-  border-radius: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
   margin-bottom: 2rem;
 }
 
 .search-tabs {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  margin-bottom: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .search-tabs button {
   flex: 1;
-  padding: 1rem;
-  border: 2px solid #ecf0f1;
-  background: white;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: calc(var(--radius) - 4px);
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition);
 }
 
 .search-tabs button.active {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
+  background: var(--accent-gradient);
+  color: #0b0d1c;
+  box-shadow: var(--shadow-sm);
 }
 
 .search-tabs button:hover:not(.active) {
-  border-color: #3498db;
-  background: #f8f9fa;
+  color: var(--text);
+  background: var(--surface-hover);
 }
 
 .search-input {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .search-input input {
   flex: 1;
-  padding: 1rem;
-  border: 2px solid #ecf0f1;
-  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
   font-size: 1rem;
-  transition: border-color 0.3s;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.search-input input::placeholder {
+  color: var(--text-dim);
 }
 
 .search-input input:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--accent-border);
+  background: var(--surface-hover);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .search-input button {
-  padding: 1rem 2rem;
-  background: #3498db;
-  color: white;
+  padding: 0.9rem 1.75rem;
+  background: var(--accent-gradient);
+  color: #0b0d1c;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 500;
-  transition: background 0.3s;
+  font-weight: 700;
+  transition: transform var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-input button:hover {
-  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow), var(--accent-glow);
 }
 
-.loading, .no-results {
+/* ── Список групп / состояния ── */
+.loading,
+.no-results {
   text-align: center;
   padding: 3rem;
-  color: white;
-  font-size: 1.2rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 
 .groups-list {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 2rem;
-  border-radius: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  padding: 1.75rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 2rem;
 }
 
 .groups-list h2 {
-  margin: 0 0 1.5rem 0;
-  color: white;
-  font-size: 1.5rem;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  margin: 0 0 1.25rem 0;
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.groups-list h2::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-pill);
 }
 
 .groups-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
 }
 
 .group-card {
-  padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 0.85rem 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), color var(--transition);
+  font-family: var(--font-display);
 }
 
 .group-card:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  color: var(--text);
 }
 
+/* ── Результаты расписания ── */
 .schedule-results {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
 .schedule-header {
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, rgba(139, 123, 255, 0.15), rgba(34, 211, 238, 0.10));
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .schedule-header h2 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .schedule-date {
-  font-size: 1rem;
-  opacity: 0.9;
+  font-size: 0.95rem;
+  color: var(--text-muted);
   text-transform: capitalize;
+  font-weight: 500;
 }
 
+/* ── Легенда ── */
 .lesson-types-legend {
   display: flex;
   justify-content: center;
-  gap: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  margin: 1.5rem 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin: 1.25rem 1.5rem 0;
+  border: 1px solid var(--border);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  color: white;
-  font-size: 1rem;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
 .legend-badge {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 1px var(--border);
 }
 
 .legend-badge.badge-lecture {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
 }
 
 .legend-badge.badge-practice {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
 }
 
 .legend-badge.badge-lab {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
 }
 
+/* ── Timeline ── */
 .timeline-container {
-  padding: 2rem;
+  padding: 1.5rem;
   position: relative;
 }
 
 .timeline-item {
   display: flex;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
   position: relative;
-  transition: all 0.3s;
 }
 
 .timeline-item:last-child .timeline-line {
   display: none;
 }
 
-.timeline-item.current-lesson {
-  animation: highlight 2s ease-in-out infinite;
-}
-
-@keyframes highlight {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-}
-
 .timeline-marker {
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
   flex-shrink: 0;
 }
 
 .lesson-badge {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
   font-weight: 800;
-  color: white;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-  border: 4px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  box-shadow: 0 6px 20px -4px rgba(139, 123, 255, 0.5);
   z-index: 2;
-  transition: all 0.3s;
+  transition: transform var(--transition);
 }
 
-/* Цветовая кодировка по типам занятий */
 .lesson-badge.badge-lecture {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
+  box-shadow: 0 6px 20px -4px rgba(139, 123, 255, 0.5);
 }
 
 .lesson-badge.badge-practice {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+  background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+  box-shadow: 0 6px 20px -4px rgba(244, 114, 182, 0.5);
 }
 
 .lesson-badge.badge-lab {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  box-shadow: 0 4px 20px rgba(79, 172, 254, 0.4);
+  background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
+  box-shadow: 0 6px 20px -4px rgba(34, 211, 238, 0.5);
 }
 
 .timeline-item.lesson-lecture .timeline-line {
-  background: linear-gradient(180deg, rgba(102, 126, 234, 0.3) 0%, rgba(102, 126, 234, 0.1) 100%);
+  background: linear-gradient(180deg, rgba(139, 123, 255, 0.4), transparent);
 }
 
 .timeline-item.lesson-practice .timeline-line {
-  background: linear-gradient(180deg, rgba(245, 87, 108, 0.3) 0%, rgba(245, 87, 108, 0.1) 100%);
+  background: linear-gradient(180deg, rgba(244, 114, 182, 0.4), transparent);
 }
 
 .timeline-item.lesson-lab .timeline-line {
-  background: linear-gradient(180deg, rgba(79, 172, 254, 0.3) 0%, rgba(79, 172, 254, 0.1) 100%);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.4), transparent);
 }
 
 .timeline-item.current-lesson .lesson-badge {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  box-shadow: 0 4px 30px rgba(245, 87, 108, 0.6);
-  animation: pulse-badge 1.5s ease-in-out infinite;
+  animation: pulse-badge 1.8s ease-in-out infinite;
 }
 
 @keyframes pulse-badge {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%, 100% { transform: scale(1); box-shadow: 0 6px 20px -4px rgba(244, 114, 182, 0.6); }
+  50% { transform: scale(1.08); box-shadow: 0 8px 30px -4px rgba(244, 114, 182, 0.9); }
 }
 
 .timeline-line {
-  width: 4px;
+  width: 3px;
   flex: 1;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(180deg, var(--border-hover), transparent);
   margin-top: 0.5rem;
-  min-height: 80px;
-  border-radius: 2px;
+  min-height: 72px;
+  border-radius: var(--radius-pill);
 }
 
 .timeline-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .lesson-time {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.1rem;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.time-start, .time-end {
-  font-size: 1.3rem;
+.time-start,
+.time-end {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
   font-weight: 700;
+  color: var(--text);
 }
 
 .time-separator {
-  opacity: 0.6;
-  margin: 0 0.3rem;
+  opacity: 0.5;
+  margin: 0 0.2rem;
 }
 
 .lesson-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  padding: 1.5rem;
-  transition: all 0.3s;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
 }
 
 .lesson-card:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateX(10px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateX(4px);
 }
 
 .timeline-item.current-lesson .lesson-card {
-  background: rgba(245, 87, 108, 0.2);
-  border-color: rgba(245, 87, 108, 0.5);
-  box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
+  background: rgba(244, 114, 182, 0.08);
+  border-color: rgba(244, 114, 182, 0.35);
+  box-shadow: 0 0 24px rgba(244, 114, 182, 0.15);
 }
 
 .lesson-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
-  gap: 1rem;
+  margin-bottom: 0.9rem;
+  gap: 0.75rem;
 }
 
 .lesson-subject {
-  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
   font-weight: 700;
-  color: white;
+  color: var(--text);
   margin: 0;
   line-height: 1.3;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  letter-spacing: -0.01em;
 }
 
 .lesson-type {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.4rem 0.8rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: white;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   white-space: nowrap;
-  transition: all 0.3s;
+  border: 1px solid transparent;
 }
 
 .lesson-type.type-lecture {
-  background: rgba(102, 126, 234, 0.3);
-  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: rgba(139, 123, 255, 0.15);
+  border-color: rgba(139, 123, 255, 0.35);
+  color: #b4a8ff;
 }
 
 .lesson-type.type-practice {
-  background: rgba(245, 87, 108, 0.3);
-  border: 1px solid rgba(245, 87, 108, 0.5);
+  background: rgba(244, 114, 182, 0.15);
+  border-color: rgba(244, 114, 182, 0.35);
+  color: #fbc0dc;
 }
 
 .lesson-type.type-lab {
-  background: rgba(79, 172, 254, 0.3);
-  border: 1px solid rgba(79, 172, 254, 0.5);
+  background: rgba(34, 211, 238, 0.15);
+  border-color: rgba(34, 211, 238, 0.35);
+  color: #7ee4f5;
 }
 
 .lesson-details {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.6rem;
 }
 
 .lesson-detail {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  color: white;
+  gap: 0.6rem;
+  color: var(--text-muted);
 }
 
 .detail-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
 .detail-text {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 500;
+  color: var(--text);
 }
 
 .show-on-map-btn {
   margin-left: auto;
-  padding: 0.5rem 1rem;
-  background: rgba(52, 152, 219, 0.3);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(52, 152, 219, 0.5);
-  border-radius: 10px;
-  color: white;
-  font-size: 0.9rem;
+  padding: 0.4rem 0.9rem;
+  background: var(--info-soft);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: var(--radius-pill);
+  color: #7ee4f5;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background var(--transition), transform var(--transition);
 }
 
 .show-on-map-btn:hover {
-  background: rgba(52, 152, 219, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+  background: rgba(34, 211, 238, 0.25);
+  transform: translateY(-1px);
 }
 
-.schedule-grid {
-  display: flex;
-  flex-direction: column;
-}
-
-.schedule-row {
-  display: grid;
-  grid-template-columns: 140px 60px 1fr 250px 100px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: background-color 0.2s;
-}
-
-.schedule-row:hover:not(.header-row) {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.schedule-row.current-lesson {
-  background-color: rgba(52, 152, 219, 0.2);
-  border-left: 4px solid #3498db;
-}
-
-.header-row {
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: 600;
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.cell {
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.cell:last-child {
-  border-right: none;
-}
-
-.time-cell {
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.time-range {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.time-start, .time-end {
-  font-weight: 600;
-  color: white;
-  font-size: 0.95rem;
-}
-
-.time-separator {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.8rem;
-}
-
-.lesson-cell {
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.lesson-number {
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: white;
-  background: rgba(255, 255, 255, 0.2);
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.subject-cell {
-  padding-left: 1.5rem;
-}
-
-.subject-name {
-  font-weight: 500;
-  color: white;
-  line-height: 1.4;
-}
-
-.teacher-cell {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.teacher-name {
-  font-size: 0.95rem;
-}
-
-.room-cell {
-  justify-content: center;
-  font-weight: 600;
-  color: #ff6b6b;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.room-number {
-  background: rgba(255, 107, 107, 0.2);
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  color: #ff6b6b;
-}
-
-@media (max-width: 1200px) {
-  .schedule-row {
-    grid-template-columns: 120px 50px 1fr 200px 80px;
-  }
-
-  .cell {
-    padding: 0.8rem;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .schedule-row {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    padding: 1rem;
-  }
-
-  .cell {
-    border-right: none;
-    border-bottom: 1px solid #ecf0f1;
-    padding: 0.5rem;
-  }
-
-  .header-row {
-    display: none;
-  }
-
-  .time-cell::before {
-    content: 'Время: ';
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-
-  .lesson-cell::before {
-    content: 'Пара: ';
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-
-  .teacher-cell::before {
-    content: 'Преподаватель: ';
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-
-  .room-cell::before {
-    content: 'Кабинет: ';
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
+@media (max-width: 720px) {
+  .timeline-container { padding: 1rem; }
+  .timeline-item { gap: 1rem; }
+  .lesson-badge { width: 44px; height: 44px; font-size: 1.1rem; }
+  .search-input { flex-direction: column; }
+  .lesson-header { flex-direction: column; }
 }
 </style>

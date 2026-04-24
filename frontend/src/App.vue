@@ -2,13 +2,17 @@
   <div id="app">
     <header class="app-header">
       <div class="header-content">
-        <router-link to="/" class="logo-link">
+        <router-link to="/" class="logo-link" aria-label="На главную">
           <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
         </router-link>
-        <h1>ККРИТ - Интерактивный стенд</h1>
+        <div class="header-text">
+          <span class="header-eyebrow">Интерактивный стенд</span>
+          <h1>ККРИТ</h1>
+        </div>
       </div>
       <div v-if="!isOnline" class="offline-indicator">
-        📡 Offline режим
+        <span class="offline-dot"></span>
+        Offline
       </div>
     </header>
 
@@ -95,92 +99,119 @@ export default {
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-#app {
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .app-header {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 1.5rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  padding: 1rem 2rem;
+  background: rgba(10, 13, 28, 0.72);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid var(--border);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .logo-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  text-decoration: none;
-  cursor: pointer;
-  padding: 8px;
-  margin: -8px;
-  border-radius: 12px;
-  transition: all 0.3s;
-  min-width: 80px;
-  min-height: 80px;
   justify-content: center;
+  text-decoration: none;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.96);
+  transition: transform var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow-xs);
 }
 
 .logo-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .logo-link:active {
-  transform: scale(0.95);
+  transform: translateY(0) scale(0.98);
 }
 
 .logo {
-  height: 60px;
+  height: 44px;
   width: auto;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
-  background: rgba(255, 255, 255, 0.95);
-  padding: 8px;
-  border-radius: 12px;
-  transition: transform 0.3s;
+  display: block;
 }
 
-.logo:hover {
-  transform: scale(1.05);
+.header-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.header-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .app-header h1 {
-  text-shadow: 0 2px 15px rgba(0,0,0,0.3);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .offline-indicator {
-  background: rgba(231, 76, 60, 0.3);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(231, 76, 60, 0.5);
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: var(--radius-pill);
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 10px var(--danger);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
 }
 
 .app-content {
   flex: 1;
   padding: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+  .app-content {
+    padding: 1rem;
+  }
 }
 </style>
