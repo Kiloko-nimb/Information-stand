@@ -106,7 +106,7 @@
         >
           <div class="timeline-marker">
             <div class="lesson-badge" :class="'badge-' + getLessonTypeClass(item.lesson_type)">
-              {{ item.lesson_number }}
+              {{ formatLessonNumber(item.lesson_number) }}
             </div>
             <div class="timeline-line"></div>
           </div>
@@ -235,6 +235,13 @@ export default {
       search()
     }
 
+    const toDateParam = (d) => {
+      const yyyy = d.getFullYear()
+      const mm = String(d.getMonth() + 1).padStart(2, '0')
+      const dd = String(d.getDate()).padStart(2, '0')
+      return `${yyyy}-${mm}-${dd}`
+    }
+
     const search = async () => {
       if (!searchQuery.value.trim()) return
 
@@ -246,14 +253,25 @@ export default {
           ? `/schedule/group/${searchQuery.value}`
           : `/schedule/teacher/${searchQuery.value}`
 
-        const response = await api.get(endpoint)
+        const response = await api.get(endpoint, {
+          params: { date: toDateParam(selectedDate.value) }
+        })
         scheduleData.value = response.data.sort((a, b) => a.lesson_number - b.lesson_number)
       } catch (error) {
-        console.error('Ошибка поиска:', error)
-        scheduleData.value = []
+        if (error.response && error.response.status === 404) {
+          scheduleData.value = []
+        } else {
+          console.error('Ошибка поиска:', error)
+          scheduleData.value = []
+        }
       } finally {
         loading.value = false
       }
+    }
+
+    const formatLessonNumber = (n) => {
+      if (n === 0 || n === '0') return 'КЧ'
+      return String(n)
     }
 
     const formatTime = (timeStr) => {
@@ -336,7 +354,8 @@ export default {
       nextDay,
       showRoomOnMap,
       getLessonTypeClass,
-      formatLessonType
+      formatLessonType,
+      formatLessonNumber
     }
   }
 }

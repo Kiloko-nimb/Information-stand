@@ -1,6 +1,10 @@
 """
 Импорт расписания из Excel (.xlsx) или PDF (.pdf) в БД.
 
+Единый источник правды для тайминга пар — ``app.core.bell_schedule``.
+Модуль сам не знает, во сколько начинаются пары: он берёт тайминги из
+расписания звонков по дню недели (``schedule_date.weekday()+1``).
+
 Публичное API:
 - ``import_schedule_from_excel(file_path, date_str)`` — импорт из Excel.
 - ``import_schedule_from_pdf(file_path, date_str)`` — импорт из PDF.
@@ -9,209 +13,275 @@
 """
 import argparse
 import os
-from datetime import date, datetime, time
+import re
+from datetime import date, datetime
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import pdfplumber
 
+from app.core.bell_schedule import PairTiming, get_bell_schedule
 from app.core.database import SessionLocal
 from app.models.schedule import Schedule
 
-# Расписание звонков для понедельника
-MONDAY_SCHEDULE = {
-    0: ("08:00", "08:10"),  # Линейка
-    1: ("08:10", "08:55"),  # Классный час
-    2: ("09:00", "09:45"),  # 1 пара - слот 1
-    3: ("09:50", "10:35"),  # 1 пара - слот 2
-    4: ("10:45", "11:30"),  # 2 пара - слот 1
-    5: ("11:35", "12:20"),  # 2 пара - слот 2
-    # Обед 12:20-13:00
-    6: ("13:00", "13:45"),  # 3 пара - слот 1
-    7: ("13:50", "14:35"),  # 3 пара - слот 2
-    8: ("14:45", "15:30"),  # 4 пара - слот 1
-    9: ("15:35", "16:20"),  # 4 пара - слот 2
-    10: ("16:30", "17:15"), # 5 пара - слот 1
-    11: ("17:20", "18:05"), # 5 пара - слот 2
-    12: ("18:15", "19:00"), # 6 пара - слот 1
-    13: ("19:05", "19:50"), # 6 пара - слот 2
-    14: ("20:00", "20:45"), # 7 пара - слот 1
-    15: ("20:50", "21:35"), # 7 пара - слот 2
-}
 
-# Расписание звонков для вторника-субботы
-REGULAR_SCHEDULE = {
-    1: ("08:00", "08:45"),  # 1 пара - слот 1
-    2: ("08:50", "09:35"),  # 1 пара - слот 2
-    3: ("09:45", "10:30"),  # 2 пара - слот 1
-    4: ("10:35", "11:20"),  # 2 пара - слот 2
-    # Обед 11:20-12:00
-    5: ("12:00", "12:45"),  # 3 пара - слот 1
-    6: ("12:50", "13:35"),  # 3 пара - слот 2
-    7: ("13:45", "14:30"),  # 4 пара - слот 1
-    8: ("14:35", "15:20"),  # 4 пара - слот 2
-    9: ("15:30", "16:15"),  # 5 пара - слот 1
-    10: ("16:20", "17:05"), # 5 пара - слот 2
-    11: ("17:15", "18:00"), # 6 пара - слот 1
-    12: ("18:05", "18:50"), # 6 пара - слот 2
-    13: ("19:00", "19:45"), # 7 пара - слот 1
-    14: ("19:50", "20:35"), # 7 пара - слот 2
-}
+# "Фамилия И.О." или "Фамилия-Двойная И.О." в конце строки.
+# Допускаем пробел или его отсутствие между инициалами и точками.
+_TEACHER_RE = re.compile(
+    r"""
+    (?P<teacher>
+        [А-ЯЁ][а-яёА-ЯЁ\-]+   # Фамилия (возможна двойная через дефис)
+        \s+
+        [А-ЯЁ]\.\s*[А-ЯЁ]\.?  # И.О. или И. О.
+    )
+    \s*$
+    """,
+    re.VERBOSE,
+)
 
-# Время пар для PDF-файла (одна пара = один номер)
-PDF_LESSON_TIMES = {
-    1: (time(8, 10), time(8, 55)),
-    2: (time(9, 0), time(9, 45)),
-    3: (time(9, 50), time(10, 35)),
-    4: (time(10, 45), time(11, 30)),
-    5: (time(11, 35), time(12, 20)),
-    6: (time(13, 0), time(13, 45)),
-    7: (time(13, 50), time(14, 35)),
-}
+# Маркеры типа занятия. Если в тексте встречается один из них, выставляем
+# lesson_type. Сначала проверяем более специфичные (лаб/практ), потом лекцию.
+_LESSON_TYPE_MARKERS: Tuple[Tuple[str, str], ...] = (
+    ("лаборатор", "Лабораторная"),
+    (" лр ", "Лабораторная"),
+    ("практик", "Практика"),
+    (" пр ", "Практика"),
+    ("лекци", "Лекция"),
+    (" лк ", "Лекция"),
+)
 
 
-def get_time_slots_for_day(day_of_week: int) -> dict:
-    """Возвращает расписание звонков в зависимости от дня недели"""
-    return MONDAY_SCHEDULE if day_of_week == 1 else REGULAR_SCHEDULE
-
-
-def parse_time(time_str):
-    """Парсинг времени из строки"""
-    try:
-        return datetime.strptime(time_str, "%H:%M").time()
-    except Exception:
+def _clean(value) -> Optional[str]:
+    """Нормализовать содержимое ячейки: убрать NaN, пробелы, многострочность."""
+    if value is None:
         return None
-
-
-def clean_text(text):
-    """Очистка текста от лишних символов"""
-    if pd.isna(text) or text == '':
+    if isinstance(value, float) and pd.isna(value):
         return None
-    return str(text).strip()
+    text = str(value).strip()
+    if not text or text.lower() == "nan":
+        return None
+    # Заменяем переносы строк одним пробелом и схлопываем множественные пробелы.
+    text = re.sub(r"\s+", " ", text.replace("\r", " ").replace("\n", " "))
+    return text or None
+
+
+def _split_subject_and_teacher(text: str) -> Tuple[str, Optional[str]]:
+    """
+    Извлечь ФИО преподавателя из конца строки.
+
+    Возвращает ``(subject, teacher)``. Если ФИО не найдено — ``teacher=None``,
+    а ``subject`` — исходный текст без изменений.
+    """
+    m = _TEACHER_RE.search(text)
+    if not m:
+        return text.strip(), None
+    teacher = re.sub(r"\s+", " ", m.group("teacher")).strip()
+    subject = text[: m.start()].strip()
+    return subject or text.strip(), teacher
+
+
+def _pick_room(rooms: List[str]) -> Optional[str]:
+    """Выбрать номер кабинета из нескольких значений (для слотов пары)."""
+    unique = []
+    for r in rooms:
+        if r and r not in unique:
+            unique.append(r)
+    if not unique:
+        return None
+    if len(unique) == 1:
+        return unique[0]
+    return "/".join(unique)
+
+
+def _infer_lesson_type(subject: str) -> Optional[str]:
+    """Грубая эвристика по тексту предмета."""
+    if not subject:
+        return None
+    lower = " " + subject.lower() + " "
+    for marker, label in _LESSON_TYPE_MARKERS:
+        if marker in lower:
+            return label
+    return None
 
 
 def _parse_date(date_str: str) -> date:
     return datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
-def import_schedule_from_excel(file_path: str, date_str: str = "2026-04-13"):
+def _collect_group_columns(
+    header_row: pd.Series,
+) -> List[Tuple[str, int, int]]:
+    """Вытащить (group_name, subject_col, room_col) из первой строки листа."""
+    groups: List[Tuple[str, int, int]] = []
+    # Первые две колонки — это «Пара» и «Расписание звонков».
+    for i in range(2, len(header_row), 2):
+        name = _clean(header_row.iloc[i])
+        if not name or name.lower().startswith("ауд"):
+            continue
+        if i + 1 >= len(header_row):
+            break
+        groups.append((name, i, i + 1))
+    return groups
+
+
+def _iter_pair_rows(df: pd.DataFrame):
     """
-    Импорт расписания из Excel файла.
+    Итератор по парам в листе Excel.
+
+    Yield ``(lesson_number, [row_slot1, row_slot2, ...])``. Каждая пара
+    обычно занимает 2 строки (слот 1 и слот 2). Первая строка помечена
+    числом в колонке «Пара» (col 0), последующие строки-слоты имеют там
+    пустое значение, но непустой столбец «Расписание звонков» (col 1).
+    """
+    n = len(df)
+    i = 1  # пропускаем строку заголовков (row 0)
+    while i < n:
+        row = df.iloc[i]
+        col0 = _clean(row.iloc[0])
+        col1 = _clean(row.iloc[1])
+
+        # Пустая строка — пропускаем.
+        if not col0 and not col1:
+            i += 1
+            continue
+
+        # Первая строка пары: в col[0] лежит номер пары.
+        if col0 is not None and col0.isdigit():
+            lesson_number = int(col0)
+            slots = [row]
+            j = i + 1
+            while j < n:
+                nrow = df.iloc[j]
+                ncol0 = _clean(nrow.iloc[0])
+                ncol1 = _clean(nrow.iloc[1])
+                if ncol0 and ncol0.isdigit():
+                    break  # началась следующая пара
+                if ncol1:
+                    slots.append(nrow)  # второй слот этой пары
+                    j += 1
+                else:
+                    break
+            yield lesson_number, slots
+            i = j
+        else:
+            i += 1
+
+
+def _extract_lesson_for_group(
+    slots: List[pd.Series], subj_col: int, room_col: int
+) -> Optional[Tuple[str, Optional[str], Optional[str]]]:
+    """Собрать (subject, teacher, room) для группы из слотов пары."""
+    texts: List[str] = []
+    rooms: List[str] = []
+    for slot in slots:
+        if subj_col < len(slot):
+            t = _clean(slot.iloc[subj_col])
+            if t:
+                texts.append(t)
+        if room_col < len(slot):
+            r = _clean(slot.iloc[room_col])
+            if r:
+                rooms.append(r)
+
+    if not texts:
+        return None
+
+    # Часто второй слот дублирует текст первого — дедуплицируем.
+    dedup: List[str] = []
+    for t in texts:
+        if t not in dedup:
+            dedup.append(t)
+    combined = " ".join(dedup)
+
+    subject, teacher = _split_subject_and_teacher(combined)
+    room = _pick_room(rooms)
+    return subject, teacher, room
+
+
+def import_schedule_from_excel(
+    file_path: str, date_str: str = "2026-04-13"
+) -> int:
+    """
+    Импорт расписания из Excel.
 
     Args:
-        file_path: путь к Excel файлу.
+        file_path: путь к .xlsx / .xls.
         date_str: дата в формате YYYY-MM-DD.
+
+    Returns:
+        количество добавленных записей.
     """
+    schedule_date = _parse_date(date_str)
+    day_of_week = schedule_date.weekday() + 1  # 1=Пн ... 7=Вс
+
+    bell = get_bell_schedule(day_of_week)
+    if not bell:
+        raise ValueError(
+            f"Нет расписания звонков для {schedule_date} (воскресенье?)"
+        )
+    bell_by_number = {p.lesson_number: p for p in bell}
+
     db = SessionLocal()
+    records_added = 0
 
     try:
-        schedule_date = _parse_date(date_str)
+        # Снимаем старое расписание на эту дату, чтобы повторный импорт был
+        # идемпотентным.
+        db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
         excel_file = pd.ExcelFile(file_path)
         print(f"Найдено листов: {len(excel_file.sheet_names)}")
-
-        # Удаляем старое расписание на эту дату
-        db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
         total_groups = 0
 
         for sheet_name in excel_file.sheet_names:
             print(f"Обработка листа: {sheet_name}")
-            df = pd.read_excel(excel_file, sheet_name=sheet_name)
+            df = pd.read_excel(
+                excel_file, sheet_name=sheet_name, header=None, dtype=str
+            )
+            if df.empty:
+                continue
 
-            # Удаляем первую строку (заголовок с номерами)
-            df = df.iloc[1:]
-
-            # Получаем список групп из заголовков столбцов
-            groups = []
-            for i in range(2, len(df.columns), 2):  # Каждая группа занимает 2 столбца (предмет, аудитория)
-                group_name = df.columns[i]
-                if pd.notna(group_name) and group_name != '':
-                    groups.append({
-                        'name': group_name,
-                        'subject_col': i,
-                        'room_col': i + 1
-                    })
-
+            groups = _collect_group_columns(df.iloc[0])
             total_groups += len(groups)
             print(f"  Найдено групп: {len(groups)}")
 
-            # Получаем день недели и соответствующее расписание
-            day_of_week = schedule_date.weekday() + 1  # 1 = Понедельник
-            time_slots = get_time_slots_for_day(day_of_week)
-
-            # Обрабатываем каждую строку (пару)
-            for idx, row in df.iterrows():
-                lesson_num = row.iloc[0]  # Номер пары
-
-                # Пропускаем пустые строки и перерывы
-                if pd.isna(lesson_num) or lesson_num == '':
+            for lesson_number, slots in _iter_pair_rows(df):
+                pair_timing: Optional[PairTiming] = bell_by_number.get(
+                    lesson_number
+                )
+                if pair_timing is None:
+                    # Не в расписании звонков (например, пара номер 8) — пропускаем.
                     continue
 
-                try:
-                    lesson_num = int(float(lesson_num))
-                except Exception:
-                    continue
-
-                # Получаем время из расписания по номеру строки
-                row_index = idx - 1  # Корректируем индекс (т.к. первая строка удалена)
-                if row_index in time_slots:
-                    time_start_str, time_end_str = time_slots[row_index]
-                    time_start = parse_time(time_start_str)
-                    time_end = parse_time(time_end_str)
-                else:
-                    continue
-
-                # Обрабатываем каждую группу
-                for group in groups:
-                    subject = clean_text(row.iloc[group['subject_col']])
-                    room = clean_text(row.iloc[group['room_col']])
-
-                    # Пропускаем пустые ячейки
-                    if not subject:
+                for group_name, subj_col, room_col in groups:
+                    extracted = _extract_lesson_for_group(slots, subj_col, room_col)
+                    if extracted is None:
                         continue
+                    subject, teacher, room = extracted
 
-                    # Извлекаем имя преподавателя (обычно в конце строки)
-                    teacher_name = None
-                    if subject:
-                        # Ищем ФИО в формате "Фамилия И.О."
-                        parts = subject.split()
-                        if len(parts) >= 2:
-                            # Последние 2-3 слова могут быть ФИО
-                            potential_name = ' '.join(parts[-3:]) if len(parts) >= 3 else ' '.join(parts[-2:])
-                            # Проверяем, есть ли точки (признак инициалов)
-                            if '.' in potential_name:
-                                teacher_name = potential_name
-                                # Убираем ФИО из названия предмета
-                                subject = ' '.join(parts[:-3] if len(parts) >= 3 else parts[:-2])
-
-                    # Проверяем на дубликаты
-                    existing = db.query(Schedule).filter(
-                        Schedule.group_name == group['name'],
-                        Schedule.date == schedule_date,
-                        Schedule.lesson_number == lesson_num,
-                        Schedule.time_start == time_start
-                    ).first()
-
-                    if existing:
-                        continue  # Пропускаем дубликат
-
-                    # Создаем запись расписания
-                    schedule_entry = Schedule(
-                        group_name=group['name'],
-                        teacher_name=teacher_name,
-                        subject=subject,
-                        room_number=room,
-                        lesson_number=lesson_num,
-                        time_start=time_start,
-                        time_end=time_end,
-                        date=schedule_date,
-                        day_of_week=day_of_week
+                    db.add(
+                        Schedule(
+                            group_name=group_name,
+                            teacher_name=teacher,
+                            subject=subject,
+                            room_number=room,
+                            day_of_week=day_of_week,
+                            lesson_number=lesson_number,
+                            time_start=pair_timing.start,
+                            time_end=pair_timing.end,
+                            date=schedule_date,
+                            lesson_type=_infer_lesson_type(subject),
+                        )
                     )
-
-                    db.add(schedule_entry)
+                    records_added += 1
 
         db.commit()
-        print(f"[OK] Расписание успешно импортировано: {total_groups} групп из {len(excel_file.sheet_names)} листов")
+        print(
+            f"[OK] Импортировано {records_added} записей "
+            f"({total_groups} групп на {len(excel_file.sheet_names)} листах)"
+        )
+        return records_added
 
     except Exception as e:
         db.rollback()
@@ -221,100 +291,113 @@ def import_schedule_from_excel(file_path: str, date_str: str = "2026-04-13"):
         db.close()
 
 
-def _parse_pdf_cell(cell_text):
-    """Парсит ячейку расписания из PDF."""
-    if not cell_text or cell_text.strip() == "":
+def _parse_pdf_cell(cell_text: Optional[str]) -> Optional[dict]:
+    """Разобрать ячейку расписания из PDF в {subject, teacher, room}."""
+    if not cell_text:
+        return None
+    text = _clean(cell_text)
+    if not text:
         return None
 
-    lines = [line.strip() for line in cell_text.split('\n') if line.strip()]
-    if len(lines) < 2:
-        return None
+    # В PDF часто номер кабинета идёт отдельной короткой строкой — попробуем
+    # вычленить его. Но если формат разный — просто парсим как Excel-ячейку.
+    subject, teacher = _split_subject_and_teacher(text)
+    # Пробуем найти отдельное короткое поле-номер кабинета.
+    room_match = re.search(r"\b(\d{2,4}[А-ЯЁа-яё/]*)\b\s*$", subject)
+    room: Optional[str] = None
+    if room_match:
+        room = room_match.group(1)
+        subject = subject[: room_match.start()].strip()
 
-    subject = lines[0]
-    teacher = lines[-1] if len(lines) > 1 else ""
-
-    # Ищем номер кабинета (короткая строка с цифрами)
-    room = ""
-    for line in lines:
-        if any(ch.isdigit() for ch in line) and len(line) < 10:
-            room = line
-            break
-
-    return {'subject': subject, 'teacher': teacher, 'room': room}
+    return {"subject": subject, "teacher": teacher, "room": room}
 
 
-def import_schedule_from_pdf(file_path: str, date_str: str = "2026-04-13"):
+def import_schedule_from_pdf(
+    file_path: str, date_str: str = "2026-04-13"
+) -> int:
     """
-    Импорт расписания из PDF (одна страница = один день).
+    Импорт расписания из PDF.
 
     Args:
-        file_path: путь к PDF-файлу.
+        file_path: путь к PDF.
         date_str: дата в формате YYYY-MM-DD.
+
+    Returns:
+        количество добавленных записей.
     """
     schedule_date = _parse_date(date_str)
     day_of_week = schedule_date.weekday() + 1
 
+    bell = get_bell_schedule(day_of_week)
+    if not bell:
+        raise ValueError(
+            f"Нет расписания звонков для {schedule_date} (воскресенье?)"
+        )
+    bell_by_number = {p.lesson_number: p for p in bell}
+
     db = SessionLocal()
+    records_added = 0
 
     try:
         with pdfplumber.open(file_path) as pdf:
+            if not pdf.pages:
+                print("Файл PDF пуст")
+                return 0
             page = pdf.pages[0]
             tables = page.extract_tables()
 
             if not tables:
-                print("Таблицы не найдены")
-                return
+                print("Таблицы в PDF не найдены")
+                return 0
 
             table = tables[0]
             headers = table[0]
-            # Пропускаем первые 2 колонки (номер пары, время)
+            # Пропускаем первые 2 колонки (номер пары, время).
             groups = [h.strip() for h in headers[2:] if h and h.strip()]
-
             print(f"Найдено групп: {len(groups)}")
 
-            # Удаляем старое расписание на эту дату
             db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
             lesson_number = 0
-            records_added = 0
-
-            for row in table[2:]:  # Пропускаем заголовки
+            for row in table[2:]:
                 if not row or len(row) < 3:
                     continue
 
-                if row[0] and row[0].strip().isdigit():
-                    lesson_number = int(row[0].strip())
+                first = (row[0] or "").strip()
+                if first.isdigit():
+                    lesson_number = int(first)
 
-                if lesson_number == 0 or lesson_number not in PDF_LESSON_TIMES:
+                pair_timing: Optional[PairTiming] = bell_by_number.get(
+                    lesson_number
+                )
+                if pair_timing is None:
                     continue
 
                 for i, cell in enumerate(row[2:]):
                     if i >= len(groups):
                         break
-
                     data = _parse_pdf_cell(cell)
                     if not data:
                         continue
-
-                    time_start, time_end = PDF_LESSON_TIMES[lesson_number]
-
-                    db.add(Schedule(
-                        group_name=groups[i],
-                        teacher_name=data['teacher'],
-                        subject=data['subject'],
-                        room_number=data['room'],
-                        day_of_week=day_of_week,
-                        lesson_number=lesson_number,
-                        time_start=time_start,
-                        time_end=time_end,
-                        date=schedule_date,
-                        lesson_type="Занятие",
-                    ))
+                    db.add(
+                        Schedule(
+                            group_name=groups[i],
+                            teacher_name=data["teacher"],
+                            subject=data["subject"],
+                            room_number=data["room"],
+                            day_of_week=day_of_week,
+                            lesson_number=lesson_number,
+                            time_start=pair_timing.start,
+                            time_end=pair_timing.end,
+                            date=schedule_date,
+                            lesson_type=_infer_lesson_type(data["subject"]),
+                        )
+                    )
                     records_added += 1
 
             db.commit()
-            total = db.query(Schedule).count()
-            print(f"[OK] Добавлено {records_added} записей; всего в БД: {total}")
+            print(f"[OK] Импортировано из PDF: {records_added} записей")
+            return records_added
 
     except Exception as e:
         db.rollback()
@@ -324,9 +407,9 @@ def import_schedule_from_pdf(file_path: str, date_str: str = "2026-04-13"):
         db.close()
 
 
-def import_schedule(file_path: str, date_str: str = "2026-04-13"):
+def import_schedule(file_path: str, date_str: str = "2026-04-13") -> int:
     """
-    Универсальный импорт расписания. Выбирает парсер по расширению файла.
+    Универсальный импорт. Выбирает парсер по расширению файла.
     """
     ext = os.path.splitext(file_path)[1].lower()
     if ext in {".xlsx", ".xls"}:
@@ -334,7 +417,8 @@ def import_schedule(file_path: str, date_str: str = "2026-04-13"):
     if ext == ".pdf":
         return import_schedule_from_pdf(file_path, date_str)
     raise ValueError(
-        f"Неподдерживаемое расширение файла: {ext!r}. Ожидается .xlsx, .xls или .pdf."
+        f"Неподдерживаемое расширение файла: {ext!r}. "
+        f"Ожидается .xlsx, .xls или .pdf."
     )
 
 
@@ -342,7 +426,9 @@ def _main():
     parser = argparse.ArgumentParser(
         description="Импорт расписания из Excel или PDF в БД."
     )
-    parser.add_argument("file", help="Путь к файлу расписания (.xlsx / .xls / .pdf)")
+    parser.add_argument(
+        "file", help="Путь к файлу расписания (.xlsx / .xls / .pdf)"
+    )
     parser.add_argument(
         "--date",
         default="2026-04-13",
