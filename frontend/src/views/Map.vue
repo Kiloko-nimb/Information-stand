@@ -27,60 +27,20 @@
     </div>
 
     <div class="map-container">
-      <!-- 1 этаж - Интерактивный компонент -->
-      <template v-if="currentFloor === 1">
-        <MapFloor2 />
-      </template>
-
-      <!-- 2 этаж - SVG Карта -->
-      <template v-else-if="currentFloor === 2">
-        <div class="svg-floor-map" @wheel.prevent="handleWheel">
+      <!-- 1–4 этажи — общий контейнер с zoom/pan -->
+      <template v-if="floors.includes(currentFloor)">
+        <div class="svg-floor-map" @wheel.prevent="handleWheel" @mousedown="startPan">
           <div
             class="svg-map-wrapper"
-            :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})` }"
-            @mousedown="startPan"
+            :class="{ 'is-panning': isPanning }"
+            :style="{ transform: `translate3d(${panX}px, ${panY}px, 0) scale(${zoomLevel})` }"
           >
-            <img src="/floor2.svg" alt="План 2 этажа" class="floor-svg-img" draggable="false" />
+            <MapFloor2 v-if="currentFloor === 1" />
+            <img v-else :src="`/floor${currentFloor}.svg`" :alt="`План ${currentFloor} этажа`" class="floor-svg-img" draggable="false" />
           </div>
           <div class="zoom-controls">
-            <button @click="zoom(0.1)" title="Приблизить">+</button>
-            <button @click="zoom(-0.1)" title="Отдалить">−</button>
-            <button @click="resetView" title="Сбросить">⟳</button>
-          </div>
-        </div>
-      </template>
-
-      <!-- 3 этаж - SVG Карта -->
-      <template v-else-if="currentFloor === 3">
-        <div class="svg-floor-map" @wheel.prevent="handleWheel">
-          <div
-            class="svg-map-wrapper"
-            :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})` }"
-            @mousedown="startPan"
-          >
-            <img src="/floor3.svg" alt="План 3 этажа" class="floor-svg-img" draggable="false" />
-          </div>
-          <div class="zoom-controls">
-            <button @click="zoom(0.1)" title="Приблизить">+</button>
-            <button @click="zoom(-0.1)" title="Отдалить">−</button>
-            <button @click="resetView" title="Сбросить">⟳</button>
-          </div>
-        </div>
-      </template>
-
-      <!-- 4 этаж - SVG Карта -->
-      <template v-else-if="currentFloor === 4">
-        <div class="svg-floor-map" @wheel.prevent="handleWheel">
-          <div
-            class="svg-map-wrapper"
-            :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})` }"
-            @mousedown="startPan"
-          >
-            <img src="/floor4.svg" alt="План 4 этажа" class="floor-svg-img" draggable="false" />
-          </div>
-          <div class="zoom-controls">
-            <button @click="zoom(0.1)" title="Приблизить">+</button>
-            <button @click="zoom(-0.1)" title="Отдалить">−</button>
+            <button @click="zoom(0.2)" title="Приблизить">+</button>
+            <button @click="zoom(-0.2)" title="Отдалить">−</button>
             <button @click="resetView" title="Сбросить">⟳</button>
           </div>
         </div>
@@ -139,7 +99,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import MapFloor2 from '../components/MapFloor2.vue'
 
 export default {
@@ -157,13 +117,16 @@ export default {
     const startX = ref(0)
     const startY = ref(0)
 
+    const MIN_ZOOM = 0.5
+    const MAX_ZOOM = 3
+
     const zoom = (delta) => {
-      const next = zoomLevel.value + delta
-      if (next >= 0.5 && next <= 3) zoomLevel.value = Math.round(next * 10) / 10
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomLevel.value + delta))
+      zoomLevel.value = Math.round(next * 100) / 100
     }
 
     const handleWheel = (event) => {
-      const delta = event.deltaY > 0 ? -0.1 : 0.1
+      const delta = event.deltaY > 0 ? -0.15 : 0.15
       zoom(delta)
     }
 
@@ -174,6 +137,8 @@ export default {
     }
 
     const startPan = (event) => {
+      // Не перехватываем клики с кнопок зума и интерактивных элементов
+      if (event.target && event.target.closest && event.target.closest('.zoom-controls, button, a, [data-room]')) return
       isPanning.value = true
       startX.value = event.clientX - panX.value
       startY.value = event.clientY - panY.value
@@ -187,9 +152,15 @@ export default {
     }
 
     const onMouseUp = () => {
+      if (!isPanning.value) return
       isPanning.value = false
       document.body.style.cursor = 'default'
     }
+
+    // При смене этажа сбрасываем zoom и позицию
+    watch(currentFloor, () => {
+      resetView()
+    })
 
     onMounted(() => {
       document.addEventListener('mousemove', onMouseMove)
@@ -209,6 +180,7 @@ export default {
       handleWheel,
       panX,
       panY,
+      isPanning,
       startPan,
       resetView
     }
@@ -496,19 +468,28 @@ h1 {
   align-items: center;
   justify-content: center;
   background: var(--surface);
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.svg-floor-map:active {
+  cursor: grabbing;
 }
 
 .svg-map-wrapper {
   transform-origin: center center;
-  transition: transform 0.25s var(--ease);
+  transition: transform 180ms ease-out;
+  will-change: transform;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: grab;
+  pointer-events: auto;
 }
 
-.svg-map-wrapper:active {
-  cursor: grabbing;
+/* Во время перетаскивания отключаем анимацию — панорама без рывков */
+.svg-map-wrapper.is-panning {
+  transition: none;
 }
 
 .floor-svg-img {

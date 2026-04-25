@@ -7,8 +7,8 @@
     <h1>Расписание занятий</h1>
 
     <div class="date-carousel">
-      <button class="carousel-arrow" @click="previousDay">‹</button>
-      <div class="date-cards-container">
+      <button class="carousel-arrow" @click="previousDay" aria-label="Предыдущий день">‹</button>
+      <div class="date-cards-container" ref="dateScrollEl" @wheel.prevent="onDateWheel">
         <div class="date-cards">
           <button
             v-for="(day, index) in dateRange"
@@ -22,7 +22,15 @@
           </button>
         </div>
       </div>
-      <button class="carousel-arrow" @click="nextDay">›</button>
+      <button class="carousel-arrow" @click="nextDay" aria-label="Следующий день">›</button>
+      <button class="carousel-picker" @click="openDatePicker" aria-label="Выбрать дату" title="Выбрать дату">📅</button>
+      <input
+        ref="datePickerEl"
+        type="date"
+        class="date-picker-input"
+        :value="toDateParam(selectedDate)"
+        @change="onDatePicked"
+      />
     </div>
 
     <div class="search-panel">
@@ -163,16 +171,44 @@ export default {
     const searched = ref(false)
     const selectedDate = ref(new Date())
     const dateRange = ref([])
+    const datePickerEl = ref(null)
+    const dateScrollEl = ref(null)
 
     const generateDateRange = () => {
       const dates = []
-      const today = new Date()
-      for (let i = -1; i <= 5; i++) {
-        const date = new Date(today)
-        date.setDate(today.getDate() + i)
+      const anchor = new Date(selectedDate.value)
+      for (let i = -3; i <= 7; i++) {
+        const date = new Date(anchor)
+        date.setDate(anchor.getDate() + i)
         dates.push(date)
       }
       dateRange.value = dates
+    }
+
+    const openDatePicker = () => {
+      const el = datePickerEl.value
+      if (!el) return
+      if (typeof el.showPicker === 'function') {
+        try { el.showPicker(); return } catch (_) { /* fallback */ }
+      }
+      el.click()
+      el.focus()
+    }
+
+    const onDatePicked = (event) => {
+      const value = event.target.value
+      if (!value) return
+      const [yyyy, mm, dd] = value.split('-').map(Number)
+      const picked = new Date(yyyy, mm - 1, dd)
+      selectedDate.value = picked
+      generateDateRange()
+      if (searchQuery.value.trim()) search()
+    }
+
+    const onDateWheel = (event) => {
+      const el = dateScrollEl.value
+      if (!el) return
+      el.scrollLeft += event.deltaY !== 0 ? event.deltaY : event.deltaX
     }
 
     const formatDayName = (date) => {
@@ -211,6 +247,7 @@ export default {
       newDate.setDate(newDate.getDate() - 1)
       selectedDate.value = newDate
       generateDateRange()
+      if (searchQuery.value.trim()) search()
     }
 
     const nextDay = () => {
@@ -218,6 +255,7 @@ export default {
       newDate.setDate(newDate.getDate() + 1)
       selectedDate.value = newDate
       generateDateRange()
+      if (searchQuery.value.trim()) search()
     }
 
     const loadGroups = async () => {
@@ -352,10 +390,16 @@ export default {
       selectDate,
       previousDay,
       nextDay,
+      formatLessonNumber,
+      toDateParam,
+      datePickerEl,
+      dateScrollEl,
+      openDatePicker,
+      onDatePicked,
+      onDateWheel,
       showRoomOnMap,
       getLessonTypeClass,
-      formatLessonType,
-      formatLessonNumber
+      formatLessonType
     }
   }
 }
@@ -446,14 +490,55 @@ h1 {
   transform: scale(1.08);
 }
 
+.carousel-picker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.2rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.carousel-picker:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  transform: scale(1.08);
+}
+
+.date-picker-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .date-cards-container {
   flex: 1;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.date-cards-container::-webkit-scrollbar {
+  display: none;
 }
 
 .date-cards {
   display: flex;
   gap: 0.6rem;
+  scroll-snap-align: start;
   overflow-x: auto;
   scroll-behavior: smooth;
   padding: 0.25rem 0;
@@ -833,12 +918,12 @@ h1 {
 }
 
 .timeline-item.current-lesson .lesson-badge {
-  animation: pulse-badge 1.8s ease-in-out infinite;
+  animation: glow-badge 2.6s ease-in-out infinite;
 }
 
-@keyframes pulse-badge {
-  0%, 100% { transform: scale(1); box-shadow: 0 6px 20px -4px rgba(244, 114, 182, 0.6); }
-  50% { transform: scale(1.08); box-shadow: 0 8px 30px -4px rgba(244, 114, 182, 0.9); }
+@keyframes glow-badge {
+  0%, 100% { box-shadow: 0 6px 20px -4px rgba(244, 114, 182, 0.45); }
+  50%      { box-shadow: 0 6px 28px -2px rgba(244, 114, 182, 0.85); }
 }
 
 .timeline-line {

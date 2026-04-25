@@ -425,16 +425,32 @@ def import_schedule_from_pdf(
 def import_schedule(file_path: str, date_str: str = "2026-04-13") -> int:
     """
     Универсальный импорт. Выбирает парсер по расширению файла.
+
+    После успешного импорта автоматически вызывает ``populate_rooms`` —
+    чтобы новые аудитории, появившиеся в свежем расписании, сразу
+    попадали в таблицу ``rooms``.
     """
     ext = os.path.splitext(file_path)[1].lower()
     if ext in {".xlsx", ".xls"}:
-        return import_schedule_from_excel(file_path, date_str)
-    if ext == ".pdf":
-        return import_schedule_from_pdf(file_path, date_str)
-    raise ValueError(
-        f"Неподдерживаемое расширение файла: {ext!r}. "
-        f"Ожидается .xlsx, .xls или .pdf."
-    )
+        records = import_schedule_from_excel(file_path, date_str)
+    elif ext == ".pdf":
+        records = import_schedule_from_pdf(file_path, date_str)
+    else:
+        raise ValueError(
+            f"Неподдерживаемое расширение файла: {ext!r}. "
+            f"Ожидается .xlsx, .xls или .pdf."
+        )
+
+    # Идемпотентный авто-вызов populate_rooms: новые аудитории добавятся,
+    # существующие будут пропущены. Ошибка здесь не должна валить импорт.
+    try:
+        from app.utils.populate_rooms import populate_rooms
+
+        populate_rooms()
+    except Exception as exc:  # pragma: no cover - defensive
+        print(f"[WARN] populate_rooms после импорта упал: {exc}")
+
+    return records
 
 
 def _main():
