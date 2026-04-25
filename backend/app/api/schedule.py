@@ -86,6 +86,20 @@ async def get_all_groups(db: Session = Depends(get_db)):
     return [{"name": g[0]} for g in groups]
 
 
+@router.get("/teachers")
+async def get_all_teachers(db: Session = Depends(get_db)):
+    """Список всех преподавателей, встречающихся в расписании."""
+    rows = (
+        db.query(Schedule.teacher_name)
+        .filter(Schedule.teacher_name.isnot(None))
+        .filter(Schedule.teacher_name != "")
+        .distinct()
+        .order_by(Schedule.teacher_name)
+        .all()
+    )
+    return [{"name": r[0]} for r in rows if r[0]]
+
+
 @router.get("/today")
 async def get_today_schedule(db: Session = Depends(get_db)):
     """Получить расписание на сегодня для всех групп."""

@@ -54,10 +54,14 @@
           v-model="searchQuery"
           :placeholder="searchType === 'group' ? 'Введите номер группы' : 'Введите ФИО преподавателя'"
           @keyup.enter="search"
-          list="groups-list"
+          :list="searchType === 'group' ? 'groups-list' : 'teachers-list'"
+          autocomplete="off"
         />
-        <datalist id="groups-list" v-if="searchType === 'group'">
+        <datalist id="groups-list">
           <option v-for="group in availableGroups" :key="group.name" :value="group.name"></option>
+        </datalist>
+        <datalist id="teachers-list">
+          <option v-for="teacher in availableTeachers" :key="teacher.name" :value="teacher.name"></option>
         </datalist>
         <button @click="search">Найти</button>
       </div>
@@ -167,6 +171,7 @@ export default {
     const searchQuery = ref('')
     const scheduleData = ref([])
     const availableGroups = ref([])
+    const availableTeachers = ref([])
     const loading = ref(false)
     const searched = ref(false)
     const selectedDate = ref(new Date())
@@ -256,6 +261,15 @@ export default {
       selectedDate.value = newDate
       generateDateRange()
       if (searchQuery.value.trim()) search()
+    }
+
+    const loadTeachers = async () => {
+      try {
+        const response = await api.get('/schedule/teachers')
+        availableTeachers.value = response.data
+      } catch (error) {
+        console.error('Ошибка загрузки преподавателей:', error)
+      }
     }
 
     const loadGroups = async () => {
@@ -366,6 +380,7 @@ export default {
 
     onMounted(() => {
       loadGroups()
+      loadTeachers()
       generateDateRange()
     })
 
@@ -374,6 +389,7 @@ export default {
       searchQuery,
       scheduleData,
       availableGroups,
+      availableTeachers,
       loading,
       searched,
       search,
