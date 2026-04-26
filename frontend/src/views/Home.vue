@@ -9,6 +9,15 @@
         <div class="date">{{ currentDate }}</div>
       </div>
 
+      <div v-if="nowWidget" class="now-widget" @click="$router.push('/schedule')">
+        <div class="now-icon">{{ nowWidget.icon }}</div>
+        <div class="now-text">
+          <div class="now-title">{{ nowWidget.title }}</div>
+          <div v-if="nowWidget.line1" class="now-line">{{ nowWidget.line1 }}</div>
+          <div v-if="nowWidget.line2" class="now-line now-line-dim">{{ nowWidget.line2 }}</div>
+        </div>
+      </div>
+
       <transition name="ticker-fade" mode="out-in">
         <a
           v-if="tickerNews"
@@ -26,14 +35,7 @@
     </div>
 
     <div class="middle-section">
-      <div v-if="nowWidget" class="now-widget" @click="$router.push('/schedule')">
-        <div class="now-icon">{{ nowWidget.icon }}</div>
-        <div class="now-text">
-          <div class="now-title">{{ nowWidget.title }}</div>
-          <div v-if="nowWidget.line1" class="now-line">{{ nowWidget.line1 }}</div>
-          <div v-if="nowWidget.line2" class="now-line now-line-dim">{{ nowWidget.line2 }}</div>
-        </div>
-      </div>
+      <!-- Резервное вертикальное пространство между шапкой и контактами -->
     </div>
 
     <div class="bottom-section">
@@ -971,13 +973,15 @@ h1 {
   transform: translateY(4px);
 }
 
-/* ── Виджет «Сейчас идёт» ── */
+/* ── Виджет «Сейчас идёт» ──
+   Находится внутри .top-section, под заголовком, чтобы визуально
+   не налезать на блок контактов ниже. */
 .now-widget {
   display: flex;
   align-items: center;
   gap: 1.25rem;
   padding: 1rem 1.5rem;
-  margin: 1.25rem auto 0;
+  margin: 1.5rem auto 0.5rem;
   max-width: 720px;
   background: var(--surface);
   backdrop-filter: blur(14px);
