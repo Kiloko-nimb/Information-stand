@@ -37,13 +37,13 @@
       <div class="search-tabs">
         <button
           :class="{ active: searchType === 'group' }"
-          @click="searchType = 'group'"
+          @click="selectSearchType('group')"
         >
           По группе
         </button>
         <button
           :class="{ active: searchType === 'teacher' }"
-          @click="searchType = 'teacher'"
+          @click="selectSearchType('teacher')"
         >
           По преподавателю
         </button>
@@ -155,7 +155,13 @@
     </div>
 
     <div v-else-if="searched" class="no-results">
-      Расписание не найдено
+      <div v-if="searchType === 'teacher'">
+        Преподаватель «{{ searchQuery }}» не найден на эту дату.
+        <div class="no-results-hint">Попробуйте выбрать из подсказок — формат «Фамилия И.О.»</div>
+      </div>
+      <div v-else>
+        Группа «{{ searchQuery }}» не найдена на эту дату.
+      </div>
     </div>
   </div>
 </template>
@@ -287,6 +293,16 @@ export default {
       search()
     }
 
+    const selectSearchType = (type) => {
+      if (searchType.value === type) return
+      searchType.value = type
+      // Переключили режим — очищаем старый запрос/результаты,
+      // иначе номер группы улетит в эндпоинт преподавателя → 404.
+      searchQuery.value = ''
+      scheduleData.value = []
+      searched.value = false
+    }
+
     const toDateParam = (d) => {
       const yyyy = d.getFullYear()
       const mm = String(d.getMonth() + 1).padStart(2, '0')
@@ -310,11 +326,11 @@ export default {
         })
         scheduleData.value = response.data.sort((a, b) => a.lesson_number - b.lesson_number)
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          scheduleData.value = []
-        } else {
+        // 404 — ожидаемый случай «ничего не найдено»,
+        // показываем пользователю пустое состояние без шума в консоли.
+        scheduleData.value = []
+        if (!(error.response && error.response.status === 404)) {
           console.error('Ошибка поиска:', error)
-          scheduleData.value = []
         }
       } finally {
         loading.value = false
@@ -386,6 +402,7 @@ export default {
 
     return {
       searchType,
+      selectSearchType,
       searchQuery,
       scheduleData,
       availableGroups,
@@ -717,6 +734,12 @@ h1 {
 }
 
 /* ── Список групп / состояния ── */
+.no-results-hint {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
 .loading,
 .no-results {
   text-align: center;
