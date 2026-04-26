@@ -381,18 +381,33 @@ export default {
 
     const showPassingScores = () => {
       const modal = document.createElement('div')
-      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;'
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:600px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
-          <h2 style="color:#eceef5;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📊 Проходные баллы 2025</h2>
-          <div style="background:rgba(255,255,255,0.04);padding:1.75rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(255,255,255,0.08);">
-            <p style="color:rgba(236,238,245,0.88);line-height:1.7;font-size:1rem;text-align:center;margin:0;">
-              Проходные баллы формируются по результатам конкурса аттестатов.<br><br>
-              <strong style="color:#fbbf24;">Средний балл аттестата 2025:</strong><br>
-              Бюджетные места: от 3.8 до 4.5<br>
-              Платные места: от 3.0<br><br>
-              <span style="font-size:0.9rem;color:rgba(236,238,245,0.55);">Точные проходные баллы будут известны после завершения приемной кампании</span>
+        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
+          <h2 style="color:#eceef5;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📊 Проходные баллы</h2>
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
+            <p style="color:rgba(236,238,245,0.88);line-height:1.7;font-size:1rem;margin:0;">
+              В ККРИТ нет вступительных экзаменов — зачисление проходит по конкурсу <strong style="color:#fbbf24;">среднего балла аттестата</strong>.<br><br>
+              На специальности «Пожарная безопасность» — дополнительно психологическое тестирование и нормативы физподготовки.
             </p>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-size:1.1rem;font-weight:700;">📈 Средний балл аттестата 2025 (справочно)</h3>
+            <div style="color:rgba(236,238,245,0.85);line-height:1.8;font-size:0.95rem;">
+              • Бюджет (ИТ-специальности): <strong style="color:#fbbf24;">4.0–4.5</strong><br>
+              • Бюджет (экономика, электроника): <strong style="color:#fbbf24;">3.8–4.2</strong><br>
+              • Платные места: <strong style="color:#fbbf24;">от 3.0</strong><br><br>
+              <span style="color:rgba(236,238,245,0.55);font-size:0.85rem;">Цифры ориентировочные — точный проходной балл формируется по итогам конкурса.</span>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(255,255,255,0.08);">
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-size:1.1rem;font-weight:700;">📆 Сроки приёма 2026</h3>
+            <div style="color:rgba(236,238,245,0.85);line-height:1.8;font-size:0.95rem;">
+              • Начало приёма: <strong style="color:#fbbf24;">15 июня 2026</strong><br>
+              • Окончание (основное): <strong style="color:#fbbf24;">14 августа 2026</strong><br>
+              • Пожарная безопасность: <strong style="color:#fbbf24;">до 10 августа 2026</strong><br>
+              • При наличии свободных мест: <strong style="color:#fbbf24;">до 25 ноября 2026</strong>
+            </div>
           </div>
           <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
@@ -403,39 +418,49 @@ export default {
 
     const showSpecialties = () => {
       const modal = document.createElement('div')
-      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:flex-start;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
-          <h2 style="color:#eceef5;margin:0 0 1.75rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">Специальности ККРИТ 2026</h2>
+        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:900px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
+          <h2 style="color:#eceef5;margin:0 0 0.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">Специальности ККРИТ 2026/27</h2>
+          <p style="color:rgba(236,238,245,0.6);text-align:center;margin:0 0 1.5rem;font-size:0.92rem;">Поступление на базе 9 классов, срок обучения в скобках</p>
 
           <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
-            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.15rem;font-weight:700;">📍 пр. Красноярский рабочий, 156</h3>
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.15rem;font-weight:700;">📍 пр. Красноярский рабочий, 156 — IT и экономика</h3>
             <div style="color:rgba(236,238,245,0.82);line-height:1.75;font-size:0.95rem;">
               <strong style="color:#fbbf24;">Бюджет:</strong><br>
-              • 38.02.01 Экономика и бухгалтерский учет (25 мест)<br>
-              • 38.02.07 Банковское дело (25 мест)<br><br>
+              • 38.02.01 Экономика и бухгалтерский учёт — 25 мест (2 г. 10 мес.)<br>
+              • 38.02.07 Банковское дело — 25 мест (2 г. 10 мес.)<br><br>
               <strong style="color:#fbbf24;">Платно:</strong><br>
-              • 09.02.09 Веб-разработка (25 мест)<br>
-              • 09.02.10 Разработка компьютерных игр, AR/VR (25 мест)<br>
-              • 09.02.11 Разработка ПО (25 мест)<br>
-              • 09.02.13 Искусственный интеллект (25 мест)
+              • 09.02.09 Веб-разработка — 25 мест (2 г. 10 мес.)<br>
+              • 09.02.09 Веб-разработка (после 11 кл.) — 25 мест (1 г. 10 мес.)<br>
+              • 09.02.10 Разработка игр, AR/VR — 25 мест (3 г. 10 мес.)<br>
+              • 09.02.11 Разработка ПО (программист) — 25 мест (3 г. 10 мес.)<br>
+              • 09.02.13 Искусственный интеллект — 25 мест (3 г. 10 мес.)
             </div>
           </div>
 
           <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
-            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.15rem;font-weight:700;">📍 пр. Свободный, 67</h3>
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.15rem;font-weight:700;">📍 пр. Свободный, 67 — инфраструктура и электроника</h3>
             <div style="color:rgba(236,238,245,0.82);line-height:1.75;font-size:0.95rem;">
               <strong style="color:#fbbf24;">Бюджет:</strong><br>
-              • 09.02.01 Компьютерные системы и комплексы (50 мест)<br>
-              • 09.02.06 Сетевое и системное администрирование (50 мест)<br>
-              • 10.02.05 Информационная безопасность (25 мест)<br>
-              • 11.02.16 Монтаж электронных приборов (50 мест)<br><br>
+              • 09.02.01 Компьютерные системы и комплексы — 50 мест (3 г. 10 мес.)<br>
+              • 09.02.06 Сетевое и системное администрирование — 50 мест (3 г. 10 мес.)<br>
+              • 10.02.05 Информационная безопасность АС — 25 мест (3 г. 10 мес.)<br>
+              • 11.02.16 Монтаж электронных приборов — 50 мест (3 г. 10 мес.)<br>
+              • 20.02.04 Пожарная безопасность — 50 мест (3 г. 10 мес.)<br><br>
               <strong style="color:#fbbf24;">Платно:</strong><br>
-              • 20.02.04 Пожарная безопасность (50 мест)
+              • 09.02.01 Компьютерные системы и комплексы — 25 мест<br>
+              • 09.02.06 Сетевое и системное администрирование — 25 мест<br>
+              • 10.02.05 Информационная безопасность АС — 25 мест<br>
+              • 20.02.04 Пожарная безопасность (после 11 кл.) — 25 мест (2 г. 10 мес.)
             </div>
           </div>
 
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;margin-top:0.75rem;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
+          <div style="background:linear-gradient(135deg,rgba(139,123,255,0.12),rgba(34,211,238,0.08));padding:1.25rem 1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(139,123,255,0.25);color:rgba(236,238,245,0.92);font-size:0.95rem;line-height:1.7;">
+            📊 <strong>Итого на 2026/27:</strong> 225 бюджетных + 275 платных мест. <br>Три специальности появились впервые в этом году: <strong style="color:#fbbf24;">ИИ, игры/AR‑VR и веб-разработка</strong>.
+          </div>
+
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -445,23 +470,51 @@ export default {
     const showApplicationQR = async () => {
       const qr = await generateQRCode('https://kraskrit.ru/abitur/')
       const modal = document.createElement('div')
-      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;'
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:flex-start;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:600px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
+        <div style="background:linear-gradient(160deg,#151a32 0%,#0f1224 100%);padding:2.25rem;border-radius:24px;max-width:760px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);font-family:'Inter',system-ui,sans-serif;">
           <h2 style="color:#eceef5;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📱 Подать документы</h2>
-          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.5rem;text-align:center;border:1px solid rgba(255,255,255,0.08);">
-            <img src="${qr}" style="width:240px;height:240px;margin-bottom:1.25rem;border-radius:14px;background:#fff;padding:8px;"/>
-            <p style="color:rgba(236,238,245,0.88);font-size:1rem;line-height:1.7;margin:0;">
-              <strong style="color:#fbbf24;">Прием документов:</strong><br>
-              с 15 июня по 14 августа 2026<br><br>
-              <strong style="color:#fbbf24;">Адрес приемной комиссии:</strong><br>
-              пр. Свободный, 67<br><br>
+
+          <div style="display:grid;grid-template-columns:240px 1fr;gap:1.5rem;background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);align-items:center;">
+            <div style="text-align:center;">
+              <img src="${qr}" style="width:220px;height:220px;border-radius:14px;background:#fff;padding:8px;"/>
+              <p style="color:rgba(236,238,245,0.7);font-size:0.85rem;margin:0.6rem 0 0;">Отсканируйте —<br>откроется раздел «Абитуриенту»</p>
+            </div>
+            <div style="color:rgba(236,238,245,0.88);font-size:0.97rem;line-height:1.7;">
+              <strong style="color:#fbbf24;">Приём документов:</strong><br>
+              c 15 июня по 14 августа 2026<br>
+              Пожарная безопасность — до 10 августа<br><br>
+              <strong style="color:#fbbf24;">Адрес приёмной комиссии:</strong><br>
+              пр. Свободный, 67<br>
+              пн–чт 09:00–15:30, пт 09:00–12:00<br><br>
               <strong style="color:#fbbf24;">Телефоны:</strong><br>
               8-929-332-29-43<br>
               8-933-327-02-09<br>
-              8-391-298-46-46
-            </p>
+              8-391-298-46-46<br>
+              <strong style="color:#fbbf24;">E-mail:</strong> kraskritpk@yandex.ru
+            </div>
           </div>
+
+          <div style="background:rgba(255,255,255,0.04);padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.08);">
+            <h3 style="color:#eceef5;margin:0 0 0.9rem;font-size:1.1rem;font-weight:700;">📋 Перечень документов</h3>
+            <div style="color:rgba(236,238,245,0.85);line-height:1.85;font-size:0.95rem;">
+              • Заявление о приёме на обучение (одно на все специальности)<br>
+              • Согласие на обработку персональных данных<br>
+              • Паспорт — копия разворота с фото и прописки<br>
+              • Документ об образовании (аттестат / диплом) — оригинал или копия<br>
+              • СНИЛС (копия)<br>
+              • 4 фотографии 3×4 см (без головного убора)<br>
+              • Справка 086/у<br>
+              • Копия полиса ОМС<br>
+              • Для несовершеннолетних — копия паспорта родителя / законного представителя<br>
+              • Для ОВЗ / инвалидности — копии подтверждающих документов
+            </div>
+          </div>
+
+          <div style="background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(139,123,255,0.08));padding:1.25rem 1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(34,211,238,0.25);color:rgba(236,238,245,0.92);font-size:0.93rem;line-height:1.7;">
+            ℹ️ Заявление можно подать <strong>лично</strong> на пр. Свободный 67, <strong>почтой</strong> или <strong>через Госуслуги</strong> (в тестовом режиме).<br>Для зачисления оригинал аттестата нужно сдать до <strong>14 августа 2026</strong>.
+          </div>
+
           <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#8b7bff 0%,#22d3ee 100%);color:#0b0d1c;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(139,123,255,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
