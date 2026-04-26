@@ -25,6 +25,51 @@ from app.core.database import SessionLocal
 from app.models.schedule import Schedule
 
 
+def _snapshot_existing(db, schedule_date: date):
+    """
+    Снять слепок расписания на дату до удаления.
+
+    Используется потом, чтобы пометить изменённые занятия как
+    «замены» (``is_modified=True``).
+
+    Ключ в словаре — ``(group_name, lesson_number)``, значение — кортеж
+    ``(subject, teacher, room, lesson_type)``.
+    """
+    rows = (
+        db.query(Schedule)
+        .filter(Schedule.date == schedule_date)
+        .all()
+    )
+    return {
+        (r.group_name, r.lesson_number): (
+            r.subject,
+            r.teacher_name,
+            r.room_number,
+            r.lesson_type,
+        )
+        for r in rows
+    }
+
+
+def _is_changed(
+    old_lesson, new_subject, new_teacher, new_room, new_lesson_type
+) -> bool:
+    """
+    Отличается ли новая версия от старой по значимым полям.
+
+    ``old_lesson`` — результат ``_snapshot_existing(...)[key]`` или ``None``,
+    если в предыдущем импорте такого занятия не было.
+    """
+    if old_lesson is None:
+        # Новое занятие, которого раньше не было в предыдущем
+        # импорте — считаем заменой только если раньше были другие
+        # занятия на эту дату (проверяется на уровне вызывающего
+        # кода). На самом первом импорте все записи «новые»,
+        # поэтому отмечать все заменами было бы бессмысленно.
+        return True
+    return old_lesson != (new_subject, new_teacher, new_room, new_lesson_type)
+
+
 # "Фамилия И.О." или "Фамилия-Двойная И.О." в конце строки.
 # Допускаем пробел или его отсутствие между инициалами и точками.
 _TEACHER_RE = re.compile(
@@ -235,8 +280,10 @@ def import_schedule_from_excel(
     records_added = 0
 
     try:
-        # Снимаем старое расписание на эту дату, чтобы повторный импорт был
-        # идемпотентным.
+        # Сначала снимаем слепок старого расписания для diff'а,
+        # потом удаляем его — повторный импорт идемпотентен.
+        previous_snapshot = _snapshot_existing(db, schedule_date)
+        had_previous = bool(previous_snapshot)
         db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
         excel_file = pd.ExcelFile(file_path)
@@ -269,6 +316,15 @@ def import_schedule_from_excel(
                     if extracted is None:
                         continue
                     subject, teacher, room = extracted
+                    lesson_type = _infer_lesson_type(subject)
+
+                    if had_previous:
+                        old = previous_snapshot.get((group_name, lesson_number))
+                        is_modified = _is_changed(
+                            old, subject, teacher, room, lesson_type
+                        )
+                    else:
+                        is_modified = False
 
                     db.add(
                         Schedule(
@@ -281,7 +337,8 @@ def import_schedule_from_excel(
                             time_start=pair_timing.start,
                             time_end=pair_timing.end,
                             date=schedule_date,
-                            lesson_type=_infer_lesson_type(subject),
+                            lesson_type=lesson_type,
+                            is_modified=is_modified,
                         )
                     )
                     records_added += 1
@@ -362,8 +419,10 @@ def import_schedule_from_pdf(
                 return 0
             print(f"Найдено таблиц: {len(all_tables)}")
 
-            # Очищаем старое расписание на эту дату — повторный импорт
-            # идемпотентен.
+            # Снимаем слепок старого расписания для diff'а, потом удаляем.
+            # Повторный импорт остаётся идемпотентным.
+            previous_snapshot = _snapshot_existing(db, schedule_date)
+            had_previous = bool(previous_snapshot)
             db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
             total_groups = 0
@@ -390,6 +449,17 @@ def import_schedule_from_pdf(
                         if extracted is None:
                             continue
                         subject, teacher, room = extracted
+                        lesson_type = _infer_lesson_type(subject)
+
+                        if had_previous:
+                            old = previous_snapshot.get(
+                                (group_name, lesson_number)
+                            )
+                            is_modified = _is_changed(
+                                old, subject, teacher, room, lesson_type
+                            )
+                        else:
+                            is_modified = False
 
                         db.add(
                             Schedule(
@@ -402,7 +472,8 @@ def import_schedule_from_pdf(
                                 time_start=pair_timing.start,
                                 time_end=pair_timing.end,
                                 date=schedule_date,
-                                lesson_type=_infer_lesson_type(subject),
+                                lesson_type=lesson_type,
+                                is_modified=is_modified,
                             )
                         )
                         records_added += 1

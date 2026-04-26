@@ -5,7 +5,8 @@ import asyncio
 import os
 from pathlib import Path
 from app.api import bells, schedule, staff, rooms, news
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, engine
+from app.core.migrations import apply_pending_migrations
 from app.services.news_parser import fetch_news_from_website, save_news_to_db
 import logging
 
@@ -112,6 +113,10 @@ async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
     # Startup
     logger.info("🚀 Запуск KKRIT Interactive Board API")
+    try:
+        apply_pending_migrations(engine)
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("⚠ apply_pending_migrations упал: %s", exc)
     logger.info("📰 Запуск фоновой задачи обновления новостей (каждые 6 часов)")
     
     # Запускаем фоновые задачи

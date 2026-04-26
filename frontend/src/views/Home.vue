@@ -8,10 +8,32 @@
         <div class="time">{{ currentTime }}</div>
         <div class="date">{{ currentDate }}</div>
       </div>
+
+      <transition name="ticker-fade" mode="out-in">
+        <a
+          v-if="tickerNews"
+          :key="tickerNews.id"
+          class="ticker-plate"
+          :href="tickerNews.source_url || 'https://kraskrit.ru/news/'"
+          target="_blank"
+          rel="noopener"
+          :title="tickerNews.title"
+        >
+          <span class="ticker-icon">{{ tickerNews.icon || '📰' }}</span>
+          <span class="ticker-title">{{ tickerNews.title }}</span>
+        </a>
+      </transition>
     </div>
 
     <div class="middle-section">
-      <!-- Декоративное пространство -->
+      <div v-if="nowWidget" class="now-widget" @click="$router.push('/schedule')">
+        <div class="now-icon">{{ nowWidget.icon }}</div>
+        <div class="now-text">
+          <div class="now-title">{{ nowWidget.title }}</div>
+          <div v-if="nowWidget.line1" class="now-line">{{ nowWidget.line1 }}</div>
+          <div v-if="nowWidget.line2" class="now-line now-line-dim">{{ nowWidget.line2 }}</div>
+        </div>
+      </div>
     </div>
 
     <div class="bottom-section">
@@ -128,7 +150,7 @@
         </div>
         <div class="news-grid">
           <a
-            v-for="item in newsItems"
+            v-for="item in newsCards"
             :key="item.id"
             class="news-card"
             :href="item.source_url || 'https://kraskrit.ru/news/'"
@@ -154,9 +176,10 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { generateQRCode } from '../utils/qrGenerator'
 import { fetchNews } from '../services/newsService'
+import api from '../services/api'
 
 export default {
   name: 'Home',
@@ -168,10 +191,83 @@ export default {
     const accessibilityMode = ref(false)
     const daysUntilAdmission = ref(0)
     const newsItems = ref([])
+    const tickerIndex = ref(0)
+    const newsCards = computed(() => newsItems.value.slice(0, 3))
+    const tickerNews = computed(() => {
+      if (newsItems.value.length === 0) return null
+      return newsItems.value[tickerIndex.value % newsItems.value.length] || null
+    })
+    const nowStatus = ref(null)
+
+    const loadNowStatus = async () => {
+      try {
+        const response = await api.get('/schedule/now')
+        nowStatus.value = response.data
+      } catch (_) {
+        nowStatus.value = null
+      }
+    }
+
+    const nowWidget = computed(() => {
+      const s = nowStatus.value
+      if (!s) return null
+      if (s.status === 'weekend') {
+        return {
+          icon: '☕',
+          title: 'Сегодня выходной',
+          line1: 'Занятий в воскресенье нет',
+          line2: null,
+        }
+      }
+      if (s.status === 'before_classes' && s.next) {
+        return {
+          icon: '🕔',
+          title: 'До начала пар',
+          line1: `${s.next.label}: ${s.next.start}—${s.next.end}`,
+          line2: s.next.minutes_until != null
+            ? `Начало через ${s.next.minutes_until} мин`
+            : null,
+        }
+      }
+      if (s.status === 'break' && s.next) {
+        return {
+          icon: '☕',
+          title: 'Сейчас перерыв',
+          line1: `Следующая — ${s.next.label}: ${s.next.start}—${s.next.end}`,
+          line2: s.next.minutes_until != null
+            ? `Через ${s.next.minutes_until} мин`
+            : null,
+        }
+      }
+      if (s.status === 'after_classes') {
+        return {
+          icon: '🌙',
+          title: 'Пары на сегодня закончились',
+          line1: 'До встречи завтра!',
+          line2: null,
+        }
+      }
+      if (s.status === 'in_progress' && s.current) {
+        const groups = s.current.busy_groups
+        const groupsLabel = groups
+          ? `занято групп: ${groups}`
+          : ''
+        const left = s.current.minutes_left != null
+          ? `Осталось ${s.current.minutes_left} мин`
+          : ''
+        return {
+          icon: '📚',
+          title: `Сейчас идёт ${s.current.label}`,
+          line1: `${s.current.start}—${s.current.end}${groups ? '  ·  ' + groupsLabel : ''}`,
+          line2: left,
+        }
+      }
+      return null
+    })
 
     const loadNews = async () => {
       try {
-        const data = await fetchNews(3)
+        const data = await fetchNews(5)
         newsItems.value = Array.isArray(data) ? data : []
       } catch (_) {
         newsItems.value = []
@@ -327,6 +423,14 @@ export default {
       modal.onclick = (e) => { if (e.target === modal) modal.remove() }
     }
 
+    let nowInterval = null
+    let tickerInterval = null
+
+    const rotateTicker = () => {
+      if (newsItems.value.length === 0) return
+      tickerIndex.value = (tickerIndex.value + 1) % newsItems.value.length
+    }
+
     onMounted(() => {
       updateDateTime()
       timeInterval = setInterval(updateDateTime, 1000)
@@ -335,6 +439,9 @@ export default {
       loadNews()
       rotateFact()
       factInterval = setInterval(rotateFact, 18000) // Меняем факт каждые 18 секунд
+      loadNowStatus()
+      nowInterval = setInterval(loadNowStatus, 30000)
+      tickerInterval = setInterval(rotateTicker, 54000)
     })
 
     onUnmounted(() => {
@@ -343,6 +450,12 @@ export default {
       }
       if (factInterval) {
         clearInterval(factInterval)
+      }
+      if (nowInterval) {
+        clearInterval(nowInterval)
+      }
+      if (tickerInterval) {
+        clearInterval(tickerInterval)
       }
     })
 
@@ -359,7 +472,10 @@ export default {
       showSpecialties,
       showApplicationQR,
       newsItems,
-      formatNewsDate
+      newsCards,
+      tickerNews,
+      formatNewsDate,
+      nowWidget
     }
   }
 }
@@ -805,6 +921,106 @@ h1 {
   font-size: 1rem;
   line-height: 1.5;
   max-width: 280px;
+}
+
+/* ── Бегущая строка новостей (статичная, смена каждые 54с) ── */
+.ticker-plate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+  text-decoration: none;
+  max-width: min(680px, calc(100% - 2rem));
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.ticker-plate:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow), var(--accent-glow);
+}
+
+.ticker-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.ticker-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.ticker-fade-enter-active,
+.ticker-fade-leave-active {
+  transition: opacity 380ms ease, transform 380ms ease;
+}
+.ticker-fade-enter-from,
+.ticker-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* ── Виджет «Сейчас идёт» ── */
+.now-widget {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  margin: 1.25rem auto 0;
+  max-width: 720px;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.now-widget:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow), var(--accent-glow);
+  border-color: var(--border-hover);
+}
+
+.now-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.now-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.now-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.now-line {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.now-line-dim {
+  font-size: 0.85rem;
+  color: var(--text-dim);
 }
 
 /* ── Новости колледжа ── */

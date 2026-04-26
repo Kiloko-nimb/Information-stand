@@ -47,14 +47,20 @@
         >
           По преподавателю
         </button>
+        <button
+          :class="{ active: searchType === 'room' }"
+          @click="selectSearchType('room')"
+        >
+          По кабинету
+        </button>
       </div>
 
       <div class="search-input">
         <input
           v-model="searchQuery"
-          :placeholder="searchType === 'group' ? 'Введите номер группы' : 'Введите ФИО преподавателя'"
+          :placeholder="searchPlaceholder"
           @keyup.enter="search"
-          :list="searchType === 'group' ? 'groups-list' : 'teachers-list'"
+          :list="datalistId"
           autocomplete="off"
         />
         <datalist id="groups-list">
@@ -62,6 +68,9 @@
         </datalist>
         <datalist id="teachers-list">
           <option v-for="teacher in availableTeachers" :key="teacher.name" :value="teacher.name"></option>
+        </datalist>
+        <datalist id="rooms-list">
+          <option v-for="room in availableRooms" :key="room.number" :value="room.number"></option>
         </datalist>
         <button @click="search">Найти</button>
       </div>
@@ -85,8 +94,18 @@
 
     <div v-else-if="scheduleData.length > 0" class="schedule-results">
       <div class="schedule-header">
-        <h2>{{ searchType === 'group' ? `Группа: ${searchQuery}` : `Преподаватель: ${searchQuery}` }}</h2>
-        <div class="schedule-date">{{ formatDate(selectedDate) }}</div>
+        <h2>{{ scheduleHeader }}</h2>
+        <div class="schedule-header-right">
+          <div class="schedule-date">{{ formatDate(selectedDate) }}</div>
+          <button
+            class="qr-share-btn"
+            type="button"
+            title="Забрать расписание в телефон"
+            @click="openShareQR"
+          >
+            📱 Сканировать QR
+          </button>
+        </div>
       </div>
 
       <div class="lesson-types-legend">
@@ -113,7 +132,8 @@
             'current-lesson': isCurrentLesson(item),
             'lesson-lecture': getLessonTypeClass(item.lesson_type) === 'lecture',
             'lesson-practice': getLessonTypeClass(item.lesson_type) === 'practice',
-            'lesson-lab': getLessonTypeClass(item.lesson_type) === 'lab'
+            'lesson-lab': getLessonTypeClass(item.lesson_type) === 'lab',
+            'lesson-modified': item.is_modified
           }"
         >
           <div class="timeline-marker">
@@ -131,6 +151,11 @@
             <div class="lesson-card">
               <div class="lesson-header">
                 <h3 class="lesson-subject">{{ item.subject }}</h3>
+                <span
+                  v-if="item.is_modified"
+                  class="modified-badge"
+                  title="Это занятие изменилось с предыдущего импорта расписания"
+                >Замена</span>
                 <span class="lesson-type" :class="'type-' + getLessonTypeClass(item.lesson_type)">
                   {{ formatLessonType(item.lesson_type) }}
                 </span>
@@ -138,13 +163,25 @@
               <div class="lesson-details">
                 <div class="lesson-detail">
                   <span class="detail-icon">👨‍🏫</span>
-                  <span class="detail-text">{{ item.teacher_name || 'Не указан' }}</span>
+                  <button
+                    v-if="item.teacher_name"
+                    class="detail-link"
+                    :title="`Открыть расписание преподавателя`"
+                    @click="openTeacherSchedule(item.teacher_name)"
+                  >{{ item.teacher_name }}</button>
+                  <span v-else class="detail-text">Не указан</span>
                 </div>
                 <div class="lesson-detail">
                   <span class="detail-icon">📍</span>
-                  <span class="detail-text">Кабинет {{ item.room_number || '—' }}</span>
+                  <button
+                    v-if="item.room_number"
+                    class="detail-link"
+                    :title="`Открыть расписание кабинета`"
+                    @click="openRoomSchedule(item.room_number)"
+                  >Кабинет {{ item.room_number }}</button>
+                  <span v-else class="detail-text">Кабинет —</span>
                   <button v-if="item.room_number" class="show-on-map-btn" @click="showRoomOnMap(item.room_number)">
-                    Показать на карте
+                    На карте
                   </button>
                 </div>
               </div>
@@ -154,10 +191,27 @@
       </div>
     </div>
 
-    <div v-else-if="searched" class="no-results">
+    <div
+      v-if="shareQR.open"
+      class="share-qr-modal"
+      @click.self="closeShareQR"
+    >
+      <div class="share-qr-card">
+        <h3>Расписание — {{ shareQR.subtitle }}</h3>
+        <p class="share-qr-hint">Наведите камеру телефона на код, чтобы забрать расписание.</p>
+        <img v-if="shareQR.dataUrl" :src="shareQR.dataUrl" alt="QR с расписанием" class="share-qr-image" />
+        <p v-else class="share-qr-hint">Генерируем…</p>
+        <button class="share-qr-close" type="button" @click="closeShareQR">Закрыть</button>
+      </div>
+    </div>
+
+    <div v-if="!loading && scheduleData.length === 0 && searched" class="no-results">
       <div v-if="searchType === 'teacher'">
         Преподаватель «{{ searchQuery }}» не найден на эту дату.
         <div class="no-results-hint">Попробуйте выбрать из подсказок — формат «Фамилия И.О.»</div>
+      </div>
+      <div v-else-if="searchType === 'room'">
+        В кабинете «{{ searchQuery }}» ничего не запланировано на эту дату.
       </div>
       <div v-else>
         Группа «{{ searchQuery }}» не найдена на эту дату.
@@ -167,8 +221,9 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
+import { generateQRCode } from '../utils/qrGenerator'
 
 export default {
   name: 'Schedule',
@@ -178,7 +233,27 @@ export default {
     const scheduleData = ref([])
     const availableGroups = ref([])
     const availableTeachers = ref([])
+    const availableRooms = ref([])
     const loading = ref(false)
+    const shareQR = ref({ open: false, dataUrl: '', subtitle: '' })
+    let searchAbortController = null
+    let searchDebounceTimer = null
+
+    const searchPlaceholder = computed(() => {
+      if (searchType.value === 'group') return 'Введите номер группы'
+      if (searchType.value === 'teacher') return 'Введите ФИО преподавателя'
+      return 'Введите номер кабинета'
+    })
+    const datalistId = computed(() => {
+      if (searchType.value === 'group') return 'groups-list'
+      if (searchType.value === 'teacher') return 'teachers-list'
+      return 'rooms-list'
+    })
+    const scheduleHeader = computed(() => {
+      if (searchType.value === 'group') return `Группа: ${searchQuery.value}`
+      if (searchType.value === 'teacher') return `Преподаватель: ${searchQuery.value}`
+      return `Кабинет ${searchQuery.value}`
+    })
     const searched = ref(false)
     const selectedDate = ref(new Date())
     const dateRange = ref([])
@@ -213,7 +288,7 @@ export default {
       const picked = new Date(yyyy, mm - 1, dd)
       selectedDate.value = picked
       generateDateRange()
-      if (searchQuery.value.trim()) search()
+      debouncedSearch()
     }
 
     const onDateWheel = (event) => {
@@ -246,11 +321,22 @@ export default {
       return date.toDateString() === selectedDate.value.toDateString()
     }
 
+    // Дебаунс для быстрых кликов по карусели дат — объединяем всплеск
+    // GET'ов в один фактический запрос.
+    const debouncedSearch = () => {
+      if (!searchQuery.value.trim()) return
+      if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer)
+      }
+      searchDebounceTimer = setTimeout(() => {
+        searchDebounceTimer = null
+        search()
+      }, 180)
+    }
+
     const selectDate = (date) => {
       selectedDate.value = date
-      if (searchQuery.value.trim()) {
-        search()
-      }
+      debouncedSearch()
     }
 
     const previousDay = () => {
@@ -258,7 +344,7 @@ export default {
       newDate.setDate(newDate.getDate() - 1)
       selectedDate.value = newDate
       generateDateRange()
-      if (searchQuery.value.trim()) search()
+      debouncedSearch()
     }
 
     const nextDay = () => {
@@ -266,7 +352,7 @@ export default {
       newDate.setDate(newDate.getDate() + 1)
       selectedDate.value = newDate
       generateDateRange()
-      if (searchQuery.value.trim()) search()
+      debouncedSearch()
     }
 
     const loadTeachers = async () => {
@@ -276,6 +362,73 @@ export default {
       } catch (error) {
         console.error('Ошибка загрузки преподавателей:', error)
       }
+    }
+
+    const loadRooms = async () => {
+      try {
+        const response = await api.get('/schedule/rooms')
+        availableRooms.value = response.data
+      } catch (error) {
+        console.error('Ошибка загрузки кабинетов:', error)
+      }
+    }
+
+    const openTeacherSchedule = (teacherName) => {
+      if (!teacherName) return
+      searchType.value = 'teacher'
+      searchQuery.value = teacherName
+      search()
+    }
+
+    const openRoomSchedule = (roomNumber) => {
+      if (!roomNumber) return
+      searchType.value = 'room'
+      searchQuery.value = String(roomNumber)
+      search()
+    }
+
+    const buildShareText = () => {
+      const dateStr = formatDate(selectedDate.value)
+      const lines = [
+        `ККРИТ · ${scheduleHeader.value}`,
+        dateStr,
+        '',
+      ]
+      const rows = scheduleData.value.slice().sort(
+        (a, b) => a.lesson_number - b.lesson_number
+      )
+      for (const it of rows) {
+        const lesson = formatLessonNumber(it.lesson_number)
+        const time = `${formatTime(it.time_start)}–${formatTime(it.time_end)}`
+        const subj = it.subject || ''
+        const teacher = it.teacher_name ? ` · ${it.teacher_name}` : ''
+        const room = it.room_number ? ` · ауд.${it.room_number}` : ''
+        const tag = it.is_modified ? ' [ЗАМЕНА]' : ''
+        lines.push(`${lesson}. ${time} · ${subj}${teacher}${room}${tag}`)
+      }
+      // QR надёжно читается до ~700 байт. Трим на 800 символов.
+      let text = lines.join('\n')
+      if (text.length > 800) text = text.slice(0, 797) + '…'
+      return text
+    }
+
+    const openShareQR = async () => {
+      if (scheduleData.value.length === 0) return
+      shareQR.value = {
+        open: true,
+        dataUrl: '',
+        subtitle: scheduleHeader.value,
+      }
+      const text = buildShareText()
+      const dataUrl = await generateQRCode(text)
+      shareQR.value = {
+        ...shareQR.value,
+        dataUrl: dataUrl || '',
+      }
+    }
+
+    const closeShareQR = () => {
+      shareQR.value = { open: false, dataUrl: '', subtitle: '' }
     }
 
     const loadGroups = async () => {
@@ -317,15 +470,36 @@ export default {
       searched.value = true
 
       try {
-        const endpoint = searchType.value === 'group'
-          ? `/schedule/group/${searchQuery.value}`
-          : `/schedule/teacher/${searchQuery.value}`
+        let endpoint
+        if (searchType.value === 'group') {
+          endpoint = `/schedule/group/${searchQuery.value}`
+        } else if (searchType.value === 'teacher') {
+          endpoint = `/schedule/teacher/${searchQuery.value}`
+        } else {
+          endpoint = `/schedule/room/${searchQuery.value}`
+        }
 
+        // Отменяем предыдущий в полёте запрос — иначе
+        // при быстром переключении даты улетает пачка
+        // одинаковых GET'ов.
+        if (searchAbortController) {
+          searchAbortController.abort()
+        }
+        searchAbortController = new AbortController()
         const response = await api.get(endpoint, {
-          params: { date: toDateParam(selectedDate.value) }
+          params: { date: toDateParam(selectedDate.value) },
+          signal: searchAbortController.signal,
         })
         scheduleData.value = response.data.sort((a, b) => a.lesson_number - b.lesson_number)
       } catch (error) {
+        // Запрос отменен — тихо выходим, ничего не показываем.
+        if (
+          error?.code === 'ERR_CANCELED' ||
+          error?.name === 'CanceledError' ||
+          error?.name === 'AbortError'
+        ) {
+          return
+        }
         // 404 — ожидаемый случай «ничего не найдено»,
         // показываем пользователю пустое состояние без шума в консоли.
         scheduleData.value = []
@@ -397,7 +571,13 @@ export default {
     onMounted(() => {
       loadGroups()
       loadTeachers()
+      loadRooms()
       generateDateRange()
+    })
+
+    onUnmounted(() => {
+      if (searchAbortController) searchAbortController.abort()
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
     })
 
     return {
@@ -407,6 +587,15 @@ export default {
       scheduleData,
       availableGroups,
       availableTeachers,
+      availableRooms,
+      openTeacherSchedule,
+      openRoomSchedule,
+      shareQR,
+      openShareQR,
+      closeShareQR,
+      searchPlaceholder,
+      datalistId,
+      scheduleHeader,
       loading,
       searched,
       search,
@@ -740,6 +929,31 @@ h1 {
   color: var(--text-dim);
 }
 
+.detail-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px dashed transparent;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.detail-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.detail-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .loading,
 .no-results {
   text-align: center;
@@ -845,6 +1059,110 @@ h1 {
   color: var(--text-muted);
   text-transform: capitalize;
   font-weight: 500;
+}
+
+.schedule-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.qr-share-btn {
+  background: linear-gradient(135deg, #8b7bff 0%, #22d3ee 100%);
+  color: #0b0d1c;
+  border: none;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+  white-space: nowrap;
+}
+
+.qr-share-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(139, 123, 255, 0.4);
+}
+
+/* ── Бейдж «Замена» (отслеживание изменений в расписании) ── */
+.modified-badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #1a0e00;
+  font-weight: 800;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 0.35rem;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.timeline-item.lesson-modified .lesson-card {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25), var(--shadow-sm);
+}
+
+/* ── Модалка QR с расписанием ── */
+.share-qr-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+}
+
+.share-qr-card {
+  background: linear-gradient(160deg, #151a32 0%, #0f1224 100%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 1.75rem 2rem 1.5rem;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.share-qr-card h3 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.share-qr-hint {
+  margin: 0 0 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.share-qr-image {
+  width: 240px;
+  height: 240px;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px;
+  margin: 0 auto 1.1rem;
+  display: block;
+}
+
+.share-qr-close {
+  width: 100%;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, #8b7bff 0%, #22d3ee 100%);
+  color: #0b0d1c;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 /* ── Легенда ── */
