@@ -414,7 +414,7 @@ export default {
               • При наличии свободных мест: <strong style="color:#b45309;">до 25 ноября 2026</strong>
             </div>
           </div>
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#6366f1 0%,#0ea5b7 100%);color:#ffffff;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(99,102,241,0.35)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#2563EB 0%,#0EA5B7 100%);color:#ffffff;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(37,99,235,0.35)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -461,11 +461,11 @@ export default {
             </div>
           </div>
 
-          <div style="background:linear-gradient(135deg,rgba(99,102,241,0.10),rgba(14,165,183,0.08));padding:1.25rem 1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(99,102,241,0.30);color:rgba(15,23,42,0.92);font-size:0.95rem;line-height:1.7;">
+          <div style="background:linear-gradient(135deg,rgba(37,99,235,0.10),rgba(14,165,183,0.08));padding:1.25rem 1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(37,99,235,0.30);color:rgba(15,23,42,0.92);font-size:0.95rem;line-height:1.7;">
             📊 <strong>Итого на 2026/27:</strong> 225 бюджетных + 275 платных мест. <br>Три специальности появились впервые в этом году: <strong style="color:#b45309;">ИИ, игры/AR‑VR и веб-разработка</strong>.
           </div>
 
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#6366f1 0%,#0ea5b7 100%);color:#ffffff;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(99,102,241,0.35)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#2563EB 0%,#0EA5B7 100%);color:#ffffff;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(37,99,235,0.35)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -516,11 +516,11 @@ export default {
             </div>
           </div>
 
-          <div style="background:linear-gradient(135deg,rgba(14,165,183,0.12),rgba(99,102,241,0.08));padding:1.25rem 1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(14,165,183,0.30);color:rgba(15,23,42,0.92);font-size:0.93rem;line-height:1.7;">
+          <div style="background:linear-gradient(135deg,rgba(14,165,183,0.12),rgba(37,99,235,0.08));padding:1.25rem 1.5rem;border-radius:18px;margin-bottom:1.5rem;border:1px solid rgba(14,165,183,0.30);color:rgba(15,23,42,0.92);font-size:0.93rem;line-height:1.7;">
             ℹ️ Заявление можно подать <strong>лично</strong> на пр. Свободный 67, <strong>почтой</strong> или <strong>через Госуслуги</strong> (в тестовом режиме).<br>Для зачисления оригинал аттестата нужно сдать до <strong>14 августа 2026</strong>.
           </div>
 
-          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#6366f1 0%,#0ea5b7 100%);color:#ffffff;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(99,102,241,0.35)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:0.9rem 2rem;background:linear-gradient(135deg,#2563EB 0%,#0EA5B7 100%);color:#ffffff;border:none;border-radius:999px;cursor:pointer;font-size:1rem;font-weight:700;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 0 24px rgba(37,99,235,0.35)'" onmouseout="this.style.transform='';this.style.boxShadow=''">Закрыть</button>
         </div>
       `
       document.body.appendChild(modal)
@@ -613,11 +613,12 @@ export default {
 /* ── Заголовок ── */
 h1 {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-size: clamp(2.25rem, 5vw, 3.6rem);
   font-weight: 800;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
   margin-bottom: 0.75rem;
-  background: linear-gradient(135deg, #ffffff 0%, #c4c6d8 50%, #8b7bff 100%);
+  background: var(--accent-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -864,12 +865,12 @@ h1 {
 }
 
 .social-link--mail .social-badge {
-  background: linear-gradient(135deg, #8b7bff 0%, #22d3ee 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #0EA5B7 100%);
   color: #fff;
 }
 
 .social-link--site .social-badge {
-  background: linear-gradient(135deg, #22d3ee 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #0EA5B7 0%, #2563EB 100%);
   color: #fff;
 }
 
@@ -901,7 +902,10 @@ h1 {
   justify-content: center;
   align-items: center;
   text-align: center;
-  background: linear-gradient(135deg, rgba(139, 123, 255, 0.08), rgba(34, 211, 238, 0.06));
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 70%),
+    var(--surface);
+  border-color: var(--accent-border);
 }
 
 .time {
@@ -935,8 +939,23 @@ h1 {
 
 /* ── Абитуриент-виджет ── */
 .applicant-widget {
-  background: linear-gradient(135deg, rgba(139, 123, 255, 0.12), rgba(244, 114, 182, 0.08));
-  border-color: rgba(139, 123, 255, 0.25);
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(239, 68, 68, 0.06)),
+    var(--surface);
+  border-color: rgba(245, 158, 11, 0.25);
+  overflow: hidden;
+}
+
+.applicant-widget::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--accent-gradient-warm);
+  z-index: 1;
 }
 
 .applicant-widget h3 {
@@ -1000,6 +1019,7 @@ h1 {
   background: var(--surface-hover);
   border-color: var(--accent-border);
   transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-icon {
@@ -1114,7 +1134,7 @@ h1 {
   font-size: 4rem;
   margin-bottom: 1.25rem;
   transition: transform var(--transition-slow);
-  filter: drop-shadow(0 4px 12px rgba(139, 123, 255, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.20));
 }
 
 .feature-card:hover .feature-icon {
@@ -1189,53 +1209,86 @@ h1 {
    Находится внутри .top-section, под заголовком, чтобы визуально
    не налезать на блок контактов ниже. */
 .now-widget {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1rem 1.5rem;
-  margin: 1.5rem auto 0.5rem;
-  max-width: 720px;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  margin: 2rem auto 0.75rem;
+  max-width: 880px;
   background: var(--surface);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
   cursor: pointer;
+  overflow: hidden;
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.now-widget::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-gradient);
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.now-widget::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  z-index: 1;
+}
+
+.now-widget > * {
+  position: relative;
+  z-index: 2;
 }
 
 .now-widget:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow), var(--accent-glow);
-  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-border);
 }
 
 .now-icon {
-  font-size: 2rem;
+  font-size: 3rem;
   flex-shrink: 0;
+  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.20));
 }
 
 .now-text {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.35rem;
   min-width: 0;
+  flex: 1;
 }
 
 .now-title {
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.25rem, 1.8vw, 1.6rem);
+  letter-spacing: -0.02em;
   color: var(--text);
+  line-height: 1.2;
 }
 
 .now-line {
-  font-size: 0.95rem;
+  font-size: clamp(1rem, 1.2vw, 1.1rem);
   color: var(--text-muted);
+  font-weight: 500;
 }
 
 .now-line-dim {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-dim);
 }
 
@@ -1436,7 +1489,7 @@ h1 {
   order: 2;
   flex: 1 1 auto;
   min-height: 8vh;
-  background: radial-gradient(ellipse at center, rgba(139,123,255,0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(37,99,235,0.06) 0%, transparent 70%);
 }
 
 .home.accessibility-active .bottom-section {

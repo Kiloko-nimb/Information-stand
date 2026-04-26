@@ -1105,7 +1105,7 @@ h1 {
 
 .schedule-header {
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(34, 211, 238, 0.10));
+  background: linear-gradient(135deg, var(--accent-soft), rgba(14, 165, 183, 0.08));
   border-bottom: 1px solid var(--border);
   color: var(--text);
   display: flex;
@@ -1138,7 +1138,7 @@ h1 {
 }
 
 .qr-share-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #0ea5b7 100%);
+  background: var(--accent-gradient);
   color: #ffffff;
   border: none;
   padding: 0.5rem 0.95rem;
@@ -1152,7 +1152,7 @@ h1 {
 
 .qr-share-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 18px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
 }
 
 /* ── Бейдж «Замена» (отслеживание изменений в расписании) ── */
@@ -1225,7 +1225,7 @@ h1 {
 .share-qr-close {
   width: 100%;
   padding: 0.7rem 1.5rem;
-  background: linear-gradient(135deg, #6366f1 0%, #0ea5b7 100%);
+  background: var(--accent-gradient);
   color: #ffffff;
   border: none;
   border-radius: 999px;
@@ -1264,15 +1264,15 @@ h1 {
 }
 
 .legend-badge.badge-lecture {
-  background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
 }
 
 .legend-badge.badge-practice {
-  background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+  background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
 }
 
 .legend-badge.badge-lab {
-  background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
+  background: linear-gradient(135deg, #0EA5B7 0%, #14B8A6 100%);
 }
 
 /* ── Timeline ── */
@@ -1302,7 +1302,7 @@ h1 {
 .lesson-badge {
   width: 52px;
   height: 52px;
-  background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -1311,28 +1311,28 @@ h1 {
   font-size: 1.3rem;
   font-weight: 800;
   color: #fff;
-  box-shadow: 0 6px 20px -4px rgba(99, 102, 241, 0.45);
+  box-shadow: 0 6px 20px -4px rgba(37, 99, 235, 0.45);
   z-index: 2;
   transition: transform var(--transition);
 }
 
 .lesson-badge.badge-lecture {
-  background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
-  box-shadow: 0 6px 20px -4px rgba(99, 102, 241, 0.45);
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 6px 20px -4px rgba(37, 99, 235, 0.45);
 }
 
 .lesson-badge.badge-practice {
-  background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
-  box-shadow: 0 6px 20px -4px rgba(244, 114, 182, 0.5);
+  background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+  box-shadow: 0 6px 20px -4px rgba(245, 158, 11, 0.45);
 }
 
 .lesson-badge.badge-lab {
-  background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
-  box-shadow: 0 6px 20px -4px rgba(34, 211, 238, 0.5);
+  background: linear-gradient(135deg, #0EA5B7 0%, #14B8A6 100%);
+  box-shadow: 0 6px 20px -4px rgba(14, 165, 183, 0.45);
 }
 
 .timeline-item.lesson-lecture .timeline-line {
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.35), transparent);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.35), transparent);
 }
 
 .timeline-item.lesson-practice .timeline-line {
@@ -1441,21 +1441,21 @@ h1 {
 }
 
 .lesson-type.type-lecture {
-  background: rgba(99, 102, 241, 0.14);
-  border-color: rgba(99, 102, 241, 0.30);
-  color: #ffffff;
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(37, 99, 235, 0.30);
+  color: var(--text);
 }
 
 .lesson-type.type-practice {
-  background: rgba(244, 114, 182, 0.15);
-  border-color: rgba(244, 114, 182, 0.35);
-  color: #ffffff;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: var(--text);
 }
 
 .lesson-type.type-lab {
-  background: rgba(34, 211, 238, 0.15);
-  border-color: rgba(34, 211, 238, 0.35);
-  color: #ffffff;
+  background: rgba(14, 165, 183, 0.14);
+  border-color: rgba(14, 165, 183, 0.32);
+  color: var(--text);
 }
 
 .lesson-details {
