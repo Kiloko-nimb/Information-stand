@@ -2,9 +2,17 @@
   <div id="app">
     <header class="app-header">
       <div class="header-content">
-        <router-link to="/" class="logo-link" aria-label="На главную">
+        <router-link
+          v-if="$route.path !== '/'"
+          to="/"
+          class="logo-link"
+          aria-label="На главную"
+        >
           <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
         </router-link>
+        <div v-else class="logo-link is-static" aria-hidden="true">
+          <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
+        </div>
         <div class="header-text">
           <span class="header-eyebrow">Интерактивный стенд</span>
           <h1>ККРИТ</h1>
@@ -142,6 +150,15 @@ export default {
 
 .logo-link:active {
   transform: translateY(0) scale(0.98);
+}
+
+.logo-link.is-static {
+  cursor: default;
+}
+
+.logo-link.is-static:hover {
+  transform: none;
+  box-shadow: var(--shadow-xs);
 }
 
 .logo {

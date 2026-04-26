@@ -1,12 +1,21 @@
 <template>
   <div class="home" :class="{ 'accessibility-active': accessibilityMode }">
     <div class="top-section">
-      <h1>Добро пожаловать в ККРИТ!</h1>
-      <p class="subtitle">Красноярский колледж радиоэлектроники и информационных технологий</p>
-
-      <div class="widget datetime-widget-top">
-        <div class="time">{{ currentTime }}</div>
-        <div class="date">{{ currentDate }}</div>
+      <div class="bento-hero">
+        <div class="bento-card bento-welcome">
+          <span class="bento-eyebrow">Добро пожаловать в</span>
+          <h1>Красноярский колледж радиоэлектроники<br>и информационных технологий</h1>
+          <div class="bento-day-row">
+            <span class="bento-day-name">{{ currentDayName }}</span>
+            <span class="bento-day-dot">·</span>
+            <span class="bento-day-date">{{ currentDayShort }}</span>
+          </div>
+        </div>
+        <div class="bento-card bento-clock">
+          <div class="bento-clock-eyebrow">Сейчас</div>
+          <div class="bento-clock-time">{{ currentTime }}</div>
+          <div class="bento-clock-date">{{ currentDayName }}</div>
+        </div>
       </div>
 
       <div v-if="nowWidget" class="now-widget" @click="$router.push('/schedule')">
@@ -32,6 +41,33 @@
           <span class="ticker-title">{{ tickerNews.title }}</span>
         </a>
       </transition>
+
+      <div v-if="bellSchedule.length > 0" class="bells-widget" @click="$router.push('/schedule')">
+        <div class="bells-head">
+          <span class="bells-icon">🔔</span>
+          <span class="bells-title">Расписание звонков</span>
+          <span class="bells-day">{{ currentDayName }}</span>
+        </div>
+        <div class="bells-list">
+          <div
+            v-for="pair in bellSchedule"
+            :key="pair.label + pair.start"
+            class="bell-item"
+            :class="{
+              'bell-item--current': pair.lesson_number === currentBellNumber,
+              'bell-item--next': pair.lesson_number === nextBellNumber,
+            }"
+          >
+            <div class="bell-num">{{ pair.lesson_number > 0 ? pair.lesson_number : '·' }}</div>
+            <div class="bell-info">
+              <div class="bell-label">{{ pair.label }}</div>
+              <div class="bell-time">{{ pair.start }}–{{ pair.end }}</div>
+            </div>
+            <div v-if="pair.lesson_number === currentBellNumber" class="bell-tag bell-tag--now">Сейчас</div>
+            <div v-else-if="pair.lesson_number === nextBellNumber" class="bell-tag bell-tag--next">След.</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="middle-section">
@@ -135,11 +171,6 @@
       </div>
 
       <div class="bottom-widgets">
-        <div class="widget datetime-widget">
-          <div class="time">{{ currentTime }}</div>
-          <div class="date">{{ currentDate }}</div>
-        </div>
-
         <div class="widget applicant-widget">
           <h3>🎓 Абитуриенту 2026</h3>
           <div class="countdown-timer">
@@ -235,6 +266,9 @@ export default {
   setup() {
     const currentTime = ref('')
     const currentDate = ref('')
+    const currentDayName = ref('')
+    const currentDayShort = ref('')
+    const bellSchedule = ref([])
     const qrWebsite = ref('')
     const qrFeedback = ref('')
     const qrVK = ref('')
@@ -359,7 +393,36 @@ export default {
         month: 'long',
         day: 'numeric'
       })
+      currentDayName.value = now.toLocaleDateString('ru-RU', { weekday: 'long' })
+      currentDayShort.value = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     }
+
+    const loadBellSchedule = async () => {
+      try {
+        const response = await api.get('/schedule/bells')
+        bellSchedule.value = Array.isArray(response.data?.pairs) ? response.data.pairs : []
+      } catch (_) {
+        bellSchedule.value = []
+      }
+    }
+
+    const currentBellNumber = computed(() => {
+      const s = nowStatus.value
+      if (!s) return null
+      if (s.status === 'in_progress' && s.current?.lesson_number != null) {
+        return s.current.lesson_number
+      }
+      return null
+    })
+
+    const nextBellNumber = computed(() => {
+      const s = nowStatus.value
+      if (!s) return null
+      if ((s.status === 'before_classes' || s.status === 'break') && s.next?.lesson_number != null) {
+        return s.next.lesson_number
+      }
+      return null
+    })
 
     const generateQRCodes = async () => {
       qrWebsite.value = await generateQRCode('https://kraskrit.ru/')
@@ -545,6 +608,7 @@ export default {
       factInterval = setInterval(rotateFact, 18000) // Меняем факт каждые 18 секунд
       loadNowStatus()
       nowInterval = setInterval(loadNowStatus, 30000)
+      loadBellSchedule()
       tickerInterval = setInterval(rotateTicker, 54000)
     })
 
@@ -580,7 +644,12 @@ export default {
       newsCards,
       tickerNews,
       formatNewsDate,
-      nowWidget
+      nowWidget,
+      currentDayName,
+      currentDayShort,
+      bellSchedule,
+      currentBellNumber,
+      nextBellNumber,
     }
   }
 }
@@ -596,8 +665,7 @@ export default {
 }
 
 .top-section {
-  text-align: center;
-  padding: 3rem 0 2rem;
+  padding: 1.5rem 0 1rem;
   transition: all 0.6s var(--ease);
 }
 
@@ -610,18 +678,289 @@ export default {
   transform: translateY(0);
 }
 
+/* ── Bento hero: приветствие + часы ── */
+.bento-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .bento-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bento-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow);
+}
+
+.bento-welcome {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  background:
+    radial-gradient(120% 80% at 0% 0%, var(--accent-soft), transparent 55%),
+    var(--surface);
+}
+
+.bento-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 /* ── Заголовок ── */
 h1 {
   font-family: var(--font-display);
-  font-size: clamp(2.25rem, 5vw, 3.6rem);
+  font-size: clamp(1.75rem, 3.4vw, 2.6rem);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  margin-bottom: 0.75rem;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--text);
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+.bento-day-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding: 0.55rem 1.1rem;
   background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  text-transform: capitalize;
+  letter-spacing: -0.01em;
+  align-self: flex-start;
+  box-shadow: var(--shadow-sm);
+}
+
+.bento-day-dot {
+  opacity: 0.55;
+}
+
+.bento-day-date {
+  font-weight: 600;
+}
+
+.bento-clock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.4rem;
+  background:
+    linear-gradient(160deg, var(--accent) 0%, var(--accent-2) 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: var(--shadow), var(--accent-glow);
+}
+
+.bento-clock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.18), transparent 60%);
+  pointer-events: none;
+}
+
+.bento-clock-eyebrow {
+  position: relative;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.bento-clock-time {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bento-clock-date {
+  position: relative;
+  font-size: 1rem;
+  opacity: 0.9;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+/* ── Расписание звонков ── */
+.bells-widget {
+  margin: 1.25rem auto 0;
+  max-width: 880px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+.bells-widget:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow);
+}
+
+.bells-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+.bells-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.bells-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.bells-day {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.bells-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.5rem;
+}
+
+.bell-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  position: relative;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.bell-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-strong);
+  color: var(--text-muted);
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.bell-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.bell-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bell-time {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.bell-tag {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.bell-tag--now {
+  background: var(--accent-gradient);
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.5);
+}
+
+.bell-tag--next {
+  background: linear-gradient(135deg, var(--accent-3), #EF4444);
+}
+
+.bell-item--current {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.bell-item--current .bell-num {
+  background: var(--accent-gradient);
+  color: #ffffff;
+}
+
+.bell-item--current .bell-label {
+  color: var(--accent);
+}
+
+.bell-item--next {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.30);
+}
+
+.bell-item--next .bell-num {
+  background: linear-gradient(135deg, var(--accent-3), #EF4444);
+  color: #ffffff;
 }
 
 .subtitle {
@@ -886,7 +1225,7 @@ h1 {
 /* ── Нижние виджеты ── */
 .bottom-widgets {
   display: grid;
-  grid-template-columns: 1fr 1.8fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   margin: 2rem 0;
 }

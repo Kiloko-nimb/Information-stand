@@ -8,6 +8,16 @@
 
     <div class="date-carousel">
       <button class="carousel-arrow" @click="previousDay" aria-label="Предыдущий день">‹</button>
+      <button
+        v-if="!isToday"
+        class="carousel-today"
+        @click="goToToday"
+        aria-label="Перейти к сегодняшней дате"
+        title="Перейти к сегодняшней дате"
+      >
+        <span class="carousel-today-icon">↺</span>
+        <span class="carousel-today-label">Сегодня</span>
+      </button>
       <div class="date-cards-container" ref="dateScrollEl" @wheel.prevent="onDateWheel">
         <div class="date-cards">
           <button
@@ -400,6 +410,17 @@ export default {
       debouncedSearch()
     }
 
+    const isToday = computed(() => {
+      const t = new Date()
+      return selectedDate.value.toDateString() === t.toDateString()
+    })
+
+    const goToToday = () => {
+      selectedDate.value = new Date()
+      generateDateRange()
+      debouncedSearch()
+    }
+
     const loadTeachers = async () => {
       try {
         const response = await api.get('/schedule/teachers')
@@ -666,6 +687,8 @@ export default {
       selectDate,
       previousDay,
       nextDay,
+      isToday,
+      goToToday,
       formatLessonNumber,
       toDateParam,
       datePickerEl,
@@ -764,6 +787,35 @@ h1 {
   background: var(--surface-hover);
   border-color: var(--accent-border);
   transform: scale(1.08);
+}
+
+.carousel-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0 0.95rem;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.carousel-today:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.carousel-today-icon {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .carousel-picker {
