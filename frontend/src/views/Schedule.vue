@@ -76,17 +76,22 @@
       </div>
     </div>
 
-    <div v-if="!searched && availableGroups.length > 0" class="groups-list">
-      <h2>Доступные группы</h2>
-      <div class="groups-grid">
+    <div v-if="!searched && quickPickItems.length > 0" class="groups-list">
+      <h2>{{ quickPickHeader }}</h2>
+      <div class="groups-grid" :class="'groups-grid--' + searchType">
         <button
-          v-for="group in availableGroups"
-          :key="group.name"
+          v-for="item in quickPickItems"
+          :key="item.value"
           class="group-card"
-          @click="selectGroup(group.name)"
+          :title="item.label"
+          @click="selectQuickPick(item.value)"
         >
-          {{ group.name }}
+          {{ item.label }}
         </button>
+      </div>
+      <div v-if="quickPickTotal > quickPickItems.length" class="quick-pick-hint">
+        Показаны первые {{ quickPickItems.length }} из {{ quickPickTotal }}.
+        Начните вводить в поиске, чтобы отфильтровать.
       </div>
     </div>
 
@@ -254,6 +259,46 @@ export default {
       if (searchType.value === 'teacher') return `Преподаватель: ${searchQuery.value}`
       return `Кабинет ${searchQuery.value}`
     })
+
+    const QUICK_PICK_LIMIT = 60
+
+    const quickPickHeader = computed(() => {
+      if (searchType.value === 'group') return 'Доступные группы'
+      if (searchType.value === 'teacher') return 'Преподаватели'
+      return 'Кабинеты'
+    })
+
+    const _allQuickPickItems = computed(() => {
+      if (searchType.value === 'group') {
+        return availableGroups.value.map((g) => ({
+          value: g.name,
+          label: g.name,
+        }))
+      }
+      if (searchType.value === 'teacher') {
+        return availableTeachers.value.map((t) => ({
+          value: t.name,
+          label: t.name,
+        }))
+      }
+      return availableRooms.value.map((r) => ({
+        value: String(r.number),
+        label: String(r.number),
+      }))
+    })
+
+    const _filteredQuickPickItems = computed(() => {
+      const q = searchQuery.value.trim().toLowerCase()
+      if (!q) return _allQuickPickItems.value
+      return _allQuickPickItems.value.filter((item) =>
+        item.label.toLowerCase().includes(q)
+      )
+    })
+
+    const quickPickItems = computed(() =>
+      _filteredQuickPickItems.value.slice(0, QUICK_PICK_LIMIT)
+    )
+    const quickPickTotal = computed(() => _filteredQuickPickItems.value.length)
     const searched = ref(false)
     const selectedDate = ref(new Date())
     const dateRange = ref([])
@@ -446,6 +491,11 @@ export default {
       search()
     }
 
+    const selectQuickPick = (value) => {
+      searchQuery.value = value
+      search()
+    }
+
     const selectSearchType = (type) => {
       if (searchType.value === type) return
       searchType.value = type
@@ -588,6 +638,10 @@ export default {
       availableGroups,
       availableTeachers,
       availableRooms,
+      quickPickItems,
+      quickPickTotal,
+      quickPickHeader,
+      selectQuickPick,
       openTeacherSchedule,
       openRoomSchedule,
       shareQR,
@@ -1001,6 +1055,21 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 0.75rem;
+}
+
+.groups-grid--teacher {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.groups-grid--room {
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+}
+
+.quick-pick-hint {
+  margin-top: 0.75rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .group-card {
