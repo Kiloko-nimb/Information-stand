@@ -84,6 +84,48 @@
               </div>
             </div>
           </div>
+          <div class="contact-item">
+            <span class="icon">📱</span>
+            <div>
+              <strong>Мы в соцсетях:</strong>
+              <div class="social-list">
+                <a
+                  class="social-link social-link--vk"
+                  href="https://vk.com/kraskrit"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="ВКонтакте"
+                >
+                  <span class="social-badge">VK</span>
+                  <span class="social-text">vk.com/kraskrit</span>
+                </a>
+                <a
+                  class="social-link social-link--mail"
+                  href="mailto:priem@kraskrit.ru"
+                  aria-label="Электронная почта приёмной"
+                >
+                  <span class="social-badge">@</span>
+                  <span class="social-text">priem@kraskrit.ru</span>
+                </a>
+                <a
+                  class="social-link social-link--site"
+                  href="https://kraskrit.ru/"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Официальный сайт"
+                >
+                  <span class="social-badge">🌍</span>
+                  <span class="social-text">kraskrit.ru</span>
+                </a>
+              </div>
+              <div class="qr-codes">
+                <div class="qr-item">
+                  <img v-if="qrVK" :src="qrVK" alt="QR код VK" class="qr-code" />
+                  <p class="qr-label">VK</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -190,6 +232,7 @@ export default {
     const currentDate = ref('')
     const qrWebsite = ref('')
     const qrFeedback = ref('')
+    const qrVK = ref('')
     const accessibilityMode = ref(false)
     const daysUntilAdmission = ref(0)
     const newsItems = ref([])
@@ -316,6 +359,7 @@ export default {
     const generateQRCodes = async () => {
       qrWebsite.value = await generateQRCode('https://kraskrit.ru/')
       qrFeedback.value = await generateQRCode('https://kraskrit.ru/contact-us/obr-svaz/')
+      qrVK.value = await generateQRCode('https://vk.com/kraskrit')
     }
 
     const toggleAccessibilityMode = () => {
@@ -466,6 +510,7 @@ export default {
       currentDate,
       qrWebsite,
       qrFeedback,
+      qrVK,
       accessibilityMode,
       toggleAccessibilityMode,
       daysUntilAdmission,
@@ -667,6 +712,67 @@ h1 {
   font-weight: 500;
   line-height: 1.3;
   max-width: 130px;
+  word-break: break-word;
+}
+
+/* ── Соцсети колледжа ── */
+.social-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.social-link:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateX(2px);
+}
+
+.social-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.social-link--vk .social-badge {
+  background: linear-gradient(135deg, #4a76a8 0%, #5181b8 100%);
+  color: #fff;
+}
+
+.social-link--mail .social-badge {
+  background: linear-gradient(135deg, #8b7bff 0%, #22d3ee 100%);
+  color: #fff;
+}
+
+.social-link--site .social-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  color: #fff;
+}
+
+.social-text {
   word-break: break-word;
 }
 
