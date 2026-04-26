@@ -107,10 +107,14 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(10, 13, 28, 0.72);
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: saturate(180%) blur(18px);
   -webkit-backdrop-filter: saturate(180%) blur(18px);
   border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .app-header {
+  background: rgba(10, 13, 28, 0.72);
 }
 
 .header-content {

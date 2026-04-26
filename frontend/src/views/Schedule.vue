@@ -796,7 +796,7 @@ h1 {
 .date-card.active {
   background: var(--accent-gradient);
   border-color: transparent;
-  color: #0b0d1c;
+  color: #ffffff;
   box-shadow: var(--accent-glow);
 }
 
@@ -809,7 +809,7 @@ h1 {
 }
 
 .date-card.active .date-day {
-  color: rgba(11, 13, 28, 0.72);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .date-number {
@@ -828,7 +828,7 @@ h1 {
 }
 
 .date-card.active .date-month {
-  color: rgba(11, 13, 28, 0.68);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 /* ── Панель поиска ── */
@@ -868,7 +868,7 @@ h1 {
 
 .search-tabs button.active {
   background: var(--accent-gradient);
-  color: #0b0d1c;
+  color: #ffffff;
   box-shadow: var(--shadow-sm);
 }
 
@@ -907,7 +907,7 @@ h1 {
 .search-input button {
   padding: 0.9rem 1.75rem;
   background: var(--accent-gradient);
-  color: #0b0d1c;
+  color: #ffffff;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
@@ -1036,7 +1036,7 @@ h1 {
 
 .schedule-header {
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, rgba(139, 123, 255, 0.15), rgba(34, 211, 238, 0.10));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(34, 211, 238, 0.10));
   border-bottom: 1px solid var(--border);
   color: var(--text);
   display: flex;
@@ -1069,8 +1069,8 @@ h1 {
 }
 
 .qr-share-btn {
-  background: linear-gradient(135deg, #8b7bff 0%, #22d3ee 100%);
-  color: #0b0d1c;
+  background: linear-gradient(135deg, #6366f1 0%, #0ea5b7 100%);
+  color: #ffffff;
   border: none;
   padding: 0.5rem 0.95rem;
   border-radius: 999px;
@@ -1083,15 +1083,15 @@ h1 {
 
 .qr-share-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 18px rgba(139, 123, 255, 0.4);
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.35);
 }
 
 /* ── Бейдж «Замена» (отслеживание изменений в расписании) ── */
 .modified-badge {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, #f59e0b, #ef4444);
-  color: #1a0e00;
+  background: linear-gradient(135deg, #d97706, #b91c1c);
+  color: #ffffff;
   font-weight: 800;
   font-size: 0.7rem;
   padding: 0.2rem 0.55rem;
@@ -1111,7 +1111,7 @@ h1 {
 .share-qr-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1120,14 +1120,14 @@ h1 {
 }
 
 .share-qr-card {
-  background: linear-gradient(160deg, #151a32 0%, #0f1224 100%);
+  background: linear-gradient(160deg, #ffffff 0%, #f7f9fd 100%);
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 1.75rem 2rem 1.5rem;
   max-width: 380px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
 }
 
 .share-qr-card h3 {
@@ -1156,8 +1156,8 @@ h1 {
 .share-qr-close {
   width: 100%;
   padding: 0.7rem 1.5rem;
-  background: linear-gradient(135deg, #8b7bff 0%, #22d3ee 100%);
-  color: #0b0d1c;
+  background: linear-gradient(135deg, #6366f1 0%, #0ea5b7 100%);
+  color: #ffffff;
   border: none;
   border-radius: 999px;
   cursor: pointer;
@@ -1242,14 +1242,14 @@ h1 {
   font-size: 1.3rem;
   font-weight: 800;
   color: #fff;
-  box-shadow: 0 6px 20px -4px rgba(139, 123, 255, 0.5);
+  box-shadow: 0 6px 20px -4px rgba(99, 102, 241, 0.45);
   z-index: 2;
   transition: transform var(--transition);
 }
 
 .lesson-badge.badge-lecture {
   background: linear-gradient(135deg, #8b7bff 0%, #6366f1 100%);
-  box-shadow: 0 6px 20px -4px rgba(139, 123, 255, 0.5);
+  box-shadow: 0 6px 20px -4px rgba(99, 102, 241, 0.45);
 }
 
 .lesson-badge.badge-practice {
@@ -1263,7 +1263,7 @@ h1 {
 }
 
 .timeline-item.lesson-lecture .timeline-line {
-  background: linear-gradient(180deg, rgba(139, 123, 255, 0.4), transparent);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.35), transparent);
 }
 
 .timeline-item.lesson-practice .timeline-line {
@@ -1372,21 +1372,21 @@ h1 {
 }
 
 .lesson-type.type-lecture {
-  background: rgba(139, 123, 255, 0.15);
-  border-color: rgba(139, 123, 255, 0.35);
-  color: #b4a8ff;
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.30);
+  color: #ffffff;
 }
 
 .lesson-type.type-practice {
   background: rgba(244, 114, 182, 0.15);
   border-color: rgba(244, 114, 182, 0.35);
-  color: #fbc0dc;
+  color: #ffffff;
 }
 
 .lesson-type.type-lab {
   background: rgba(34, 211, 238, 0.15);
   border-color: rgba(34, 211, 238, 0.35);
-  color: #7ee4f5;
+  color: #ffffff;
 }
 
 .lesson-details {
@@ -1419,7 +1419,7 @@ h1 {
   background: var(--info-soft);
   border: 1px solid rgba(34, 211, 238, 0.35);
   border-radius: var(--radius-pill);
-  color: #7ee4f5;
+  color: #ffffff;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;

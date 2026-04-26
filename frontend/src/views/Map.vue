@@ -275,27 +275,27 @@ h1 {
 
 .floor-selector button.active {
   background: var(--accent-gradient);
-  color: #0b0d1c;
+  color: #ffffff;
   border-color: transparent;
   box-shadow: var(--shadow-sm), var(--accent-glow);
 }
 
 .floor-selector button.territory-btn {
-  background: rgba(52, 211, 153, 0.10);
-  border-color: rgba(52, 211, 153, 0.35);
-  color: #6ee7b7;
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.30);
+  color: #047857;
 }
 
 .floor-selector button.territory-btn:hover {
-  background: rgba(52, 211, 153, 0.18);
-  border-color: rgba(52, 211, 153, 0.55);
+  background: rgba(5, 150, 105, 0.14);
+  border-color: rgba(5, 150, 105, 0.45);
 }
 
 .floor-selector button.territory-btn.active {
-  background: linear-gradient(135deg, #34d399, #22d3ee);
-  color: #0b0d1c;
+  background: linear-gradient(135deg, #059669, #0ea5b7);
+  color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 0 24px rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 24px rgba(5, 150, 105, 0.30);
 }
 
 /* ── Территория ── */
@@ -497,7 +497,7 @@ h1 {
   height: auto;
   display: block;
   border-radius: var(--radius-sm);
-  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 12px 32px rgba(15, 23, 42, 0.18));
   user-select: none;
   background: #fff;
 }

@@ -308,30 +308,29 @@ export default {
 }
 
 .map-header h2 {
-  color: white;
+  color: var(--text);
   font-size: 2rem;
   margin-bottom: 1rem;
-  text-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .selected-room-info {
-  color: white;
+  color: var(--text);
   font-size: 1.2rem;
   padding: 1rem;
-  background: rgba(102, 126, 234, 0.3);
-  backdrop-filter: blur(10px);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
   border-radius: 15px;
   display: inline-block;
 }
 
 .map-container {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--border);
   border-radius: 25px;
   padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow);
   overflow: auto;
 }
 
