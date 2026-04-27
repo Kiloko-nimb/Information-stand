@@ -190,6 +190,10 @@
               <span class="btn-icon">📱</span>
               <span class="btn-text">Подать документы</span>
             </button>
+            <button class="applicant-btn applicant-btn--accent" @click="$router.push('/quiz')">
+              <span class="btn-icon">🧭</span>
+              <span class="btn-text">Подобрать профессию</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1359,6 +1363,20 @@ h1 {
   border-color: var(--accent-border);
   transform: translateX(4px);
   box-shadow: var(--shadow-sm);
+}
+
+.applicant-btn--accent {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.applicant-btn--accent:hover {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  transform: translateX(4px) translateY(-1px);
+  box-shadow: var(--shadow);
 }
 
 .btn-icon {
