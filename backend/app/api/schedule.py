@@ -209,6 +209,108 @@ async def get_now_status(db: Session = Depends(get_db)):
     }
 
 
+@router.get("/rooms/free")
+async def get_free_rooms_now(
+    floor: Optional[int] = Query(None, description="Фильтр по этажу"),
+    db: Session = Depends(get_db),
+):
+    """
+    Кабинеты, в которых сейчас не идёт занятие.
+
+    Логика:
+    - Если идёт пара (status == "in_progress") — возвращаем все кабинеты,
+      встречающиеся в расписании на сегодня, минус занятые на текущей паре.
+    - Если перерыв / до пар / после пар / выходной — формально свободны все.
+    """
+    from app.models.room import Room  # ленивый импорт во избежание циклов
+
+    now = datetime.now()
+    today = now.date()
+    weekday = today.isoweekday()
+
+    bell = get_bell_schedule(weekday)
+    current_pair = None
+    next_pair = None
+    if bell:
+        for pair in bell:
+            if pair.start <= now.time() <= pair.end:
+                current_pair = pair
+                break
+            if now.time() < pair.start and next_pair is None:
+                next_pair = pair
+
+    if current_pair is None:
+        if not bell:
+            status = "weekend"
+        elif now.time() < bell[0].start:
+            status = "before_classes"
+        elif next_pair is None:
+            status = "after_classes"
+        else:
+            status = "break"
+    else:
+        status = "in_progress"
+
+    # Список всех известных кабинетов (приоритет — справочник Room).
+    rooms_query = db.query(Room.room_number, Room.floor)
+    if floor is not None:
+        rooms_query = rooms_query.filter(Room.floor == floor)
+    all_rooms = [(r[0], r[1]) for r in rooms_query.order_by(Room.room_number).all() if r[0]]
+
+    if not all_rooms:
+        # Запасной путь — берём кабинеты из расписания (этаж определить нельзя).
+        rows = (
+            db.query(Schedule.room_number)
+            .filter(Schedule.room_number.isnot(None))
+            .filter(Schedule.room_number != "")
+            .distinct()
+            .order_by(Schedule.room_number)
+            .all()
+        )
+        all_rooms = [(r[0], None) for r in rows if r[0]]
+
+    busy_set: set[str] = set()
+    if current_pair is not None:
+        busy_rows = (
+            db.query(Schedule.room_number)
+            .filter(Schedule.date == today)
+            .filter(Schedule.lesson_number == current_pair.lesson_number)
+            .filter(Schedule.room_number.isnot(None))
+            .filter(Schedule.room_number != "")
+            .distinct()
+            .all()
+        )
+        busy_set = {row[0].strip() for row in busy_rows if row[0]}
+
+    free_rooms = [
+        {"number": number, "floor": fl}
+        for number, fl in all_rooms
+        if number.strip() not in busy_set
+    ]
+    busy_rooms = [
+        {"number": number, "floor": fl}
+        for number, fl in all_rooms
+        if number.strip() in busy_set
+    ]
+
+    payload = {
+        "status": status,
+        "current_pair": (
+            {
+                "lesson_number": current_pair.lesson_number,
+                "label": current_pair.label,
+                "start": current_pair.start.strftime("%H:%M"),
+                "end": current_pair.end.strftime("%H:%M"),
+            }
+            if current_pair
+            else None
+        ),
+        "free": free_rooms,
+        "busy": busy_rooms,
+    }
+    return payload
+
+
 @router.get("/dates")
 async def get_available_dates(db: Session = Depends(get_db)):
     """Список дат, на которые есть расписание."""

@@ -22,10 +22,51 @@
           @click="currentFloor = 'territory'"
           class="territory-btn"
         >
-          🌳 Территория (Двор)
+          <Icon name="map" :size="18" />
+          <span>Территория (Двор)</span>
         </button>
       </div>
+      <button
+        class="free-rooms-toggle"
+        :class="{ active: freeRoomsMode }"
+        @click="toggleFreeRooms"
+        :disabled="freeRoomsLoading || currentFloor === 'territory'"
+        :title="freeRoomsMode ? 'Скрыть подсветку' : 'Показать кабинеты, в которых сейчас нет занятий'"
+      >
+        <span class="free-rooms-dot" :class="{ on: freeRoomsMode }"></span>
+        <span>{{ freeRoomsMode ? 'Свободные сейчас: ВКЛ' : 'Свободные сейчас' }}</span>
+      </button>
     </div>
+
+    <transition name="free-bar">
+      <div
+        v-if="freeRoomsMode && currentFloor !== 'territory'"
+        class="free-rooms-bar"
+      >
+        <div class="free-rooms-bar-head">
+          <span v-if="freeRoomsStatus === 'in_progress' && freeRoomsCurrentPair">
+            Идёт <strong>{{ freeRoomsCurrentPair.label }}</strong>
+            ({{ freeRoomsCurrentPair.start }}–{{ freeRoomsCurrentPair.end }})
+          </span>
+          <span v-else-if="freeRoomsStatus === 'break'">Сейчас перерыв — формально все кабинеты свободны</span>
+          <span v-else-if="freeRoomsStatus === 'before_classes'">Пары ещё не начались</span>
+          <span v-else-if="freeRoomsStatus === 'after_classes'">Пары на сегодня закончились</span>
+          <span v-else-if="freeRoomsStatus === 'weekend'">Сегодня выходной</span>
+          <span v-else>Загружаю…</span>
+        </div>
+        <div v-if="freeRoomsForCurrentFloor.length > 0" class="free-rooms-list">
+          <span class="free-rooms-list-label">Свободно на {{ currentFloor }} этаже:</span>
+          <span
+            v-for="room in freeRoomsForCurrentFloor"
+            :key="room.number"
+            class="free-room-chip"
+          >{{ room.number }}</span>
+        </div>
+        <div v-else-if="!freeRoomsLoading" class="free-rooms-empty">
+          На {{ currentFloor }} этаже сейчас нет свободных кабинетов
+        </div>
+      </div>
+    </transition>
 
     <div class="map-container">
       <!-- 1–4 этажи — общий контейнер с zoom/pan -->
@@ -36,7 +77,12 @@
             :class="{ 'is-panning': isPanning }"
             :style="{ transform: `translate3d(${panX}px, ${panY}px, 0) scale(${zoomLevel})` }"
           >
-            <MapFloor2 v-if="currentFloor === 1" />
+            <MapFloor2
+              v-if="currentFloor === 1"
+              :highlight-free-rooms="freeRoomsMode"
+              :free-rooms="freeRoomNumbers"
+              :busy-rooms="busyRoomNumbers"
+            />
             <img v-else :src="`/floor${currentFloor}.svg`" :alt="`План ${currentFloor} этажа`" class="floor-svg-img" draggable="false" />
           </div>
           <div class="zoom-controls">
@@ -100,9 +146,10 @@
 </template>
 
 <script>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import MapFloor2 from '../components/MapFloor2.vue'
 import Icon from '../components/Icon.vue'
+import api from '../services/api'
 
 export default {
   name: 'Map',
@@ -113,6 +160,69 @@ export default {
   setup() {
     const floors = [1, 2, 3, 4]
     const currentFloor = ref(1)
+
+    // ─── Свободные кабинеты «прямо сейчас» ───
+    const freeRoomsMode = ref(false)
+    const freeRoomsLoading = ref(false)
+    const freeRoomsStatus = ref(null)
+    const freeRoomsCurrentPair = ref(null)
+    const freeRoomsList = ref([])
+    const busyRoomsList = ref([])
+
+    const freeRoomNumbers = computed(() => freeRoomsList.value.map((r) => r.number))
+    const busyRoomNumbers = computed(() => busyRoomsList.value.map((r) => r.number))
+
+    const freeRoomsForCurrentFloor = computed(() => {
+      if (typeof currentFloor.value !== 'number') return []
+      return freeRoomsList.value.filter((r) => r.floor === currentFloor.value)
+    })
+
+    const FALLBACK_FLOOR_BY_PREFIX = (number) => {
+      const m = String(number).match(/^(\d)/)
+      if (!m) return null
+      const d = Number(m[1])
+      return [1, 2, 3, 4].includes(d) ? d : null
+    }
+
+    const loadFreeRooms = async () => {
+      freeRoomsLoading.value = true
+      try {
+        const { data } = await api.get('/schedule/rooms/free')
+        freeRoomsStatus.value = data.status
+        freeRoomsCurrentPair.value = data.current_pair || null
+        // Если бэк не знает этажей — пытаемся определить по первой цифре номера.
+        const fillFloor = (r) => ({
+          number: String(r.number).trim(),
+          floor: r.floor != null ? Number(r.floor) : FALLBACK_FLOOR_BY_PREFIX(r.number),
+        })
+        freeRoomsList.value = (data.free || []).map(fillFloor)
+        busyRoomsList.value = (data.busy || []).map(fillFloor)
+      } catch (e) {
+        freeRoomsStatus.value = null
+        freeRoomsList.value = []
+        busyRoomsList.value = []
+      } finally {
+        freeRoomsLoading.value = false
+      }
+    }
+
+    const toggleFreeRooms = async () => {
+      freeRoomsMode.value = !freeRoomsMode.value
+      if (freeRoomsMode.value && freeRoomsList.value.length === 0) {
+        await loadFreeRooms()
+      }
+    }
+
+    let freeRoomsRefresh = null
+    onMounted(() => {
+      // Обновляем каждые 60 секунд, пока режим включён.
+      freeRoomsRefresh = setInterval(() => {
+        if (freeRoomsMode.value) loadFreeRooms()
+      }, 60000)
+    })
+    onUnmounted(() => {
+      if (freeRoomsRefresh) clearInterval(freeRoomsRefresh)
+    })
     const zoomLevel = ref(1)
     const panX = ref(0)
     const panY = ref(0)
@@ -185,7 +295,15 @@ export default {
       panY,
       isPanning,
       startPan,
-      resetView
+      resetView,
+      freeRoomsMode,
+      freeRoomsLoading,
+      freeRoomsStatus,
+      freeRoomsCurrentPair,
+      freeRoomsForCurrentFloor,
+      freeRoomNumbers,
+      busyRoomNumbers,
+      toggleFreeRooms,
     }
   }
 }
@@ -240,6 +358,10 @@ h1 {
 
 /* ── Панель управления ── */
 .map-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   background: var(--surface);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -254,6 +376,8 @@ h1 {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .floor-selector button {
@@ -268,6 +392,134 @@ h1 {
   font-size: 0.95rem;
   font-weight: 600;
   transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.free-rooms-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  white-space: nowrap;
+}
+
+.free-rooms-toggle:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+  transform: translateY(-1px);
+}
+
+.free-rooms-toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.free-rooms-toggle.active {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+}
+
+.free-rooms-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.free-rooms-dot.on {
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.32);
+  animation: free-dot-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes free-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.45); }
+  50%      { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+}
+
+/* ── Полоса с информацией по свободным кабинетам ── */
+.free-rooms-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid #22c55e;
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.1rem;
+  margin: 0 0 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.free-rooms-bar-head {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.free-rooms-bar-head strong {
+  color: var(--text);
+}
+
+.free-rooms-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+}
+
+.free-rooms-list-label {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-right: 0.4rem;
+}
+
+.free-room-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: rgba(34, 197, 94, 0.14);
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+}
+
+[data-theme="dark"] .free-room-chip {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.22);
+}
+
+.free-rooms-empty {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.free-bar-enter-active,
+.free-bar-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.free-bar-enter-from,
+.free-bar-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .floor-selector button:hover {

@@ -15,6 +15,11 @@
           <div class="bento-clock-eyebrow">Сейчас</div>
           <div class="bento-clock-time">{{ currentTime }}</div>
           <div class="bento-clock-date">{{ currentDayName }}</div>
+          <div v-if="weather" class="bento-weather" :title="weather.label">
+            <Icon :name="weather.icon" :size="22" class="bento-weather-icon" />
+            <span class="bento-weather-temp">{{ weather.temp }}°</span>
+            <span class="bento-weather-label">{{ weather.label }}</span>
+          </div>
         </div>
       </div>
 
@@ -273,6 +278,49 @@ export default {
     const daysUntilAdmission = ref(0)
     const newsItems = ref([])
     const newsCards = computed(() => newsItems.value.slice(0, 3))
+
+    // ─── Погода (open-meteo, без ключа) ───
+    const weather = ref(null)
+    const KRSK_LAT = 56.0153
+    const KRSK_LON = 92.8932
+
+    const weatherFromCode = (code) => {
+      // WMO Weather interpretation codes
+      // https://open-meteo.com/en/docs
+      if (code === 0) return { icon: 'sun', label: 'Ясно' }
+      if (code === 1) return { icon: 'sun', label: 'Преим. ясно' }
+      if (code === 2) return { icon: 'cloudSun', label: 'Перем. облачность' }
+      if (code === 3) return { icon: 'cloud', label: 'Пасмурно' }
+      if (code === 45 || code === 48) return { icon: 'fog', label: 'Туман' }
+      if (code >= 51 && code <= 57) return { icon: 'cloudRain', label: 'Морось' }
+      if (code >= 61 && code <= 67) return { icon: 'cloudRain', label: 'Дождь' }
+      if (code >= 71 && code <= 77) return { icon: 'snow', label: 'Снег' }
+      if (code >= 80 && code <= 82) return { icon: 'cloudRain', label: 'Ливень' }
+      if (code === 85 || code === 86) return { icon: 'snow', label: 'Снегопад' }
+      if (code >= 95 && code <= 99) return { icon: 'thunder', label: 'Гроза' }
+      return { icon: 'cloud', label: 'Облачно' }
+    }
+
+    const loadWeather = async () => {
+      try {
+        const url =
+          `https://api.open-meteo.com/v1/forecast?latitude=${KRSK_LAT}&longitude=${KRSK_LON}` +
+          `&current=temperature_2m,weather_code&timezone=Asia/Krasnoyarsk`
+        const response = await fetch(url)
+        if (!response.ok) return
+        const data = await response.json()
+        const c = data.current
+        if (!c) return
+        const meta = weatherFromCode(c.weather_code)
+        weather.value = {
+          temp: Math.round(c.temperature_2m),
+          icon: meta.icon,
+          label: meta.label,
+        }
+      } catch (_) {
+        // тихо: если погода не загрузилась — просто не показываем виджет
+      }
+    }
     const nowStatus = ref(null)
 
     const loadNowStatus = async () => {
@@ -583,6 +631,7 @@ export default {
     }
 
     let nowInterval = null
+    let weatherInterval = null
 
     onMounted(() => {
       updateDateTime()
@@ -595,6 +644,8 @@ export default {
       loadNowStatus()
       nowInterval = setInterval(loadNowStatus, 30000)
       loadBellSchedule()
+      loadWeather()
+      weatherInterval = setInterval(loadWeather, 15 * 60 * 1000)
     })
 
     onUnmounted(() => {
@@ -607,9 +658,13 @@ export default {
       if (nowInterval) {
         clearInterval(nowInterval)
       }
+      if (weatherInterval) {
+        clearInterval(weatherInterval)
+      }
     })
 
     return {
+      weather,
       currentTime,
       currentDate,
       qrWebsite,
@@ -784,6 +839,39 @@ h1 {
   letter-spacing: -0.04em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.bento-weather {
+  position: relative;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.bento-weather-icon {
+  flex-shrink: 0;
+}
+
+.bento-weather-temp {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.bento-weather-label {
+  opacity: 0.92;
+  font-weight: 500;
+  font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 .bento-clock-date {
