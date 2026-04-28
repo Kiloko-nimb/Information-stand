@@ -229,6 +229,12 @@
           <h2>Доска почёта</h2>
           <p>Победители олимпиад, хакатонов и WorldSkills</p>
         </div>
+
+        <div class="feature-card" @click="$router.push('/faq')">
+          <div class="feature-icon">❓</div>
+          <h2>Частые вопросы</h2>
+          <p>Справки, документы, Wi-Fi, поступление</p>
+        </div>
       </div>
 
       <section v-if="newsItems.length > 0" class="news-section">
