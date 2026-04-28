@@ -2,13 +2,13 @@
 // Заполнить реальными ссылками и контактами по мере уточнения.
 
 export const faqCategories = [
-  { id: 'all', label: 'Все', icon: '📚' },
-  { id: 'docs', label: 'Документы', icon: '📄' },
-  { id: 'study', label: 'Учёба', icon: '🎓' },
-  { id: 'admission', label: 'Поступление', icon: '🚪' },
-  { id: 'tech', label: 'Техника и Wi-Fi', icon: '📶' },
-  { id: 'money', label: 'Финансы', icon: '💰' },
-  { id: 'life', label: 'Студжизнь', icon: '🎉' },
+  { id: 'all', label: 'Все', icon: '📚', iconName: 'layers' },
+  { id: 'docs', label: 'Документы', icon: '📄', iconName: 'fileText' },
+  { id: 'study', label: 'Учёба', icon: '🎓', iconName: 'graduation' },
+  { id: 'admission', label: 'Поступление', icon: '🚪', iconName: 'door' },
+  { id: 'tech', label: 'Техника и Wi-Fi', icon: '📶', iconName: 'wifi' },
+  { id: 'money', label: 'Финансы', icon: '💰', iconName: 'wallet' },
+  { id: 'life', label: 'Студжизнь', icon: '🎉', iconName: 'party' },
 ]
 
 export const faqItems = [

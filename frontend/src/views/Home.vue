@@ -191,7 +191,7 @@
               <span class="btn-text">Подать документы</span>
             </button>
             <button class="applicant-btn applicant-btn--accent" @click="$router.push('/quiz')">
-              <span class="btn-icon">🧭</span>
+              <span class="btn-icon"><Icon name="compass" :size="22" /></span>
               <span class="btn-text">Подобрать профессию</span>
             </button>
           </div>
@@ -207,31 +207,25 @@
 
       <div class="features">
         <div class="feature-card" @click="$router.push('/schedule')">
-          <div class="feature-icon">📅</div>
+          <div class="feature-icon"><Icon name="calendar" :size="34" /></div>
           <h2>Расписание</h2>
           <p>Найдите расписание по группе или преподавателю</p>
         </div>
 
         <div class="feature-card" @click="$router.push('/staff')">
-          <div class="feature-icon">👥</div>
+          <div class="feature-icon"><Icon name="users" :size="34" /></div>
           <h2>Сотрудники</h2>
           <p>Информация о преподавателях и администрации</p>
         </div>
 
         <div class="feature-card" @click="$router.push('/map')">
-          <div class="feature-icon">🗺️</div>
+          <div class="feature-icon"><Icon name="map" :size="34" /></div>
           <h2>Навигация</h2>
           <p>Найдите нужный кабинет на карте колледжа</p>
         </div>
 
-        <div class="feature-card" @click="$router.push('/honor')">
-          <div class="feature-icon">🏆</div>
-          <h2>Доска почёта</h2>
-          <p>Победители олимпиад, хакатонов и WorldSkills</p>
-        </div>
-
         <div class="feature-card" @click="$router.push('/faq')">
-          <div class="feature-icon">❓</div>
+          <div class="feature-icon"><Icon name="help" :size="34" /></div>
           <h2>Частые вопросы</h2>
           <p>Справки, документы, Wi-Fi, поступление</p>
         </div>
@@ -276,9 +270,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { generateQRCode } from '../utils/qrGenerator'
 import { fetchNews } from '../services/newsService'
 import api from '../services/api'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Home',
+  components: { Icon },
   setup() {
     const currentTime = ref('')
     const currentDate = ref('')
@@ -1392,7 +1388,11 @@ h1 {
 }
 
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.5rem;
+  line-height: 1;
 }
 
 .btn-text {
@@ -1500,14 +1500,23 @@ h1 {
 }
 
 .feature-icon {
-  font-size: 4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
   margin-bottom: 1.25rem;
-  transition: transform var(--transition-slow);
-  filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.20));
+  border-radius: 18px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  transition: transform var(--transition-slow), background var(--transition), color var(--transition);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.18);
 }
 
 .feature-card:hover .feature-icon {
-  transform: scale(1.1) rotate(-4deg);
+  transform: translateY(-3px) rotate(-3deg);
+  background: var(--accent);
+  color: #ffffff;
 }
 
 .feature-card h2 {
@@ -1885,7 +1894,7 @@ h1 {
 .home.accessibility-active .contact-item { padding: 0.9rem; }
 .home.accessibility-active .features { order: 2; margin-top: 0; margin-bottom: 6rem; gap: 1.25rem; }
 .home.accessibility-active .feature-card { min-height: 220px; padding: 2rem 1.5rem; }
-.home.accessibility-active .feature-icon { font-size: 3.25rem; }
+.home.accessibility-active .feature-icon { width: 72px; height: 72px; }
 .home.accessibility-active .feature-card h2 { font-size: 1.5rem; }
 .home.accessibility-active .feature-card p { font-size: 0.95rem; }
 

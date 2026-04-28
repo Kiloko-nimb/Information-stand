@@ -14,6 +14,7 @@
     </header>
 
     <div class="faq-search">
+      <span class="faq-search-icon"><Icon name="search" :size="20" /></span>
       <input
         v-model="searchQuery"
         class="faq-search-input"
@@ -31,7 +32,7 @@
         :class="{ active: currentCategory === cat.id }"
         @click="currentCategory = cat.id"
       >
-        <span class="faq-filter-icon">{{ cat.icon }}</span>
+        <span class="faq-filter-icon"><Icon :name="cat.iconName" :size="18" /></span>
         <span>{{ cat.label }}</span>
         <span class="faq-filter-count">{{ countByCategory(cat.id) }}</span>
       </button>
@@ -53,30 +54,36 @@
           :aria-expanded="openItem === item.id"
           @click="toggle(item.id)"
         >
-          <span class="faq-question-icon">{{ categoryIcon(item.category) }}</span>
+          <span class="faq-question-icon"><Icon :name="categoryIconName(item.category)" :size="20" /></span>
           <span class="faq-question-text">{{ item.question }}</span>
-          <span class="faq-question-chevron">›</span>
+          <span class="faq-question-chevron"><Icon name="chevronRight" :size="22" /></span>
         </button>
-        <div v-show="openItem === item.id" class="faq-answer">
-          <p>{{ item.answer }}</p>
-          <div v-if="item.link" class="faq-answer-actions">
-            <a
-              class="faq-answer-link"
-              :href="item.link"
-              target="_blank"
-              rel="noopener"
-            >
-              {{ item.linkLabel || 'Подробнее' }} →
-            </a>
-            <button
-              class="faq-answer-qr"
-              type="button"
-              @click="showQR(item)"
-            >
-              📱 QR на телефон
-            </button>
+        <transition name="faq-accordion" @before-enter="beforeEnter" @enter="enter" @leave="leave">
+          <div v-show="openItem === item.id" class="faq-answer">
+            <div class="faq-answer-inner">
+              <p>{{ item.answer }}</p>
+              <div v-if="item.link" class="faq-answer-actions">
+                <a
+                  class="faq-answer-link"
+                  :href="item.link"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {{ item.linkLabel || 'Подробнее' }}
+                  <Icon name="arrowRight" :size="16" />
+                </a>
+                <button
+                  class="faq-answer-qr"
+                  type="button"
+                  @click="showQR(item)"
+                >
+                  <Icon name="qr" :size="18" />
+                  QR на телефон
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </transition>
       </article>
     </div>
 
@@ -97,9 +104,11 @@
 import { ref, computed } from 'vue'
 import { faqItems, faqCategories } from '../data/faq'
 import { generateQRCode } from '../utils/qrGenerator'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Faq',
+  components: { Icon },
   setup() {
     const items = faqItems
     const categories = faqCategories
@@ -134,6 +143,50 @@ export default {
       return cat ? cat.icon : '📄'
     }
 
+    const categoryIconName = (catId) => {
+      const cat = categories.find((c) => c.id === catId)
+      return cat ? cat.iconName : 'fileText'
+    }
+
+    // Плавное раскрытие/закрытие аккордеона по фактической высоте контента
+    const beforeEnter = (el) => {
+      el.style.height = '0'
+      el.style.opacity = '0'
+    }
+    const enter = (el, done) => {
+      const h = el.scrollHeight
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 280ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease-out 60ms'
+        el.style.height = `${h}px`
+        el.style.opacity = '1'
+      })
+      el.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'height') return
+        el.style.height = ''
+        el.style.transition = ''
+        el.removeEventListener('transitionend', handler)
+        done()
+      })
+    }
+    const leave = (el, done) => {
+      const h = el.scrollHeight
+      el.style.height = `${h}px`
+      el.style.opacity = '1'
+      // форсируем рефлоу
+      void el.offsetHeight
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 240ms cubic-bezier(0.4, 0, 0.2, 1), opacity 160ms ease-in'
+        el.style.height = '0'
+        el.style.opacity = '0'
+      })
+      el.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'height') return
+        el.style.transition = ''
+        el.removeEventListener('transitionend', handler)
+        done()
+      })
+    }
+
     const toggle = (id) => {
       openItem.value = openItem.value === id ? null : id
     }
@@ -161,6 +214,10 @@ export default {
       showQR,
       countByCategory,
       categoryIcon,
+      categoryIconName,
+      beforeEnter,
+      enter,
+      leave,
     }
   },
 }
@@ -236,11 +293,22 @@ export default {
 
 .faq-search {
   margin-bottom: 1rem;
+  position: relative;
+}
+
+.faq-search-icon {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  display: inline-flex;
+  pointer-events: none;
 }
 
 .faq-search-input {
   width: 100%;
-  padding: 0.95rem 1.25rem;
+  padding: 0.95rem 1.25rem 0.95rem 3rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--surface);
@@ -249,6 +317,11 @@ export default {
   font-family: inherit;
   box-shadow: var(--shadow-xs);
   transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.faq-search-input:focus + .faq-search-icon,
+.faq-search:hover .faq-search-icon {
+  color: var(--accent);
 }
 
 .faq-search-input:focus {
@@ -278,6 +351,20 @@ export default {
   color: var(--text);
   cursor: pointer;
   transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.faq-filter-icon {
+  display: inline-flex;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.faq-filter:hover .faq-filter-icon {
+  color: var(--accent);
+}
+
+.faq-filter.active .faq-filter-icon {
+  color: #ffffff;
 }
 
 .faq-filter:hover {
@@ -360,8 +447,22 @@ export default {
 }
 
 .faq-question-icon {
-  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
   flex-shrink: 0;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.faq-item.open .faq-question-icon {
+  background: var(--accent);
+  color: #ffffff;
+  transform: rotate(-4deg);
 }
 
 .faq-question-text {
@@ -373,9 +474,11 @@ export default {
 
 .faq-question-chevron {
   flex-shrink: 0;
-  font-size: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
-  transition: transform var(--transition);
+  transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1), color var(--transition);
 }
 
 .faq-item.open .faq-question-chevron {
@@ -384,7 +487,12 @@ export default {
 }
 
 .faq-answer {
-  padding: 0 1.25rem 1.25rem 3.6rem;
+  overflow: hidden;
+  will-change: height, opacity;
+}
+
+.faq-answer-inner {
+  padding: 0 1.25rem 1.25rem 3.85rem;
 }
 
 .faq-answer p {
@@ -404,8 +512,8 @@ export default {
 .faq-answer-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 1rem;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
   background: var(--accent-soft);
   color: var(--accent);
   border: 1px solid var(--accent-border);
@@ -413,7 +521,7 @@ export default {
   font-weight: 700;
   font-size: 0.9rem;
   text-decoration: none;
-  transition: background var(--transition);
+  transition: background var(--transition), color var(--transition), transform var(--transition);
 }
 
 .faq-answer-link:hover {
@@ -424,8 +532,8 @@ export default {
 .faq-answer-qr {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 1rem;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
@@ -529,7 +637,7 @@ export default {
 }
 
 @media (max-width: 600px) {
-  .faq-answer {
+  .faq-answer-inner {
     padding: 0 1rem 1rem 1rem;
   }
 }
