@@ -7,10 +7,16 @@
           to="/"
           class="logo-link"
           aria-label="На главную"
+          @click="onLogoTap"
         >
           <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
         </router-link>
-        <div v-else class="logo-link is-static" aria-hidden="true">
+        <div
+          v-else
+          class="logo-link is-static"
+          aria-hidden="true"
+          @click="onLogoTap"
+        >
           <img src="@/assets/logo.png" alt="ККРИТ" class="logo" />
         </div>
         <div class="header-text">
@@ -27,18 +33,38 @@
     <main class="app-content">
       <router-view />
     </main>
+
+    <SnakeGame v-if="snakeOpen" @close="snakeOpen = false" />
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import SnakeGame from './components/SnakeGame.vue'
 
 export default {
   name: 'App',
+  components: { SnakeGame },
   setup() {
     const isOnline = ref(navigator.onLine)
     const router = useRouter()
+    const snakeOpen = ref(false)
+
+    // Пасхалка: 5 быстрых тапов по лого в пределах 1.8с → режим «Для своих».
+    const TAP_THRESHOLD = 5
+    const TAP_WINDOW_MS = 1800
+    let logoTaps = []
+
+    const onLogoTap = () => {
+      const now = Date.now()
+      logoTaps = logoTaps.filter((t) => now - t < TAP_WINDOW_MS)
+      logoTaps.push(now)
+      if (logoTaps.length >= TAP_THRESHOLD) {
+        logoTaps = []
+        snakeOpen.value = true
+      }
+    }
     
     // Таймер бездействия для киоска
     const INACTIVITY_TIMEOUT = 3 * 60 * 1000 // 3 минуты в миллисекундах
@@ -100,7 +126,9 @@ export default {
     })
 
     return {
-      isOnline
+      isOnline,
+      snakeOpen,
+      onLogoTap,
     }
   }
 }
