@@ -223,6 +223,12 @@
           <h2>Навигация</h2>
           <p>Найдите нужный кабинет на карте колледжа</p>
         </div>
+
+        <div class="feature-card" @click="$router.push('/honor')">
+          <div class="feature-icon">🏆</div>
+          <h2>Доска почёта</h2>
+          <p>Победители олимпиад, хакатонов и WorldSkills</p>
+        </div>
       </div>
 
       <section v-if="newsItems.length > 0" class="news-section">

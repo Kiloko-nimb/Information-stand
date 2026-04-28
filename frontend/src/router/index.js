@@ -4,6 +4,7 @@ import Schedule from '../views/Schedule.vue'
 import Staff from '../views/Staff.vue'
 import Map from '../views/Map.vue'
 import Quiz from '../views/Quiz.vue'
+import Honor from '../views/Honor.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/quiz',
     name: 'Quiz',
     component: Quiz
+  },
+  {
+    path: '/honor',
+    name: 'Honor',
+    component: Honor
   }
 ]
 
