@@ -1,7 +1,8 @@
 <template>
   <div class="map">
     <button class="back-button" @click="$router.push('/')">
-      🔙 На главную
+      <Icon name="arrowLeft" :size="20" />
+      <span>На главную</span>
     </button>
 
     <h1>Навигация по колледжу</h1>
@@ -101,11 +102,13 @@
 <script>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import MapFloor2 from '../components/MapFloor2.vue'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Map',
   components: {
-    MapFloor2
+    MapFloor2,
+    Icon
   },
   setup() {
     const floors = [1, 2, 3, 4]

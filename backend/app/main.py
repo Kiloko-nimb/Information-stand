@@ -71,7 +71,7 @@ async def yandex_sync_background_task():
         logger.info("Синхронизация с Яндекс.Диском отключена (YANDEX_DISK_PUBLIC_URL не задана)")
         return
 
-    interval_hours = int(os.environ.get("YANDEX_DISK_SYNC_INTERVAL_HOURS", "6"))
+    interval_hours = int(os.environ.get("YANDEX_DISK_SYNC_INTERVAL_HOURS", "3"))
     await asyncio.sleep(60)  # 1 мин после старта
     await sync_schedules_from_yandex()
 

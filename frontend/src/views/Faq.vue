@@ -1,7 +1,8 @@
 <template>
   <div class="faq">
     <button class="back-button" @click="$router.push('/')">
-      🔙 На главную
+      <Icon name="arrowLeft" :size="20" />
+      <span>На главную</span>
     </button>
 
     <header class="faq-header">
@@ -89,7 +90,7 @@
 
     <div v-if="qrModal" class="faq-modal" @click.self="qrModal = null">
       <div class="faq-modal-card">
-        <button class="faq-modal-close" @click="qrModal = null" aria-label="Закрыть">×</button>
+        <button class="faq-modal-close" @click="qrModal = null" aria-label="Закрыть"><Icon name="x" :size="20" /></button>
         <div class="faq-modal-eyebrow">Открой ссылку на телефоне</div>
         <h3>{{ qrModal.question }}</h3>
         <img v-if="qrModal.qr" :src="qrModal.qr" alt="QR-код" class="faq-modal-qr" />
@@ -231,26 +232,33 @@ export default {
   position: relative;
 }
 
+/* ── Плавающая кнопка «На главную» ── */
 .back-button {
   position: fixed;
-  top: 5.5rem;
-  left: 1.5rem;
-  background: var(--surface);
+  bottom: 2rem;
+  left: 2rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--text);
-  border: 1px solid var(--border);
-  padding: 0.7rem 1.1rem;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  z-index: 10;
-  transition: background var(--transition), border-color var(--transition), transform var(--transition);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .back-button:hover {
+  transform: translateX(-4px);
   background: var(--surface-hover);
   border-color: var(--accent-border);
-  transform: translateY(-1px);
 }
 
 .faq-header {

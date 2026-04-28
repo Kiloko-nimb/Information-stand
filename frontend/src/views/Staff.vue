@@ -1,7 +1,8 @@
 <template>
   <div class="staff">
     <button class="back-button" @click="$router.push('/')">
-      🔙 На главную
+      <Icon name="arrowLeft" :size="20" />
+      <span>На главную</span>
     </button>
 
     <h1>Сотрудники колледжа</h1>
@@ -34,9 +35,11 @@
 <script>
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Staff',
+  components: { Icon },
   setup() {
     const searchQuery = ref('')
     const staffList = ref([])

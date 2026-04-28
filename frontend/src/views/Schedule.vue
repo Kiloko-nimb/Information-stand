@@ -1,7 +1,8 @@
 <template>
   <div class="schedule">
     <button class="back-button" @click="$router.push('/')">
-      🔙 На главную
+      <Icon name="arrowLeft" :size="20" />
+      <span>На главную</span>
     </button>
 
     <h1>Расписание занятий</h1>
@@ -33,7 +34,7 @@
         </div>
       </div>
       <button class="carousel-arrow" @click="nextDay" aria-label="Следующий день">›</button>
-      <button class="carousel-picker" @click="openDatePicker" aria-label="Выбрать дату" title="Выбрать дату">📅</button>
+      <button class="carousel-picker" @click="openDatePicker" aria-label="Выбрать дату" title="Выбрать дату"><Icon name="calendar" :size="20" /></button>
       <input
         ref="datePickerEl"
         type="date"
@@ -118,7 +119,8 @@
             title="Забрать расписание в телефон"
             @click="openShareQR"
           >
-            📱 Сканировать QR
+            <Icon name="smartphone" :size="18" />
+            <span>Сканировать QR</span>
           </button>
         </div>
       </div>
@@ -187,7 +189,7 @@
                   <span v-else class="detail-text">Не указан</span>
                 </div>
                 <div class="lesson-detail">
-                  <span class="detail-icon">📍</span>
+                  <span class="detail-icon"><Icon name="mapPin" :size="18" /></span>
                   <button
                     v-if="item.room_number"
                     class="detail-link"
@@ -239,9 +241,11 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
 import { generateQRCode } from '../utils/qrGenerator'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Schedule',
+  components: { Icon },
   setup() {
     const searchType = ref('group')
     const searchQuery = ref('')
@@ -1200,6 +1204,9 @@ h1 {
   cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .qr-share-btn:hover {

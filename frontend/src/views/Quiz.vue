@@ -1,7 +1,8 @@
 <template>
   <div class="quiz">
     <button class="back-button" @click="$router.push('/')">
-      🔙 На главную
+      <Icon name="arrowLeft" :size="20" />
+      <span>На главную</span>
     </button>
 
     <div class="quiz-container">
@@ -132,9 +133,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { quizQuestions, calculateQuizResult } from '../data/quiz'
 import { specialties } from '../data/specialties'
 import { generateQRCode } from '../utils/qrGenerator'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Quiz',
+  components: { Icon },
   setup() {
     const questions = quizQuestions
     const currentIndex = ref(0)
@@ -231,26 +234,33 @@ export default {
   position: relative;
 }
 
+/* ── Плавающая кнопка «На главную» ── */
 .back-button {
   position: fixed;
-  top: 5.5rem;
-  left: 1.5rem;
-  background: var(--surface);
+  bottom: 2rem;
+  left: 2rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface-strong);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--text);
-  border: 1px solid var(--border);
-  padding: 0.7rem 1.1rem;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-pill);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  z-index: 10;
-  transition: background var(--transition), border-color var(--transition), transform var(--transition);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .back-button:hover {
+  transform: translateX(-4px);
   background: var(--surface-hover);
   border-color: var(--accent-border);
-  transform: translateY(-1px);
 }
 
 .quiz-header {

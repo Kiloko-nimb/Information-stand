@@ -27,24 +27,9 @@
         </div>
       </div>
 
-      <transition name="ticker-fade" mode="out-in">
-        <a
-          v-if="tickerNews"
-          :key="tickerNews.id"
-          class="ticker-plate"
-          :href="tickerNews.source_url || 'https://kraskrit.ru/news/'"
-          target="_blank"
-          rel="noopener"
-          :title="tickerNews.title"
-        >
-          <span class="ticker-icon">{{ tickerNews.icon || '📰' }}</span>
-          <span class="ticker-title">{{ tickerNews.title }}</span>
-        </a>
-      </transition>
-
       <div v-if="bellSchedule.length > 0" class="bells-widget" @click="$router.push('/schedule')">
         <div class="bells-head">
-          <span class="bells-icon">🔔</span>
+          <span class="bells-icon"><Icon name="bell" :size="24" /></span>
           <span class="bells-title">Расписание звонков</span>
           <span class="bells-day">{{ currentDayName }}</span>
         </div>
@@ -79,7 +64,7 @@
         <h2>Контактная информация</h2>
         <div class="contact-grid">
           <div class="contact-item">
-            <span class="icon">📍</span>
+            <span class="icon"><Icon name="mapPin" :size="22" /></span>
             <div>
               <strong>Адреса</strong>
               <p>пр. Красноярский рабочий, 156</p>
@@ -87,7 +72,7 @@
             </div>
           </div>
           <div class="contact-item">
-            <span class="icon">📞</span>
+            <span class="icon"><Icon name="phone" :size="22" /></span>
             <div>
               <strong>Телефон</strong>
               <p>8 (391) 218-17-99</p>
@@ -95,7 +80,7 @@
             </div>
           </div>
           <div class="contact-item">
-            <span class="icon">💬</span>
+            <span class="icon"><Icon name="messageCircle" :size="22" /></span>
             <div>
               <strong>Приёмная комиссия 2026</strong>
               <p>8-929-332-29-43</p>
@@ -108,7 +93,7 @@
 
         <div class="contacts-online">
           <div class="contacts-online-head">
-            <span class="icon">🌐</span>
+            <span class="icon"><Icon name="globe" :size="22" /></span>
             <strong>Найти нас онлайн</strong>
           </div>
           <div class="contacts-online-body">
@@ -120,7 +105,7 @@
                 rel="noopener"
                 aria-label="Официальный сайт"
               >
-                <span class="social-badge">🌍</span>
+                <span class="social-badge"><Icon name="globe" :size="20" /></span>
                 <span class="social-text">kraskrit.ru</span>
               </a>
               <a
@@ -148,7 +133,7 @@
                 rel="noopener"
                 aria-label="Обратная связь"
               >
-                <span class="social-badge">✍️</span>
+                <span class="social-badge"><Icon name="edit" :size="20" /></span>
                 <span class="social-text">Обратная связь</span>
               </a>
             </div>
@@ -172,22 +157,22 @@
 
       <div class="bottom-widgets">
         <div class="widget applicant-widget">
-          <h3>🎓 Абитуриенту 2026</h3>
+          <h3><Icon name="graduation" :size="22" /> Абитуриенту 2026</h3>
           <div class="countdown-timer">
             <div class="countdown-label">До начала приемной кампании осталось:</div>
             <div class="countdown-value">{{ daysUntilAdmission }} дней</div>
           </div>
           <div class="applicant-actions">
             <button class="applicant-btn" @click="showPassingScores">
-              <span class="btn-icon">📊</span>
+              <span class="btn-icon"><Icon name="barChart" :size="22" /></span>
               <span class="btn-text">Проходные баллы</span>
             </button>
             <button class="applicant-btn" @click="showSpecialties">
-              <span class="btn-icon">🎯</span>
+              <span class="btn-icon"><Icon name="target" :size="22" /></span>
               <span class="btn-text">Специальности</span>
             </button>
             <button class="applicant-btn" @click="showApplicationQR">
-              <span class="btn-icon">📱</span>
+              <span class="btn-icon"><Icon name="smartphone" :size="22" /></span>
               <span class="btn-text">Подать документы</span>
             </button>
             <button class="applicant-btn applicant-btn--accent" @click="$router.push('/quiz')">
@@ -200,7 +185,7 @@
 
       <div class="fun-facts-widget">
         <div class="fun-fact">
-          <span class="fact-icon">💡</span>
+          <span class="fact-icon"><Icon name="lightbulb" :size="24" /></span>
           <span class="fact-text">{{ currentFact }}</span>
         </div>
       </div>
@@ -233,7 +218,7 @@
 
       <section v-if="newsItems.length > 0" class="news-section">
         <div class="news-header">
-          <h2>📰 Новости колледжа</h2>
+          <h2><Icon name="newspaper" :size="22" /> Новости колледжа</h2>
           <a class="news-all-link" href="https://kraskrit.ru/news/" target="_blank" rel="noopener">
             Все новости →
           </a>
@@ -247,7 +232,7 @@
             target="_blank"
             rel="noopener"
           >
-            <div class="news-icon">{{ item.icon || '📰' }}</div>
+            <div class="news-icon"><Icon name="newspaper" :size="22" /></div>
             <div class="news-body">
               <div class="news-date" v-if="item.published_date">{{ formatNewsDate(item.published_date) }}</div>
               <h3 class="news-title">{{ item.title }}</h3>
@@ -259,8 +244,8 @@
     </div>
 
     <button class="accessibility-button" @click="toggleAccessibilityMode" :class="{ active: accessibilityMode }">
-      <span v-if="!accessibilityMode">♿</span>
-      <span v-else>✖</span>
+      <Icon v-if="!accessibilityMode" name="accessibility" :size="24" />
+      <Icon v-else name="x" :size="24" />
     </button>
   </div>
 </template>
@@ -287,12 +272,7 @@ export default {
     const accessibilityMode = ref(false)
     const daysUntilAdmission = ref(0)
     const newsItems = ref([])
-    const tickerIndex = ref(0)
     const newsCards = computed(() => newsItems.value.slice(0, 3))
-    const tickerNews = computed(() => {
-      if (newsItems.value.length === 0) return null
-      return newsItems.value[tickerIndex.value % newsItems.value.length] || null
-    })
     const nowStatus = ref(null)
 
     const loadNowStatus = async () => {
@@ -603,12 +583,6 @@ export default {
     }
 
     let nowInterval = null
-    let tickerInterval = null
-
-    const rotateTicker = () => {
-      if (newsItems.value.length === 0) return
-      tickerIndex.value = (tickerIndex.value + 1) % newsItems.value.length
-    }
 
     onMounted(() => {
       updateDateTime()
@@ -621,7 +595,6 @@ export default {
       loadNowStatus()
       nowInterval = setInterval(loadNowStatus, 30000)
       loadBellSchedule()
-      tickerInterval = setInterval(rotateTicker, 54000)
     })
 
     onUnmounted(() => {
@@ -633,9 +606,6 @@ export default {
       }
       if (nowInterval) {
         clearInterval(nowInterval)
-      }
-      if (tickerInterval) {
-        clearInterval(tickerInterval)
       }
     })
 
@@ -654,7 +624,6 @@ export default {
       showApplicationQR,
       newsItems,
       newsCards,
-      tickerNews,
       formatNewsDate,
       nowWidget,
       currentDayName,
@@ -1535,54 +1504,6 @@ h1 {
   max-width: 280px;
 }
 
-/* ── Бегущая строка новостей (статичная, смена каждые 54с) ── */
-.ticker-plate {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 1.25rem;
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  background: var(--surface);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 0.95rem;
-  text-decoration: none;
-  max-width: min(680px, calc(100% - 2rem));
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
-}
-
-.ticker-plate:hover {
-  transform: translateY(-1px);
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow), var(--accent-glow);
-}
-
-.ticker-icon {
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.ticker-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.ticker-fade-enter-active,
-.ticker-fade-leave-active {
-  transition: opacity 380ms ease, transform 380ms ease;
-}
-.ticker-fade-enter-from,
-.ticker-fade-leave-to {
-  opacity: 0;
-  transform: translateY(4px);
-}
-
 /* ── Виджет «Сейчас идёт» ──
    Находится внутри .top-section, под заголовком, чтобы визуально
    не налезать на блок контактов ниже. */
@@ -1876,7 +1797,6 @@ h1 {
   animation: slideUp 0.6s var(--ease);
 }
 .home.accessibility-active .bottom-widgets { display: none; }
-.home.accessibility-active .ticker { display: none; }
 
 .home.accessibility-active .contact-info {
   order: 1;
