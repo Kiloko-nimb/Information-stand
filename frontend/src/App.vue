@@ -35,6 +35,32 @@
     </main>
 
     <SnakeGame v-if="snakeOpen" @close="snakeOpen = false" />
+
+    <transition name="kiosk-fade">
+      <div
+        v-if="warningVisible"
+        class="kiosk-warning"
+        role="alertdialog"
+        aria-live="assertive"
+        @click="dismissWarning"
+        @touchstart="dismissWarning"
+      >
+        <div class="kiosk-warning__card" @click.stop>
+          <div class="kiosk-warning__count">{{ warningCountdown }}</div>
+          <div class="kiosk-warning__title">Возврат на главную</div>
+          <div class="kiosk-warning__sub">
+            Тапни в любом месте, чтобы остаться на странице.
+          </div>
+          <button
+            type="button"
+            class="kiosk-warning__btn"
+            @click.stop="dismissWarning"
+          >
+            Остаться
+          </button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -66,60 +92,97 @@ export default {
       }
     }
     
-    // Таймер бездействия для киоска
-    const INACTIVITY_TIMEOUT = 3 * 60 * 1000 // 3 минуты в миллисекундах
-    let inactivityTimer = null
+    // Таймер бездействия для киоска. Настраивается через .env:
+    //   VITE_KIOSK_TIMEOUT_SEC — общее время бездействия до возврата (сек, по умолчанию 180)
+    //   VITE_KIOSK_WARNING_SEC — за сколько секунд до возврата показывать предупреждение (по умолчанию 10)
+    const TIMEOUT_SEC = Math.max(
+      5,
+      parseInt(import.meta.env.VITE_KIOSK_TIMEOUT_SEC, 10) || 180,
+    )
+    const WARNING_SEC = Math.min(
+      Math.max(0, parseInt(import.meta.env.VITE_KIOSK_WARNING_SEC, 10) || 10),
+      TIMEOUT_SEC - 1,
+    )
 
-    const resetInactivityTimer = () => {
-      // Очищаем предыдущий таймер
-      if (inactivityTimer) {
-        clearTimeout(inactivityTimer)
-      }
+    const warningVisible = ref(false)
+    const warningCountdown = ref(WARNING_SEC)
 
-      // Устанавливаем новый таймер
-      inactivityTimer = setTimeout(() => {
-        // Возвращаемся на главную страницу только если мы не на ней
-        if (router.currentRoute.value.path !== '/') {
-          console.log('Таймер бездействия: возврат на главную')
-          router.push('/')
-        }
-      }, INACTIVITY_TIMEOUT)
+    let warningTimer = null     // setTimeout: «через X мс показать предупреждение»
+    let countdownInterval = null // setInterval: тик обратного отсчёта
+    let returnTimer = null      // setTimeout: «через X мс вернуться на главную»
+
+    const clearAllTimers = () => {
+      if (warningTimer) { clearTimeout(warningTimer); warningTimer = null }
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null }
+      if (returnTimer) { clearTimeout(returnTimer); returnTimer = null }
     }
 
-    const handleUserActivity = () => {
+    const goHome = () => {
+      clearAllTimers()
+      warningVisible.value = false
+      if (router.currentRoute.value.path !== '/') {
+        router.push('/')
+      }
+    }
+
+    const showWarning = () => {
+      warningCountdown.value = WARNING_SEC
+      warningVisible.value = true
+
+      countdownInterval = setInterval(() => {
+        warningCountdown.value -= 1
+        if (warningCountdown.value <= 0) {
+          clearInterval(countdownInterval)
+          countdownInterval = null
+        }
+      }, 1000)
+
+      returnTimer = setTimeout(goHome, WARNING_SEC * 1000)
+    }
+
+    const resetInactivityTimer = () => {
+      clearAllTimers()
+      warningVisible.value = false
+
+      // На главной таймер всё равно крутится (на случай возврата), но никуда
+      // не пушит. Чтобы не дёргать пользователя предупреждением — на главной
+      // его не показываем вовсе.
+      if (router.currentRoute.value.path === '/') return
+
+      const preWarning = (TIMEOUT_SEC - WARNING_SEC) * 1000
+      warningTimer = setTimeout(showWarning, preWarning)
+    }
+
+    const dismissWarning = () => {
       resetInactivityTimer()
     }
 
+    const handleUserActivity = () => {
+      // Если предупреждение видно — НЕ сбрасываем таймер от мелких касаний
+      // экрана, иначе оно никогда не сработает у активного стенда. Сброс
+      // только по явному клику/тапу по самому оверлею (см. dismissWarning).
+      if (warningVisible.value) return
+      resetInactivityTimer()
+    }
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+
     onMounted(() => {
-      // Слушатели онлайн/офлайн статуса
-      window.addEventListener('online', () => {
-        isOnline.value = true
-      })
+      window.addEventListener('online', () => { isOnline.value = true })
+      window.addEventListener('offline', () => { isOnline.value = false })
 
-      window.addEventListener('offline', () => {
-        isOnline.value = false
-      })
-
-      // Слушатели активности пользователя для киоска
-      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
-      
       events.forEach(event => {
         document.addEventListener(event, handleUserActivity, true)
       })
 
-      // Запускаем таймер при загрузке
+      // При смене маршрута — пересчитываем таймер (главная не показывает предупреждение)
+      router.afterEach(() => resetInactivityTimer())
+
       resetInactivityTimer()
     })
 
     onUnmounted(() => {
-      // Очищаем таймер при размонтировании
-      if (inactivityTimer) {
-        clearTimeout(inactivityTimer)
-      }
-
-      // Удаляем слушатели активности
-      const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
-      
+      clearAllTimers()
       events.forEach(event => {
         document.removeEventListener(event, handleUserActivity, true)
       })
@@ -129,6 +192,9 @@ export default {
       isOnline,
       snakeOpen,
       onLogoTap,
+      warningVisible,
+      warningCountdown,
+      dismissWarning,
     }
   }
 }
@@ -262,5 +328,99 @@ export default {
   .app-content {
     padding: 1rem;
   }
+}
+
+/* ───── Kiosk inactivity warning ───── */
+.kiosk-warning {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 28, 0.62);
+  backdrop-filter: saturate(160%) blur(10px);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  cursor: pointer;
+  padding: 1.5rem;
+}
+
+.kiosk-warning__card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 24px);
+  box-shadow: var(--shadow-lg, 0 30px 80px rgba(0, 0, 0, 0.35));
+  padding: 2.5rem 3rem;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  cursor: default;
+  animation: kiosk-pop 220ms ease-out;
+}
+
+.kiosk-warning__count {
+  font-family: var(--font-display);
+  font-size: 7rem;
+  font-weight: 800;
+  line-height: 1;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kiosk-warning__title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.kiosk-warning__sub {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 1.75rem;
+  line-height: 1.45;
+}
+
+.kiosk-warning__btn {
+  display: inline-block;
+  padding: 0.85rem 2.25rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+.kiosk-warning__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.45);
+}
+
+.kiosk-warning__btn:active {
+  transform: translateY(0);
+}
+
+.kiosk-fade-enter-active,
+.kiosk-fade-leave-active {
+  transition: opacity 200ms ease;
+}
+.kiosk-fade-enter-from,
+.kiosk-fade-leave-to {
+  opacity: 0;
+}
+
+@keyframes kiosk-pop {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
 }
 </style>
