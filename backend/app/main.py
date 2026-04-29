@@ -5,6 +5,7 @@ import asyncio
 import os
 from pathlib import Path
 from app.api import bells, schedule, staff, rooms, news
+from app.core.config import settings
 from app.core.database import SessionLocal, engine
 from app.core.migrations import apply_pending_migrations
 from app.services.news_parser import fetch_news_from_website, save_news_to_db
@@ -41,9 +42,9 @@ async def update_news_async():
 
 async def sync_schedules_from_yandex():
     """Синхронизация расписания с публичной папки Яндекс.Диска."""
-    public_url = os.environ.get("YANDEX_DISK_PUBLIC_URL")
+    public_url = settings.YANDEX_DISK_PUBLIC_URL or os.environ.get("YANDEX_DISK_PUBLIC_URL")
     if not public_url:
-        return  # Фича отключена, если env-переменная не задана.
+        return  # Фича отключена, если переменная не задана.
 
     download_dir = Path(
         os.environ.get("SCHEDULE_DOWNLOAD_DIR", "data/schedule-downloads")
@@ -67,7 +68,8 @@ async def sync_schedules_from_yandex():
 
 async def yandex_sync_background_task():
     """Фоновая задача: периодическая синхронизация расписания с Яндекс.Диска."""
-    if not os.environ.get("YANDEX_DISK_PUBLIC_URL"):
+    public_url = settings.YANDEX_DISK_PUBLIC_URL or os.environ.get("YANDEX_DISK_PUBLIC_URL")
+    if not public_url:
         logger.warning(
             "⚠ Синхронизация с Яндекс.Диском НЕ запущена: не задана переменная "
             "окружения YANDEX_DISK_PUBLIC_URL. Добавь её в backend/.env "
@@ -75,7 +77,10 @@ async def yandex_sync_background_task():
         )
         return
 
-    interval_hours = int(os.environ.get("YANDEX_DISK_SYNC_INTERVAL_HOURS", "3"))
+    interval_hours = settings.YANDEX_DISK_SYNC_INTERVAL_HOURS
+    logger.info(
+        "▶ Синхронизация с Яндекс.Диском включена (интервал: %d ч)", interval_hours
+    )
     await asyncio.sleep(60)  # 1 мин после старта
     await sync_schedules_from_yandex()
 
