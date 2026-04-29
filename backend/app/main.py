@@ -68,8 +68,11 @@ async def sync_schedules_from_yandex():
 async def yandex_sync_background_task():
     """Фоновая задача: периодическая синхронизация расписания с Яндекс.Диска."""
     if not os.environ.get("YANDEX_DISK_PUBLIC_URL"):
-        # YANDEX_DISK_PUBLIC_URL не задана → синхронизация просто не запускается.
-        # Молча выходим, чтобы не засорять логи.
+        logger.warning(
+            "⚠ Синхронизация с Яндекс.Диском НЕ запущена: не задана переменная "
+            "окружения YANDEX_DISK_PUBLIC_URL. Добавь её в backend/.env "
+            "(YANDEX_DISK_PUBLIC_URL=https://disk.yandex.ru/d/...) и перезапусти бэкенд."
+        )
         return
 
     interval_hours = int(os.environ.get("YANDEX_DISK_SYNC_INTERVAL_HOURS", "3"))
