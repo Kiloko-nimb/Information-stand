@@ -711,7 +711,7 @@ export default {
 
 <style scoped>
 .schedule {
-  max-width: 1400px;
+  max-width: var(--content-max-width, 1400px);
   margin: 0 auto;
   padding: 1rem 0 6rem;
   position: relative;

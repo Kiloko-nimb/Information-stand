@@ -179,6 +179,21 @@ export default {
       router.afterEach(() => resetInactivityTimer())
 
       resetInactivityTimer()
+
+      // Принудительный 4K-режим для дебага с обычного монитора:
+      // VITE_KIOSK_4K_MODE=true → масштабирует UI как на 4K-стенде.
+      if (String(import.meta.env.VITE_KIOSK_4K_MODE).toLowerCase() === 'true') {
+        document.documentElement.setAttribute('data-kiosk-4k', '1')
+      }
+      // Помечаем, что устройство сенсорное — на случай, если какие-то
+      // CSS-эффекты в будущем захочется тонко настраивать только для тача.
+      const mq = window.matchMedia('(hover: none), (pointer: coarse)')
+      const applyTouch = () => {
+        if (mq.matches) document.documentElement.setAttribute('data-touch', '1')
+        else document.documentElement.removeAttribute('data-touch')
+      }
+      applyTouch()
+      mq.addEventListener?.('change', applyTouch)
     })
 
     onUnmounted(() => {
@@ -316,7 +331,7 @@ export default {
 .app-content {
   flex: 1;
   padding: 2rem;
-  max-width: 1600px;
+  max-width: var(--content-max-width, 1600px);
   width: 100%;
   margin: 0 auto;
 }

@@ -694,7 +694,7 @@ export default {
 
 <style scoped>
 .home {
-  max-width: 1400px;
+  max-width: var(--content-max-width, 1400px);
   margin: 0 auto;
   position: relative;
   padding-bottom: 5rem;

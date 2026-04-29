@@ -67,6 +67,10 @@
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1);
   --transition: 200ms var(--ease);
   --transition-slow: 400ms var(--ease);
+
+  /* Максимальная ширина контентной области.
+     На 4K-стенде расширяем, чтобы не было гигантских пустых полей. */
+  --content-max-width: 1400px;
 }
 
 /* ── Опциональная тёмная тема ── */
@@ -116,6 +120,9 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.55;
+  /* На 4K-стендах увеличиваем базовый шрифт, чтобы все rem-размеры
+     (большинство UI) автоматически выросли. См. также медиа-запросы
+     в самом низу файла — там же расширяется --content-max-width. */
   color: var(--text);
   background: var(--bg-base);
   background-image:
@@ -247,3 +254,60 @@ input, textarea, select {
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
+
+/* ============================================================
+   Сенсорный экран / нет мыши
+   На стенде нет курсора, поэтому :hover-эффекты после тапа "залипают"
+   до следующего тапа в другом месте. Глобально гасим transform-эффекты
+   на :hover, чтобы карточки не оставались поднятыми. Цветовые/теневые
+   изменения сохраняем — они дают полезный визуальный фидбэк во время тапа.
+   Также включаем data-touch="1" на <html> через JS (см. App.vue),
+   чтобы при необходимости можно было точечно стилизовать.
+   ============================================================ */
+@media (hover: none), (pointer: coarse) {
+  *:hover {
+    /* Сбрасываем typical lifting transforms, чтобы не было stuck-hover. */
+    transform: none !important;
+  }
+}
+
+/* Тактильный фидбэк нажатия — работает на любом девайсе.
+   Кратковременное "вдавливание" даёт визуальный отклик там, где раньше
+   полагались только на :hover. */
+button:not(:disabled):active,
+a:active,
+[role="button"]:active,
+.feature-card:active,
+.bento-card:active,
+.bento-tile:active {
+  transform: scale(0.97) !important;
+  transition: transform 80ms var(--ease) !important;
+}
+
+/* ============================================================
+   4K / большие экраны
+   На обычном FullHD (≤2560px) ничего не меняем — текущий дизайн
+   рассчитан на эту плотность. На 1440p/QHD-стендах слегка увеличиваем
+   масштаб. На 4K (≥3840px) сильно увеличиваем — иначе всё выглядит
+   крошечным с расстояния 1+ метра, с которого смотрит студент.
+   Большая часть размеров в UI задана в rem, так что шрифт = масштаб.
+   ============================================================ */
+@media (min-width: 2560px) {
+  body { font-size: 22px; }
+  :root { --content-max-width: 1900px; }
+}
+
+@media (min-width: 3200px) {
+  body { font-size: 26px; }
+  :root { --content-max-width: 2200px; }
+}
+
+@media (min-width: 3840px) {
+  body { font-size: 30px; }
+  :root { --content-max-width: 2600px; }
+}
+
+/* Принудительный 4K-режим для тестирования с обычного монитора:
+   ставится JS-ом в App.vue по флагу VITE_KIOSK_4K_MODE. */
+html[data-kiosk-4k="1"] body { font-size: 30px; }
+html[data-kiosk-4k="1"] { --content-max-width: 2600px; }
