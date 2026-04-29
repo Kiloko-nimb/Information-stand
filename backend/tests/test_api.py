@@ -96,6 +96,65 @@ class TestScheduleApi:
         assert "9ИС-1.25" in names
         assert "9ПР-1.25" in names
 
+    def test_list_groups_filters_garbage_names(
+        self, client: TestClient, db_session
+    ) -> None:
+        """В БД могут попасть мусорные имена групп («Ауд.», «.») от старых
+        импортов. Эндпоинт должен их отбрасывать, чтобы фронт не показывал
+        «не группа а набор букв»."""
+        from datetime import date, time
+
+        from app.models.schedule import Schedule
+
+        db_session.add_all(
+            [
+                Schedule(
+                    group_name="9ИС-1.25",
+                    subject="Программирование",
+                    day_of_week=1,
+                    lesson_number=1,
+                    time_start=time(8, 10),
+                    time_end=time(8, 55),
+                    date=date(2026, 4, 13),
+                ),
+                # Заголовки колонок «Ауд.» из плохого парсинга PDF — не группа.
+                Schedule(
+                    group_name="Ауд.",
+                    subject="мусор",
+                    day_of_week=1,
+                    lesson_number=1,
+                    time_start=time(8, 10),
+                    time_end=time(8, 55),
+                    date=date(2026, 4, 13),
+                ),
+                Schedule(
+                    group_name="ауд",
+                    subject="мусор",
+                    day_of_week=1,
+                    lesson_number=1,
+                    time_start=time(8, 10),
+                    time_end=time(8, 55),
+                    date=date(2026, 4, 13),
+                ),
+                # Только знаки препинания — тоже мусор.
+                Schedule(
+                    group_name=".",
+                    subject="мусор",
+                    day_of_week=1,
+                    lesson_number=1,
+                    time_start=time(8, 10),
+                    time_end=time(8, 55),
+                    date=date(2026, 4, 13),
+                ),
+            ]
+        )
+        db_session.commit()
+
+        response = client.get("/api/v1/schedule/groups")
+        assert response.status_code == 200
+        names = [item["name"] for item in response.json()]
+        assert names == ["9ИС-1.25"]
+
 
 class TestRoomsApi:
     def test_list_all_rooms(self, client: TestClient, seeded_db) -> None:

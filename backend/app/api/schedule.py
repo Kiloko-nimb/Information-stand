@@ -11,6 +11,29 @@ from app.models.schedule import Schedule
 router = APIRouter(prefix="/schedule", tags=["schedule"])
 
 
+# Фильтр для названий групп: отсекает мусорные значения, которые могли попасть
+# в БД из старых, ещё кривых импортов расписания. Текущий парсер
+# (``app.utils.import_schedule._collect_group_columns``) уже отбрасывает
+# заголовки колонок «Ауд.» при импорте, но в БД могут оставаться записи
+# от прежних версий — поэтому фильтруем ещё и на отдаче.
+def _is_valid_group_name(name: Optional[str]) -> bool:
+    if not name:
+        return False
+    stripped = name.strip()
+    if not stripped:
+        return False
+    # «Ауд.» / «Ауд..1» / «Ауд .» — это заголовок столбца с номером
+    # аудитории, а не группа. Допускаем только настоящие названия групп
+    # (например, «9РВП-1.25», «ИС-1.24»).
+    if stripped.lower().startswith("ауд"):
+        return False
+    # Названия из одних служебных символов («.», «-», «—», «...») —
+    # тоже артефакты парсинга, а не группы.
+    if all(not ch.isalnum() for ch in stripped):
+        return False
+    return True
+
+
 def _parse_date_param(value: Optional[str]) -> Optional[date_cls]:
     if value is None:
         return None
@@ -77,14 +100,18 @@ async def get_room_schedule(
 
 @router.get("/groups")
 async def get_all_groups(db: Session = Depends(get_db)):
-    """Получить список всех групп."""
+    """Получить список всех групп.
+
+    Фильтрует мусорные имена («Ауд.», «.», пустые) из старых импортов,
+    чтобы фронт не показывал «не группа а набор букв».
+    """
     groups = (
         db.query(Schedule.group_name)
         .distinct()
         .order_by(Schedule.group_name)
         .all()
     )
-    return [{"name": g[0]} for g in groups]
+    return [{"name": g[0]} for g in groups if _is_valid_group_name(g[0])]
 
 
 @router.get("/teachers")

@@ -526,9 +526,9 @@ export default {
 
     const showSpecialties = () => {
       const modal = document.createElement('div')
-      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:flex-start;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(160deg,#ffffff 0%,#f7f9fd 100%);padding:2.25rem;border-radius:24px;max-width:900px;width:100%;box-shadow:0 24px 60px rgba(15,23,42,0.18);border:1px solid rgba(15,23,42,0.10);font-family:'Inter',system-ui,sans-serif;">
+        <div style="background:linear-gradient(160deg,#ffffff 0%,#f7f9fd 100%);padding:2.25rem;border-radius:24px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.18);border:1px solid rgba(15,23,42,0.10);font-family:'Inter',system-ui,sans-serif;">
           <h2 style="color:#0f172a;margin:0 0 0.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">Специальности ККРИТ 2026/27</h2>
           <p style="color:rgba(15,23,42,0.6);text-align:center;margin:0 0 1.5rem;font-size:0.92rem;">Поступление на базе 9 классов, срок обучения в скобках</p>
 
@@ -578,9 +578,9 @@ export default {
     const showApplicationQR = async () => {
       const qr = await generateQRCode('https://kraskrit.ru/abitur/')
       const modal = document.createElement('div')
-      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:flex-start;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;padding:2rem;'
       modal.innerHTML = `
-        <div style="background:linear-gradient(160deg,#ffffff 0%,#f7f9fd 100%);padding:2.25rem;border-radius:24px;max-width:760px;width:100%;box-shadow:0 24px 60px rgba(15,23,42,0.18);border:1px solid rgba(15,23,42,0.10);font-family:'Inter',system-ui,sans-serif;">
+        <div style="background:linear-gradient(160deg,#ffffff 0%,#f7f9fd 100%);padding:2.25rem;border-radius:24px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.18);border:1px solid rgba(15,23,42,0.10);font-family:'Inter',system-ui,sans-serif;">
           <h2 style="color:#0f172a;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📱 Подать документы</h2>
 
           <div style="display:grid;grid-template-columns:240px 1fr;gap:1.5rem;background:#f5f7fb;padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(15,23,42,0.10);align-items:center;">
