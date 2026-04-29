@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # в app/main.py, но объявляем здесь, чтобы pydantic не падал при чтении .env)
     YANDEX_DISK_PUBLIC_URL: Optional[str] = None
     YANDEX_DISK_SYNC_INTERVAL_HOURS: int = 3
+    # Обходить вложенные подпапки (архивы по месяцам и т.п.). По умолчанию
+    # включено, потому что на Я.Диске ККРИТ часто кладут расписание в
+    # папки вида «апрель», «март».
+    YANDEX_DISK_RECURSIVE: bool = True
 
     # Разрешаем любые дополнительные поля в .env, чтобы добавление новых
     # переменных окружения не ломало запуск.

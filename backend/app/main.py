@@ -55,7 +55,10 @@ async def sync_schedules_from_yandex():
         from app.services.yandex_disk import sync_and_import
 
         summary = await asyncio.to_thread(
-            sync_and_import, public_url, download_dir
+            sync_and_import,
+            public_url,
+            download_dir,
+            recursive=settings.YANDEX_DISK_RECURSIVE,
         )
         for day, path, added in summary:
             logger.info(
