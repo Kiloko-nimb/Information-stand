@@ -7,31 +7,9 @@ from sqlalchemy.orm import Session
 from app.core.bell_schedule import get_bell_schedule
 from app.core.database import get_db
 from app.models.schedule import Schedule
+from app.utils.group_names import is_valid_group_name
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
-
-
-# Фильтр для названий групп: отсекает мусорные значения, которые могли попасть
-# в БД из старых, ещё кривых импортов расписания. Текущий парсер
-# (``app.utils.import_schedule._collect_group_columns``) уже отбрасывает
-# заголовки колонок «Ауд.» при импорте, но в БД могут оставаться записи
-# от прежних версий — поэтому фильтруем ещё и на отдаче.
-def _is_valid_group_name(name: Optional[str]) -> bool:
-    if not name:
-        return False
-    stripped = name.strip()
-    if not stripped:
-        return False
-    # «Ауд.» / «Ауд..1» / «Ауд .» — это заголовок столбца с номером
-    # аудитории, а не группа. Допускаем только настоящие названия групп
-    # (например, «9РВП-1.25», «ИС-1.24»).
-    if stripped.lower().startswith("ауд"):
-        return False
-    # Названия из одних служебных символов («.», «-», «—», «...») —
-    # тоже артефакты парсинга, а не группы.
-    if all(not ch.isalnum() for ch in stripped):
-        return False
-    return True
 
 
 def _parse_date_param(value: Optional[str]) -> Optional[date_cls]:
@@ -111,7 +89,7 @@ async def get_all_groups(db: Session = Depends(get_db)):
         .order_by(Schedule.group_name)
         .all()
     )
-    return [{"name": g[0]} for g in groups if _is_valid_group_name(g[0])]
+    return [{"name": g[0]} for g in groups if is_valid_group_name(g[0])]
 
 
 @router.get("/teachers")
@@ -144,7 +122,11 @@ async def get_all_rooms(db: Session = Depends(get_db)):
 
 @router.get("/today")
 async def get_today_schedule(db: Session = Depends(get_db)):
-    """Получить расписание на сегодня для всех групп."""
+    """Получить расписание на сегодня для всех групп.
+
+    Записи с мусорным ``group_name`` (например, ``Ауд.``) отфильтровываются —
+    см. :func:`app.utils.group_names.is_valid_group_name`.
+    """
     today = date_cls.today()
     schedule = (
         db.query(Schedule)
@@ -152,7 +134,7 @@ async def get_today_schedule(db: Session = Depends(get_db)):
         .order_by(Schedule.group_name, Schedule.lesson_number)
         .all()
     )
-    return schedule
+    return [s for s in schedule if is_valid_group_name(s.group_name)]
 
 
 @router.get("/now")
@@ -217,13 +199,14 @@ async def get_now_status(db: Session = Depends(get_db)):
     end_dt = datetime.combine(today, current_pair.end)
     minutes_left = max(0, int((end_dt - now).total_seconds() // 60))
 
-    busy_groups_count = (
+    busy_group_names = (
         db.query(Schedule.group_name)
         .filter(Schedule.date == today)
         .filter(Schedule.lesson_number == current_pair.lesson_number)
         .distinct()
-        .count()
+        .all()
     )
+    busy_groups_count = sum(1 for (name,) in busy_group_names if is_valid_group_name(name))
 
     return {
         "status": "in_progress",
