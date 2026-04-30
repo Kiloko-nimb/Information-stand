@@ -93,6 +93,26 @@ class _FakeSession:
         return _FakeResponse(content=self.file_bytes)
 
 
+class _PaginatingSession:
+    """Сессия, имитирующая постраничный ответ Яндекс.Диска."""
+
+    def __init__(self, pages: list[dict]):
+        self.pages = pages
+        self.calls: list[tuple[str, dict]] = []
+
+    def get(self, url, params=None, timeout=None, stream=False):
+        self.calls.append((url, params or {}))
+        if url.endswith("/public/resources"):
+            offset = (params or {}).get("offset", 0)
+            limit = (params or {}).get("limit", 200)
+            page_index = offset // limit if limit else 0
+            if page_index < len(self.pages):
+                return _FakeResponse(self.pages[page_index])
+            # Дальше страниц нет — возвращаем пустой ответ.
+            return _FakeResponse({"_embedded": {"items": [], "total": offset, "offset": offset, "limit": limit}})
+        return _FakeResponse(content=b"")
+
+
 def test_list_public_folder_filters_supported_extensions():
     session = _FakeSession(
         list_payload={
@@ -274,3 +294,98 @@ def test_sync_and_import_skips_unchanged_files(tmp_path: Path, monkeypatch):
     )
     assert len(summary3) == 1
     assert len(import_calls) == 2
+
+
+def test_list_public_folder_paginates_beyond_limit():
+    """Если в папке больше limit элементов — должны пройти по всем
+    страницам, а не остановиться на первой."""
+    page1 = {
+        "_embedded": {
+            "total": 3,
+            "offset": 0,
+            "limit": 2,
+            "items": [
+                {
+                    "type": "file",
+                    "name": "01.01.2026.pdf",
+                    "path": "/01.01.2026.pdf",
+                    "size": 10,
+                    "modified": "2026-01-01T09:00:00+00:00",
+                },
+                {
+                    "type": "file",
+                    "name": "02.01.2026.pdf",
+                    "path": "/02.01.2026.pdf",
+                    "size": 10,
+                    "modified": "2026-01-02T09:00:00+00:00",
+                },
+            ],
+        }
+    }
+    page2 = {
+        "_embedded": {
+            "total": 3,
+            "offset": 2,
+            "limit": 2,
+            "items": [
+                {
+                    "type": "file",
+                    "name": "03.01.2026.pdf",
+                    "path": "/03.01.2026.pdf",
+                    "size": 10,
+                    "modified": "2026-01-03T09:00:00+00:00",
+                }
+            ],
+        }
+    }
+    session = _PaginatingSession([page1, page2])
+
+    files = yandex_disk.list_public_folder(
+        "https://disk.yandex.ru/d/abc", session=session, limit=2
+    )
+
+    names = sorted(f.name for f in files)
+    assert names == ["01.01.2026.pdf", "02.01.2026.pdf", "03.01.2026.pdf"]
+    # Должны были сделать как минимум два запроса /resources.
+    list_calls = [c for c in session.calls if c[0].endswith("/public/resources")]
+    assert len(list_calls) >= 2
+    offsets = sorted(c[1].get("offset", 0) for c in list_calls)
+    assert 0 in offsets and 2 in offsets
+
+
+def test_sync_folder_warns_on_filename_collision(tmp_path: Path, caplog):
+    """Если в разных подпапках лежат файлы с одним именем — берём
+    более свежий и пишем warning, не молча затираем."""
+    list_payload = {
+        "_embedded": {
+            "items": [
+                {
+                    "type": "file",
+                    "name": "13.04.2026.pdf",
+                    "path": "/sub-old/13.04.2026.pdf",
+                    "size": 5,
+                    "modified": "2026-04-01T09:00:00+00:00",
+                },
+                {
+                    "type": "file",
+                    "name": "13.04.2026.pdf",
+                    "path": "/sub-new/13.04.2026.pdf",
+                    "size": 5,
+                    "modified": "2026-04-10T09:00:00+00:00",
+                },
+            ]
+        }
+    }
+    session = _FakeSession(
+        list_payload=list_payload,
+        download_payload={"href": "https://example.com/dl"},
+        file_bytes=b"hello",
+    )
+
+    with caplog.at_level("WARNING", logger="app.services.yandex_disk"):
+        results = yandex_disk.sync_folder(
+            "https://disk.yandex.ru/d/abc", tmp_path, session=session
+        )
+
+    assert len(results) == 1
+    assert any("Коллизия имён" in rec.message for rec in caplog.records)

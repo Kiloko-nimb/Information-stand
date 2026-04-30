@@ -127,44 +127,66 @@ def list_public_folder(
             continue
         seen.add(current)
 
-        resp = sess.get(
-            _PUBLIC_API,
-            params={
-                "public_key": public_key,
-                "path": current,
-                "limit": limit,
-            },
-            timeout=15,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        items = data.get("_embedded", {}).get("items", [])
-        for item in items:
-            item_type = item.get("type")
-            if item_type == "dir":
-                if recursive:
-                    to_visit.append(item.get("path", "/"))
-                continue
-            if item_type != "file":
-                continue
-            name = item.get("name", "")
-            if Path(name).suffix.lower() not in _SUPPORTED_EXTS:
-                continue
-            try:
-                modified = datetime.fromisoformat(
-                    item.get("modified", "").replace("Z", "+00:00")
-                )
-            except ValueError:
-                modified = datetime.utcnow()
-            result.append(
-                YandexFile(
-                    name=name,
-                    path=item.get("path", "/"),
-                    size=item.get("size", 0),
-                    modified=modified,
-                    parsed_date=parse_date_from_filename(name),
-                )
+        # Yandex API отдаёт результаты постранично (limit + offset). Если
+        # в папке больше `limit` файлов — без явного цикла часть просто
+        # потеряется. У ККРИТ в публичной папке уже >200 PDF, поэтому
+        # пагинация обязательна.
+        offset = 0
+        while True:
+            resp = sess.get(
+                _PUBLIC_API,
+                params={
+                    "public_key": public_key,
+                    "path": current,
+                    "limit": limit,
+                    "offset": offset,
+                },
+                timeout=15,
             )
+            resp.raise_for_status()
+            data = resp.json()
+            embedded = data.get("_embedded", {}) or {}
+            items = embedded.get("items", []) or []
+            for item in items:
+                item_type = item.get("type")
+                if item_type == "dir":
+                    if recursive:
+                        to_visit.append(item.get("path", "/"))
+                    continue
+                if item_type != "file":
+                    continue
+                name = item.get("name", "")
+                if Path(name).suffix.lower() not in _SUPPORTED_EXTS:
+                    continue
+                try:
+                    modified = datetime.fromisoformat(
+                        item.get("modified", "").replace("Z", "+00:00")
+                    )
+                except ValueError:
+                    modified = datetime.now(timezone.utc)
+                result.append(
+                    YandexFile(
+                        name=name,
+                        path=item.get("path", "/"),
+                        size=item.get("size", 0),
+                        modified=modified,
+                        parsed_date=parse_date_from_filename(name),
+                    )
+                )
+
+            # Решаем, нужна ли следующая страница. Yandex возвращает
+            # total/offset/limit в _embedded — если их нет (старое API
+            # / неполный ответ), ориентируемся по фактическому числу
+            # элементов.
+            total = embedded.get("total")
+            page_size = embedded.get("limit", limit)
+            offset += page_size
+            if total is not None:
+                if offset >= total:
+                    break
+            else:
+                if len(items) < limit:
+                    break
 
     return result
 
@@ -217,13 +239,43 @@ def sync_folder(
     """
     sess = session or requests.Session()
     files = list_public_folder(public_url, session=sess, recursive=recursive)
-    results: List[tuple[YandexFile, Path]] = []
+
+    # Защита от тихой перезаписи: если в разных подпапках (recursive=True)
+    # лежат файлы с одним именем — flatten в download_dir/<name> заставит
+    # последний скачанный затереть предыдущий, и в манифест попадёт только
+    # один. Если такое находим — берём более свежий по `modified` и
+    # явно ругаемся в логе.
+    by_name: Dict[str, YandexFile] = {}
     for f in files:
         if f.parsed_date is None:
             logger.info(
                 "Пропускаем %s: не удалось распознать дату в имени файла", f.name
             )
             continue
+        existing = by_name.get(f.name)
+        if existing is None:
+            by_name[f.name] = f
+            continue
+        if existing.path == f.path:
+            # Один и тот же файл вернулся дважды (повторный обход) — не страшно.
+            continue
+        # Реальная коллизия — два файла с одинаковыми именами из разных папок.
+        winner, loser = (
+            (f, existing) if f.modified >= existing.modified else (existing, f)
+        )
+        logger.warning(
+            "Коллизия имён на Яндекс.Диске: %s — %s (modified %s) и %s "
+            "(modified %s). Импортируем более свежий, второй проигнорирован.",
+            f.name,
+            winner.path,
+            winner.modified,
+            loser.path,
+            loser.modified,
+        )
+        by_name[f.name] = winner
+
+    results: List[tuple[YandexFile, Path]] = []
+    for f in by_name.values():
         local = download_dir / f.name
         if local.exists() and local.stat().st_size == f.size and f.size > 0:
             logger.info("Файл %s уже скачан, пропускаем", f.name)
