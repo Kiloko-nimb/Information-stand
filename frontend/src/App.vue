@@ -128,6 +128,15 @@ export default {
     }
 
     const showWarning = () => {
+      // VITE_KIOSK_WARNING_SEC=0 — режим «вернуться без предупреждения».
+      // Без этой ветки overlay успевал моргнуть (Vue рендерит до того,
+      // как setTimeout(goHome, 0) выстрелит) — а с transition-fade
+      // вспышка ~200мс реально заметна.
+      if (WARNING_SEC <= 0) {
+        goHome()
+        return
+      }
+
       warningCountdown.value = WARNING_SEC
       warningVisible.value = true
 
