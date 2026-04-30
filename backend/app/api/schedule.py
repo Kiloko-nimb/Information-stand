@@ -8,6 +8,7 @@ from app.core.bell_schedule import get_bell_schedule
 from app.core.database import get_db
 from app.models.schedule import Schedule
 from app.utils.group_names import is_valid_group_name
+from app.utils.room_names import is_valid_room_number
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
 
@@ -108,7 +109,14 @@ async def get_all_teachers(db: Session = Depends(get_db)):
 
 @router.get("/rooms")
 async def get_all_rooms(db: Session = Depends(get_db)):
-    """Список всех аудиторий, встречающихся в расписании."""
+    """Список всех аудиторий, встречающихся в расписании.
+
+    Отсеиваем мусор: если в ``room_number`` оказался текст предмета
+    из-за сдвига колонок в PDF (``"1 п/гр 1С: Предприятие …"``), он
+    не попадёт в подсказки. См.
+    :func:`app.utils.room_names.is_valid_room_number`. Маркер ``ДО``
+    (дистанционная пара) также не выводим — это не физический кабинет.
+    """
     rows = (
         db.query(Schedule.room_number)
         .filter(Schedule.room_number.isnot(None))
@@ -117,7 +125,11 @@ async def get_all_rooms(db: Session = Depends(get_db)):
         .order_by(Schedule.room_number)
         .all()
     )
-    return [{"number": r[0]} for r in rows if r[0]]
+    return [
+        {"number": r[0]}
+        for r in rows
+        if r[0] and is_valid_room_number(r[0]) and r[0].strip().lower() != "до"
+    ]
 
 
 @router.get("/today")
@@ -278,6 +290,7 @@ async def get_free_rooms_now(
 
     if not all_rooms:
         # Запасной путь — берём кабинеты из расписания (этаж определить нельзя).
+        # Отсеиваем мусор и маркер «ДО» — на карте этажей им не место.
         rows = (
             db.query(Schedule.room_number)
             .filter(Schedule.room_number.isnot(None))
@@ -286,7 +299,13 @@ async def get_free_rooms_now(
             .order_by(Schedule.room_number)
             .all()
         )
-        all_rooms = [(r[0], None) for r in rows if r[0]]
+        all_rooms = [
+            (r[0], None)
+            for r in rows
+            if r[0]
+            and is_valid_room_number(r[0])
+            and r[0].strip().lower() != "до"
+        ]
 
     busy_set: set[str] = set()
     if current_pair is not None:

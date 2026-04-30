@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.room import Room
 from app.models.schedule import Schedule
+from app.utils.room_names import is_valid_room_number
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,13 @@ def populate_rooms(db: Optional[Session] = None) -> int:
 
         for (room_number,) in unique_rooms:
             if not room_number:
+                continue
+            # Не заводим в справочник кабинетов мусор (текст предмета,
+            # попавший в room_number из-за сдвига колонок) и маркер
+            # «ДО» (дистанционная пара — не физический кабинет).
+            if not is_valid_room_number(room_number):
+                continue
+            if room_number.strip().lower() == "до":
                 continue
             if room_number in existing_numbers:
                 skipped += 1

@@ -23,6 +23,7 @@ import pdfplumber
 from app.core.bell_schedule import PairTiming, get_bell_schedule
 from app.core.database import SessionLocal
 from app.models.schedule import Schedule
+from app.utils.room_names import normalize_room_number
 
 
 def _snapshot_existing(db, schedule_date: date):
@@ -136,13 +137,26 @@ def _split_subject_and_teacher(text: str) -> Tuple[str, Optional[str]]:
 
 
 def _pick_room(rooms: List[str]) -> Optional[str]:
-    """Выбрать номер кабинета из нескольких значений (для слотов пары)."""
+    """Выбрать номер кабинета из нескольких значений (для слотов пары).
+
+    Каждое значение нормализуем через
+    :func:`app.utils.room_names.normalize_room_number` — мусор (например,
+    ``"1 п/гр 1С: Предприятие …"`` из-за сдвига колонок) отбрасывается,
+    маркер дистанционной пары приводится к каноничному ``"ДО"``.
+    """
     unique = []
     for r in rooms:
-        if r and r not in unique:
-            unique.append(r)
+        norm = normalize_room_number(r)
+        if norm and norm not in unique:
+            unique.append(norm)
     if not unique:
         return None
+    # Если среди слотов есть и реальный кабинет, и «ДО», предпочитаем
+    # реальный кабинет — пара частично очная.
+    if len(unique) > 1 and "ДО" in unique:
+        non_distance = [r for r in unique if r != "ДО"]
+        if non_distance:
+            unique = non_distance
     if len(unique) == 1:
         return unique[0]
     return "/".join(unique)

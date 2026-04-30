@@ -190,16 +190,23 @@
                 </div>
                 <div class="lesson-detail">
                   <span class="detail-icon"><Icon name="mapPin" :size="18" /></span>
-                  <button
-                    v-if="item.room_number"
-                    class="detail-link"
-                    :title="`Открыть расписание кабинета`"
-                    @click="openRoomSchedule(item.room_number)"
-                  >Кабинет {{ item.room_number }}</button>
-                  <span v-else class="detail-text">Кабинет —</span>
-                  <button v-if="item.room_number" class="show-on-map-btn" @click="showRoomOnMap(item.room_number)">
-                    На карте
-                  </button>
+                  <span
+                    v-if="isDistanceLesson(item.room_number)"
+                    class="distance-badge"
+                    title="Дистанционная пара"
+                  >Дистанционно</span>
+                  <template v-else>
+                    <button
+                      v-if="item.room_number"
+                      class="detail-link"
+                      :title="`Открыть расписание кабинета`"
+                      @click="openRoomSchedule(item.room_number)"
+                    >Кабинет {{ item.room_number }}</button>
+                    <span v-else class="detail-text">Кабинет —</span>
+                    <button v-if="item.room_number" class="show-on-map-btn" @click="showRoomOnMap(item.room_number)">
+                      На карте
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -472,7 +479,11 @@ export default {
         const time = `${formatTime(it.time_start)}–${formatTime(it.time_end)}`
         const subj = it.subject || ''
         const teacher = it.teacher_name ? ` · ${it.teacher_name}` : ''
-        const room = it.room_number ? ` · ауд.${it.room_number}` : ''
+        const room = it.room_number
+          ? (String(it.room_number).trim().toUpperCase() === 'ДО'
+              ? ' · дистанционно'
+              : ` · ауд.${it.room_number}`)
+          : ''
         const tag = it.is_modified ? ' [ЗАМЕНА]' : ''
         lines.push(`${lesson}. ${time} · ${subj}${teacher}${room}${tag}`)
       }
@@ -640,6 +651,15 @@ export default {
       return 'ЛК'
     }
 
+    // «ДО» — маркер дистанционной пары в room_number. Показываем не как
+    // номер кабинета, а как бейдж «Дистанционно»; на карте этажей не
+    // отображаем. Слот «112/ДО» (часть очно, часть дистанционно)
+    // обрабатывается парсером — оставляется только реальный кабинет.
+    const isDistanceLesson = (room) => {
+      if (!room) return false
+      return String(room).trim().toUpperCase() === 'ДО'
+    }
+
     const isCurrentLesson = (lesson) => {
       const now = new Date()
       const currentTime = now.getHours() * 60 + now.getMinutes()
@@ -714,7 +734,8 @@ export default {
       onDateWheel,
       showRoomOnMap,
       getLessonTypeClass,
-      formatLessonType
+      formatLessonType,
+      isDistanceLesson
     }
   }
 }
@@ -1551,6 +1572,19 @@ h1 {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text);
+}
+
+.distance-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  border-radius: var(--radius-pill);
+  color: #e9d5ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .show-on-map-btn {
