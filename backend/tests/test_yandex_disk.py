@@ -208,3 +208,69 @@ def test_sync_folder_skips_existing_file(tmp_path: Path):
     # Проверяем, что за скачиванием в Яндекс-API не ходили.
     called_paths = [c[0] for c in session.calls]
     assert not any("download" in p for p in called_paths)
+
+
+def test_sync_and_import_skips_unchanged_files(tmp_path: Path, monkeypatch):
+    """На втором запуске неизменённый файл не должен повторно
+    проходить через ``import_schedule`` — иначе на каждом рестарте
+    бэкенда мы перепарсим 200 PDF без причины."""
+    pdf = tmp_path / "13.04.2026.pdf"
+    pdf.write_bytes(b"fake-pdf-bytes")
+
+    list_payload = {
+        "_embedded": {
+            "items": [
+                {
+                    "type": "file",
+                    "name": "13.04.2026.pdf",
+                    "path": "/13.04.2026.pdf",
+                    "size": len(b"fake-pdf-bytes"),
+                    "modified": "2026-04-01T09:00:00+00:00",
+                }
+            ]
+        }
+    }
+
+    def make_session():
+        return _FakeSession(
+            list_payload=list_payload,
+            download_payload={"href": "https://example.com/dl"},
+            file_bytes=b"",
+        )
+
+    import_calls: list[tuple[str, str]] = []
+
+    def fake_import(file_path, date_str):
+        import_calls.append((file_path, date_str))
+        return 42
+
+    # Подменяем импорт расписания на «заглушку».
+    import app.utils.import_schedule as import_module
+
+    monkeypatch.setattr(import_module, "import_schedule", fake_import)
+
+    # Первый запуск — должно вызваться import_schedule.
+    monkeypatch.setattr(yandex_disk.requests, "Session", make_session)
+    summary = yandex_disk.sync_and_import(
+        "https://disk.yandex.ru/d/abc", tmp_path
+    )
+    assert len(summary) == 1
+    assert summary[0][2] == 42
+    assert len(import_calls) == 1
+    assert (tmp_path / ".imported.json").exists()
+
+    # Второй запуск без изменений — import_schedule вызываться НЕ должен.
+    summary2 = yandex_disk.sync_and_import(
+        "https://disk.yandex.ru/d/abc", tmp_path
+    )
+    assert summary2 == []
+    assert len(import_calls) == 1, "import_schedule повторно не должен вызываться"
+
+    # А если файл "изменился" (mtime + размер) — должен импортироваться снова.
+    pdf.write_bytes(b"fake-pdf-bytes-v2")
+    list_payload["_embedded"]["items"][0]["size"] = len(b"fake-pdf-bytes-v2")
+    summary3 = yandex_disk.sync_and_import(
+        "https://disk.yandex.ru/d/abc", tmp_path
+    )
+    assert len(summary3) == 1
+    assert len(import_calls) == 2

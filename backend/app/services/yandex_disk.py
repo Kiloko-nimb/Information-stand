@@ -10,17 +10,24 @@
 3. Скачать файл локально.
 4. Импортировать его в БД через ``import_schedule``.
 
+Чтобы не перепарсить 200 PDF на каждом старте бэкенда, успешно
+импортированные файлы запоминаются в манифесте ``.imported.json``
+рядом с директорией скачивания (см. ``_load_manifest`` ниже). При
+следующем запуске файл с тем же размером и временем модификации,
+что уже есть в манифесте, пропускается.
+
 Публичный API Яндекс.Диска: https://yandex.ru/dev/disk-api/doc/ru/reference/public
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import unquote, urlparse, urlunparse
 
 import requests
@@ -227,6 +234,50 @@ def sync_folder(
     return results
 
 
+_MANIFEST_NAME = ".imported.json"
+
+
+def _manifest_path(download_dir: Path) -> Path:
+    return download_dir / _MANIFEST_NAME
+
+
+def _load_manifest(download_dir: Path) -> Dict[str, dict]:
+    """Прочитать манифест уже импортированных файлов.
+
+    Формат: ``{ "<filename>": {"size": int, "mtime": float,
+    "schedule_date": "YYYY-MM-DD", "imported_at": "ISO timestamp"} }``.
+    Если файла нет / он битый — возвращаем пустой словарь.
+    """
+    path = _manifest_path(download_dir)
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Манифест %s повреждён, игнорируем: %s", path, exc)
+        return {}
+
+
+def _save_manifest(download_dir: Path, manifest: Dict[str, dict]) -> None:
+    path = _manifest_path(download_dir)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        logger.warning("Не смогли сохранить манифест %s: %s", path, exc)
+
+
+def _file_signature(path: Path) -> Tuple[int, int]:
+    """Подпись файла: (size, mtime в наносекундах) — стабильна между
+    запусками. Используется чтобы понять, изменился ли файл с прошлой
+    успешной попытки импорта."""
+    st = path.stat()
+    return st.st_size, st.st_mtime_ns
+
+
 def sync_and_import(
     public_url: str,
     download_dir: Path,
@@ -236,23 +287,60 @@ def sync_and_import(
     """
     Скачать и импортировать все расписания из публичной папки.
 
+    На каждом запуске пропускает файлы, которые уже были успешно
+    импортированы и не менялись с тех пор (по размеру и mtime). Это
+    избавляет от перепарсинга 200+ PDF при каждом рестарте бэкенда.
+
     Возвращает ``[(date, local_path, records_added), ...]``.
     Ошибки импорта не прерывают пайплайн — они логируются, и процесс
     продолжает работу с остальными файлами.
     """
     from app.utils.import_schedule import import_schedule
 
+    manifest = _load_manifest(download_dir)
     summary: List[tuple[date, Path, int]] = []
+    skipped_unchanged = 0
     for f, local in sync_folder(public_url, download_dir, recursive=recursive):
+        try:
+            size, mtime_ns = _file_signature(local)
+        except OSError:
+            # Файла внезапно нет — пробуем импортировать по существующему пути,
+            # пусть импортер сам ругнётся.
+            size, mtime_ns = 0, 0
+
+        entry = manifest.get(f.name)
+        if (
+            entry is not None
+            and entry.get("size") == size
+            and entry.get("mtime_ns") == mtime_ns
+            and entry.get("schedule_date") == f.parsed_date.isoformat()
+        ):
+            skipped_unchanged += 1
+            continue
+
         try:
             added = import_schedule(
                 str(local), f.parsed_date.strftime("%Y-%m-%d")
             )
             summary.append((f.parsed_date, local, added or 0))
+            manifest[f.name] = {
+                "size": size,
+                "mtime_ns": mtime_ns,
+                "schedule_date": f.parsed_date.isoformat(),
+                "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            }
         except Exception as exc:
             logger.error(
                 "Ошибка импорта %s (%s): %s", f.name, f.parsed_date, exc
             )
+
+    if skipped_unchanged:
+        logger.info(
+            "⏭ Пропущено %d файлов без изменений (уже импортированы ранее)",
+            skipped_unchanged,
+        )
+
+    _save_manifest(download_dir, manifest)
     return summary
 
 
