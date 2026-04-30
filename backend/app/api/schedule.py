@@ -157,14 +157,23 @@ async def get_now_status(db: Session = Depends(get_db)):
     if not bell:
         return {"status": "weekend", "current": None, "next": None}
 
+    # Идём по парам и параллельно ловим текущую (если уже началась, но
+    # ещё не закончилась) и ближайшую следующую (первую с pair.start > now).
+    # Раньше после нахождения current_pair был break, из-за чего next_pair
+    # во время идущей пары всегда оставался None — это нарушало контракт
+    # API (поле "next" задокументировано как «ближайшая следующая пара
+    # по сегодняшнему расписанию звонков»).
     current_pair = None
     next_pair = None
     for pair in bell:
         if pair.start <= now.time() <= pair.end:
             current_pair = pair
-            break
-        if now.time() < pair.start and next_pair is None:
+        elif now.time() < pair.start and next_pair is None:
             next_pair = pair
+            if current_pair is not None:
+                # Текущую уже нашли, и теперь нашли первую следующую —
+                # дальше можно не идти.
+                break
 
     def _pair_payload(pair) -> dict:
         return {

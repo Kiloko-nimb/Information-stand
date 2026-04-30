@@ -95,12 +95,14 @@ export default {
     // Таймер бездействия для киоска. Настраивается через .env:
     //   VITE_KIOSK_TIMEOUT_SEC — общее время бездействия до возврата (сек, по умолчанию 180)
     //   VITE_KIOSK_WARNING_SEC — за сколько секунд до возврата показывать предупреждение (по умолчанию 10)
-    const TIMEOUT_SEC = Math.max(
-      5,
-      parseInt(import.meta.env.VITE_KIOSK_TIMEOUT_SEC, 10) || 180,
-    )
+    // VITE_KIOSK_WARNING_SEC=0 должен реально отключать предупреждение
+    // (так задокументировано в .env.example). Поэтому НЕ используем
+    // `|| 10` — для 0 это даёт 10. Защищаем только от NaN.
+    const rawTimeout = parseInt(import.meta.env.VITE_KIOSK_TIMEOUT_SEC, 10)
+    const TIMEOUT_SEC = Math.max(5, Number.isNaN(rawTimeout) ? 180 : rawTimeout)
+    const rawWarning = parseInt(import.meta.env.VITE_KIOSK_WARNING_SEC, 10)
     const WARNING_SEC = Math.min(
-      Math.max(0, parseInt(import.meta.env.VITE_KIOSK_WARNING_SEC, 10) || 10),
+      Math.max(0, Number.isNaN(rawWarning) ? 10 : rawWarning),
       TIMEOUT_SEC - 1,
     )
 
