@@ -23,6 +23,7 @@ import pdfplumber
 from app.core.bell_schedule import PairTiming, get_bell_schedule
 from app.core.database import SessionLocal
 from app.models.schedule import Schedule
+from app.utils.group_names import is_valid_group_name
 from app.utils.room_names import normalize_room_number
 
 
@@ -143,6 +144,11 @@ def _pick_room(rooms: List[str]) -> Optional[str]:
     :func:`app.utils.room_names.normalize_room_number` — мусор (например,
     ``"1 п/гр 1С: Предприятие …"`` из-за сдвига колонок) отбрасывается,
     маркер дистанционной пары приводится к каноничному ``"ДО"``.
+
+    Если в слотах одной пары встретилось несколько разных кабинетов
+    (типичный случай — две подгруппы в разных аудиториях), берём
+    первый встретившийся реальный кабинет, а не склеиваем через ``/``:
+    кабинетов вида «112/413» в реальности нет.
     """
     unique = []
     for r in rooms:
@@ -153,13 +159,10 @@ def _pick_room(rooms: List[str]) -> Optional[str]:
         return None
     # Если среди слотов есть и реальный кабинет, и «ДО», предпочитаем
     # реальный кабинет — пара частично очная.
-    if len(unique) > 1 and "ДО" in unique:
-        non_distance = [r for r in unique if r != "ДО"]
-        if non_distance:
-            unique = non_distance
-    if len(unique) == 1:
-        return unique[0]
-    return "/".join(unique)
+    non_distance = [r for r in unique if r != "ДО"]
+    if non_distance:
+        return non_distance[0]
+    return unique[0]
 
 
 def _infer_lesson_type(subject: str) -> Optional[str]:
@@ -180,12 +183,17 @@ def _parse_date(date_str: str) -> date:
 def _collect_group_columns(
     header_row: pd.Series,
 ) -> List[Tuple[str, int, int]]:
-    """Вытащить (group_name, subject_col, room_col) из первой строки листа."""
+    """Вытащить (group_name, subject_col, room_col) из первой строки листа.
+
+    Заголовки ``Ауд.`` (и их PDF-перевёрнутый вариант ``.дуА``)
+    отбрасываются — это заголовок колонки с номером кабинета, а не
+    имя группы.
+    """
     groups: List[Tuple[str, int, int]] = []
     # Первые две колонки — это «Пара» и «Расписание звонков».
     for i in range(2, len(header_row), 2):
         name = _clean(header_row.iloc[i])
-        if not name or name.lower().startswith("ауд"):
+        if not name or not is_valid_group_name(name):
             continue
         if i + 1 >= len(header_row):
             break

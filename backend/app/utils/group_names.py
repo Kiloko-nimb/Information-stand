@@ -12,6 +12,7 @@
 """
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 
@@ -23,6 +24,9 @@ def is_valid_group_name(name: Optional[str]) -> bool:
     * пустые / ``None`` значения,
     * имена, начинающиеся на ``Ауд`` (любой регистр) — это заголовок
       колонки с номером аудитории, а не группа,
+    * имена с перевёрнутым ``Ауд.`` → ``.дуА`` (PDF-парсер иногда
+      выдаёт текст в обратном порядке символов, особенно в шапках с
+      нестандартным шрифтом),
     * имена, состоящие только из не буквенно-цифровых символов
       (``.``, ``-``, ``—``, ``…``).
     """
@@ -30,6 +34,11 @@ def is_valid_group_name(name: Optional[str]) -> bool:
         return False
     stripped = name.strip()
     if not stripped:
+        return False
+    # Нормализуем: только буквы (русские/латинские), без точек и пробелов.
+    # Так ловим и ``Ауд.``, и ``.дуА``, и ``А у д .`` одинаково.
+    letters_only = re.sub(r"[^а-яА-ЯёЁa-zA-Z]", "", stripped).lower()
+    if letters_only in ("ауд", "дуа"):
         return False
     if stripped.lower().startswith("ауд"):
         return False

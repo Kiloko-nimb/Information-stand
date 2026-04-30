@@ -155,9 +155,20 @@ class TestImportScheduleParser:
         from app.utils.import_schedule import _pick_room
 
         assert _pick_room(["318", "318"]) == "318"
-        assert _pick_room(["318", "418"]) == "318/418"
+        # Когда у двух подгрупп разные кабинеты — берём первый
+        # реальный, а не склеиваем через ``/``: кабинетов «318/418»
+        # в реальности нет.
+        assert _pick_room(["318", "418"]) == "318"
         assert _pick_room([]) is None
         assert _pick_room([None, ""]) is None
+        # Мусор (текст пары попал в room из-за сдвига колонок) — None.
+        assert _pick_room(["1 п/гр 1С: Предприятие Курбанова Т.В."]) is None
+        # Маркер «ДО» нормализуется к каноничному виду.
+        assert _pick_room(["до"]) == "ДО"
+        assert _pick_room(["До", "до"]) == "ДО"
+        # Если есть и реальный кабинет, и «ДО» — побеждает кабинет.
+        assert _pick_room(["112", "ДО"]) == "112"
+        assert _pick_room(["ДО", "112"]) == "112"
 
     def test_infer_lesson_type(self):
         from app.utils.import_schedule import _infer_lesson_type
