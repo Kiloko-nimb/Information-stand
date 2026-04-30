@@ -583,12 +583,12 @@ export default {
         <div style="background:linear-gradient(160deg,#ffffff 0%,#f7f9fd 100%);padding:2.25rem;border-radius:24px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,0.18);border:1px solid rgba(15,23,42,0.10);font-family:'Inter',system-ui,sans-serif;">
           <h2 style="color:#0f172a;margin:0 0 1.5rem;font-family:'Manrope','Inter',system-ui,sans-serif;font-size:1.75rem;font-weight:800;letter-spacing:-0.02em;text-align:center;">📱 Подать документы</h2>
 
-          <div style="display:grid;grid-template-columns:240px 1fr;gap:1.5rem;background:#f5f7fb;padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(15,23,42,0.10);align-items:center;">
-            <div style="text-align:center;">
-              <img src="${qr}" style="width:220px;height:220px;border-radius:14px;background:#fff;padding:8px;"/>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:1.5rem;background:#f5f7fb;padding:1.5rem;border-radius:18px;margin-bottom:1.25rem;border:1px solid rgba(15,23,42,0.10);">
+            <div style="flex:0 1 240px;min-width:0;text-align:center;">
+              <img src="${qr}" style="width:100%;max-width:220px;height:auto;aspect-ratio:1/1;border-radius:14px;background:#fff;padding:8px;box-sizing:border-box;"/>
               <p style="color:rgba(15,23,42,0.7);font-size:0.85rem;margin:0.6rem 0 0;">Отсканируйте —<br>откроется раздел «Абитуриенту»</p>
             </div>
-            <div style="color:rgba(15,23,42,0.88);font-size:0.97rem;line-height:1.7;">
+            <div style="flex:1 1 280px;min-width:0;color:rgba(15,23,42,0.88);font-size:0.97rem;line-height:1.7;">
               <strong style="color:#b45309;">Приём документов:</strong><br>
               c 15 июня по 14 августа 2026<br>
               Пожарная безопасность — до 10 августа<br><br>
