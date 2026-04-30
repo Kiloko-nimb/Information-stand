@@ -4,8 +4,11 @@
  * /schedule/now дважды на одной странице.
  *
  * При первом вызове запускает поллинг /schedule/now раз в 30 секунд
- * и одноразово грузит /schedule/bells. Поллинг живёт до конца сеанса —
- * для киоска это норма.
+ * и грузит /schedule/bells. Звонки тоже перезагружаются при смене
+ * дня недели — киоск работает 24/7, и при пересечении полуночи
+ * (например, Пн → Вт) bellSchedule нужно обновить, иначе таблица в
+ * BellsWidget остаётся со вчерашними тайминами (Пн — 8 пар с
+ * линейкой, Вт-Сб — 7 пар, разные start times).
  */
 import { ref, computed } from 'vue'
 import api from '../services/api'
@@ -15,6 +18,9 @@ const bellSchedule = ref([])
 
 let nowInterval = null
 let bellsRequested = false
+// Сохраняем weekday последней успешной загрузки звонков, чтобы при
+// его смене (полночь) автоматически перезагрузить.
+let lastBellsWeekday = null
 
 const loadNow = async () => {
   try {
@@ -23,12 +29,18 @@ const loadNow = async () => {
   } catch (_) {
     nowStatus.value = null
   }
+  // Полночь могла наступить между тиками — проверяем смену дня.
+  const today = new Date().getDay()
+  if (lastBellsWeekday !== null && today !== lastBellsWeekday) {
+    loadBells()
+  }
 }
 
 const loadBells = async () => {
   try {
     const response = await api.get('/schedule/bells')
     bellSchedule.value = Array.isArray(response.data?.pairs) ? response.data.pairs : []
+    lastBellsWeekday = new Date().getDay()
   } catch (_) {
     bellSchedule.value = []
   }
