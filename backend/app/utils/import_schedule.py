@@ -343,6 +343,19 @@ def import_schedule_from_excel(
                     )
                     records_added += 1
 
+        # Защита от тихой потери данных: если новый файл оказался
+        # пустым / нераспознаваемым (0 записей), а до импорта на эту
+        # дату уже что-то было — НЕ коммитим удаление, откатываемся.
+        # Иначе кривой PDF из автосинка тихо стирал бы день расписания.
+        if records_added == 0 and had_previous:
+            db.rollback()
+            print(
+                f"[WARN] {file_path}: 0 записей при наличии {len(previous_snapshot)} "
+                f"существующих на {schedule_date} — удаление откачено, "
+                "данные сохранены."
+            )
+            return 0
+
         db.commit()
         print(
             f"[OK] Импортировано {records_added} записей "
@@ -477,6 +490,18 @@ def import_schedule_from_pdf(
                             )
                         )
                         records_added += 1
+
+            # Та же защита, что и в Excel-импортёре: пустой результат
+            # парсинга при наличии прежних записей — это аномалия,
+            # удалять старое нельзя.
+            if records_added == 0 and had_previous:
+                db.rollback()
+                print(
+                    f"[WARN] {file_path}: 0 записей при наличии "
+                    f"{len(previous_snapshot)} существующих на "
+                    f"{schedule_date} — удаление откачено, данные сохранены."
+                )
+                return 0
 
             db.commit()
             print(

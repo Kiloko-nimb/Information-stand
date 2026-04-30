@@ -538,9 +538,16 @@ export default {
       return `${yyyy}-${mm}-${dd}`
     }
 
+    // Счётчик «текущего» запроса. Только последний инициированный
+    // search() имеет право снять loading. Это спасает от мигания
+    // спиннера, когда отменённый запрос завершает finally уже после
+    // того, как стартовал новый (см. Schedule.vue search()).
+    let searchRequestId = 0
+
     const search = async () => {
       if (!searchQuery.value.trim()) return
 
+      const myRequestId = ++searchRequestId
       loading.value = true
       searched.value = true
 
@@ -567,7 +574,8 @@ export default {
         })
         scheduleData.value = response.data.sort((a, b) => a.lesson_number - b.lesson_number)
       } catch (error) {
-        // Запрос отменен — тихо выходим, ничего не показываем.
+        // Запрос отменён более новым search() — тихо выходим, и пусть
+        // новый запрос сам управляет loading.
         if (
           error?.code === 'ERR_CANCELED' ||
           error?.name === 'CanceledError' ||
@@ -582,7 +590,11 @@ export default {
           console.error('Ошибка поиска:', error)
         }
       } finally {
-        loading.value = false
+        // Снимаем loading только если с момента старта НИКТО более
+        // новый не успел запуститься.
+        if (myRequestId === searchRequestId) {
+          loading.value = false
+        }
       }
     }
 
