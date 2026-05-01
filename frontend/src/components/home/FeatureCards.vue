@@ -8,28 +8,28 @@
 -->
 <template>
   <div class="features" :class="{ 'accessibility-active': accessibilityMode }">
-    <div class="feature-card" @click="$router.push('/schedule')">
+    <div class="feature-card" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/schedule')">
       <div class="feature-icon"><Icon name="calendar" :size="34" /></div>
       <h2>Расписание</h2>
       <p>Найдите расписание по группе или преподавателю</p>
     </div>
 
-    <div class="feature-card" @click="$router.push('/staff')">
+    <div class="feature-card" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/staff')">
       <div class="feature-icon"><Icon name="users" :size="34" /></div>
       <h2>Сотрудники</h2>
       <p>Информация о преподавателях и администрации</p>
     </div>
 
-    <div class="feature-card" @click="$router.push('/map')">
+    <div class="feature-card" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/map')">
       <div class="feature-icon"><Icon name="map" :size="34" /></div>
       <h2>Навигация</h2>
       <p>Найдите нужный кабинет на карте колледжа</p>
     </div>
 
-    <div class="feature-card" @click="$router.push('/faq')">
+    <div class="feature-card" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/faq')">
       <div class="feature-icon"><Icon name="help" :size="34" /></div>
       <h2>Частые вопросы</h2>
-      <p>Справки, документы, Wi-Fi, поступление</p>
+      <p>Справки, документы, поступление</p>
     </div>
   </div>
 </template>
@@ -52,6 +52,19 @@ export default {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
+}
+
+/* Портретный 4K: 4 карточки в ряд сжимаются в узкие полоски — делаем
+   2×2 сетку с увеличенными карточками. */
+@media (orientation: portrait) and (min-height: 2400px) {
+  .features {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+  .feature-card {
+    min-height: 360px;
+    padding: 3.5rem 2.5rem;
+  }
 }
 
 .feature-card {

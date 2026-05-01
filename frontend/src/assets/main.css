@@ -284,6 +284,48 @@ a:active,
   transition: transform 80ms var(--ease) !important;
 }
 
+/* На сенсорных устройствах (флаг data-touch ставится в App.vue)
+   усиливаем press-эффект: чуть сильнее «вдавливаем», добавляем
+   лёгкое затемнение — тактильный отклик на экран без мыши должен
+   читаться мгновенно. Ripple-волна поверх этого добавляется через
+   директиву v-ripple (см. src/directives/ripple.js). */
+html[data-touch="1"] button:not(:disabled):active,
+html[data-touch="1"] a:active,
+html[data-touch="1"] [role="button"]:active,
+html[data-touch="1"] .feature-card:active,
+html[data-touch="1"] .bento-card:active,
+html[data-touch="1"] .bento-tile:active,
+html[data-touch="1"] .faq-item:active,
+html[data-touch="1"] .faq-question:active,
+html[data-touch="1"] .applicant-btn:active,
+html[data-touch="1"] .bells-widget:active {
+  transform: scale(0.95) !important;
+  filter: brightness(0.96);
+  transition: transform 90ms var(--ease), filter 90ms var(--ease) !important;
+}
+
+/* Плавное всплытие при отпускании — делаем возврат чуть медленнее
+   прижима, так ощущается «упругий» отклик. */
+html[data-touch="1"] button:not(:disabled),
+html[data-touch="1"] a,
+html[data-touch="1"] [role="button"],
+html[data-touch="1"] .feature-card,
+html[data-touch="1"] .bento-card,
+html[data-touch="1"] .bento-tile,
+html[data-touch="1"] .faq-item,
+html[data-touch="1"] .faq-question,
+html[data-touch="1"] .applicant-btn,
+html[data-touch="1"] .bells-widget {
+  transition: transform 220ms var(--ease-spring), filter 220ms var(--ease),
+    background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+/* Убираем iOS-подсветку и touch-hover lock: у нас свой ripple + press. */
+html[data-touch="1"] * {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
 /* ============================================================
    4K / большие экраны
    На обычном FullHD (≤2560px) ничего не меняем — текущий дизайн
@@ -291,6 +333,10 @@ a:active,
    масштаб. На 4K (≥3840px) сильно увеличиваем — иначе всё выглядит
    крошечным с расстояния 1+ метра, с которого смотрит студент.
    Большая часть размеров в UI задана в rem, так что шрифт = масштаб.
+
+   ВАЖНО: триггеры ниже работают и в портретной ориентации (например
+   4K-стенд 2160×3840 в вертикале): выбираем максимум между шириной
+   и высотой вьюпорта через отдельные media-блоки по min-height.
    ============================================================ */
 @media (min-width: 2560px) {
   body { font-size: 22px; }
@@ -305,6 +351,31 @@ a:active,
 @media (min-width: 3840px) {
   body { font-size: 30px; }
   :root { --content-max-width: 2600px; }
+}
+
+/* Портретная 4K-ориентация: экран 2160×3840 (или похожий высокий
+   стенд). Ширина 2160 не триггерит блоки по min-width: 2560, поэтому
+   UI остаётся крошечным. Зеркалим пороги по высоте. */
+@media (min-height: 2560px) {
+  body { font-size: 22px; }
+  :root { --content-max-width: 1900px; }
+}
+
+@media (min-height: 3200px) {
+  body { font-size: 26px; }
+  :root { --content-max-width: 1950px; }
+}
+
+@media (min-height: 3840px) {
+  body { font-size: 30px; }
+  :root { --content-max-width: 2000px; }
+}
+
+/* На узко-и-длинном вертикальном 4K контент-колонка должна быть
+   близка к ширине экрана (1400px было разумно для горизонтального
+   FullHD, но смотрится «островком» на 2160-ширине). */
+@media (orientation: portrait) and (min-width: 1800px) {
+  :root { --content-max-width: min(1900px, 92vw); }
 }
 
 /* Принудительный 4K-режим для тестирования с обычного монитора:

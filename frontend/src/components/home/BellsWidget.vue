@@ -4,7 +4,12 @@
   Если /schedule/bells вернул пусто — виджет не рендерится.
 -->
 <template>
-  <div v-if="bellSchedule.length > 0" class="bells-widget" @click="$router.push('/schedule')">
+  <div
+    v-if="bellSchedule.length > 0"
+    class="bells-widget"
+    v-ripple="{ color: 'rgba(37, 99, 235, 0.18)' }"
+    @click="$router.push('/schedule')"
+  >
     <div class="bells-head">
       <span class="bells-icon"><Icon name="bell" :size="24" /></span>
       <span class="bells-title">Расписание звонков</span>
@@ -59,6 +64,22 @@ export default {
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+/* На портретном 4K виджет звонков смотрится узким островком в центре
+   широкой страницы. Расширяем почти до самой колонки. */
+@media (orientation: portrait) and (min-height: 2400px) {
+  .bells-widget {
+    max-width: 100%;
+    padding: 2rem 2.25rem;
+  }
+  .bells-list {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.85rem;
+  }
+  .bell-item {
+    padding: 0.85rem 1rem;
+  }
 }
 
 .bells-widget:hover {

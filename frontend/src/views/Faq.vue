@@ -31,6 +31,7 @@
         :key="cat.id"
         class="faq-filter"
         :class="{ active: currentCategory === cat.id }"
+        v-ripple="{ color: 'rgba(37, 99, 235, 0.20)' }"
         @click="currentCategory = cat.id"
       >
         <span class="faq-filter-icon"><Icon :name="cat.iconName" :size="18" /></span>
@@ -53,6 +54,7 @@
         <button
           class="faq-question"
           :aria-expanded="openItem === item.id"
+          v-ripple="{ color: 'rgba(37, 99, 235, 0.18)' }"
           @click="toggle(item.id)"
         >
           <span class="faq-question-icon"><Icon :name="categoryIconName(item.category)" :size="20" /></span>

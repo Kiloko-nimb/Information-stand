@@ -32,6 +32,7 @@
     <button
       class="accessibility-button"
       :class="{ active: accessibilityMode }"
+      v-ripple="{ color: 'rgba(37, 99, 235, 0.25)' }"
       @click="toggleAccessibilityMode"
     >
       <Icon v-if="!accessibilityMode" name="accessibility" :size="24" />
@@ -97,6 +98,46 @@ export default {
 
 .bottom-section {
   transform: translateY(0);
+}
+
+/* ===== Портретный 4K-режим =====
+   На высоком вертикальном стенде (напр. 2160×3840) контент сам по
+   себе не заполняет экран — остаётся огромная пустая область снизу.
+   Делаем .home flex-колонкой на всю высоту, распираем middle-section
+   и разводим ритм по секциям. */
+@media (orientation: portrait) and (min-height: 2400px) {
+  .home {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 8rem;
+  }
+  .top-section {
+    padding: 3rem 0 2rem;
+  }
+  .middle-section {
+    flex: 1 1 auto;
+    min-height: 4rem;
+  }
+  .bottom-section {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+}
+
+/* Ещё более «растянутый» режим для настоящего 4K-портрета */
+@media (orientation: portrait) and (min-height: 3200px) {
+  .top-section {
+    padding: 4rem 0 2.5rem;
+  }
+  .bottom-section {
+    gap: 3rem;
+  }
+  .home {
+    padding-bottom: 10rem;
+  }
 }
 
 .subtitle {

@@ -17,19 +17,19 @@
         <div class="countdown-value">{{ daysUntilAdmission }} дней</div>
       </div>
       <div class="applicant-actions">
-        <button class="applicant-btn" @click="passingScoresOpen = true">
+        <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="passingScoresOpen = true">
           <span class="btn-icon"><Icon name="barChart" :size="22" /></span>
           <span class="btn-text">Проходные баллы</span>
         </button>
-        <button class="applicant-btn" @click="specialtiesOpen = true">
+        <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="specialtiesOpen = true">
           <span class="btn-icon"><Icon name="target" :size="22" /></span>
           <span class="btn-text">Специальности</span>
         </button>
-        <button class="applicant-btn" @click="openApplicationQR">
+        <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="openApplicationQR">
           <span class="btn-icon"><Icon name="smartphone" :size="22" /></span>
           <span class="btn-text">Подать документы</span>
         </button>
-        <button class="applicant-btn applicant-btn--accent" @click="$router.push('/quiz')">
+        <button class="applicant-btn applicant-btn--accent" v-ripple="{ color: 'rgba(255, 255, 255, 0.30)' }" @click="$router.push('/quiz')">
           <span class="btn-icon"><Icon name="compass" :size="22" /></span>
           <span class="btn-text">Подобрать профессию</span>
         </button>
