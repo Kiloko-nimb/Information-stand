@@ -283,10 +283,20 @@ async def get_free_rooms_now(
         status = "in_progress"
 
     # Список всех известных кабинетов (приоритет — справочник Room).
+    # Таблица rooms могла наполниться до включения фильтрации мусора
+    # в populate_rooms, поэтому дополнительно прогоняем через
+    # is_valid_room_number здесь. «ДО» (маркер дистанционной пары)
+    # тоже не должен попадать в «свободно на этаже».
     rooms_query = db.query(Room.room_number, Room.floor)
     if floor is not None:
         rooms_query = rooms_query.filter(Room.floor == floor)
-    all_rooms = [(r[0], r[1]) for r in rooms_query.order_by(Room.room_number).all() if r[0]]
+    all_rooms = [
+        (r[0], r[1])
+        for r in rooms_query.order_by(Room.room_number).all()
+        if r[0]
+        and is_valid_room_number(r[0])
+        and r[0].strip().lower() != "до"
+    ]
 
     if not all_rooms:
         # Запасной путь — берём кабинеты из расписания (этаж определить нельзя).
@@ -318,7 +328,16 @@ async def get_free_rooms_now(
             .distinct()
             .all()
         )
-        busy_set = {row[0].strip() for row in busy_rows if row[0]}
+        # «Занято» считается только по валидным кабинетам; мусорные
+        # значения в Schedule.room_number игнорируем, иначе сравнение
+        # по .strip() всё равно ничего не найдёт в all_rooms.
+        busy_set = {
+            row[0].strip()
+            for row in busy_rows
+            if row[0]
+            and is_valid_room_number(row[0])
+            and row[0].strip().lower() != "до"
+        }
 
     free_rooms = [
         {"number": number, "floor": fl}

@@ -19,7 +19,12 @@
         <span class="carousel-today-icon">↺</span>
         <span class="carousel-today-label">Сегодня</span>
       </button>
-      <div class="date-cards-container" ref="dateScrollEl" @wheel.prevent="onDateWheel">
+      <div
+        class="date-cards-container"
+        ref="dateScrollEl"
+        @wheel.prevent="onDateWheel"
+        @scroll.passive="onDateScroll"
+      >
         <div class="date-cards">
           <button
             v-for="(day, index) in dateRange"
@@ -326,15 +331,70 @@ export default {
     const datePickerEl = ref(null)
     const dateScrollEl = ref(null)
 
+    // Сколько дней в обе стороны держим в карусели по умолчанию.
+    // На сенсорном киоске пользователь свайпает довольно агрессивно,
+    // поэтому даём приличный запас. Если упрётся в край — onDateScroll
+    // дотянет ещё.
+    const DATE_RANGE_BACKWARD = 7
+    const DATE_RANGE_FORWARD = 14
+
     const generateDateRange = () => {
       const dates = []
       const anchor = new Date(selectedDate.value)
-      for (let i = -3; i <= 7; i++) {
+      for (let i = -DATE_RANGE_BACKWARD; i <= DATE_RANGE_FORWARD; i++) {
         const date = new Date(anchor)
         date.setDate(anchor.getDate() + i)
         dates.push(date)
       }
       dateRange.value = dates
+    }
+
+    // Расширяем диапазон вперёд/назад, не пересоздавая массив, чтобы
+    // прокрутка не дёргалась и не теряла позицию (просто дописываем
+    // новые `Date` к концу/началу).
+    const extendDateRange = (direction) => {
+      if (!dateRange.value.length) return
+      const ADD = 7
+      if (direction === 'forward') {
+        const last = dateRange.value[dateRange.value.length - 1]
+        const tail = []
+        for (let i = 1; i <= ADD; i++) {
+          const d = new Date(last)
+          d.setDate(last.getDate() + i)
+          tail.push(d)
+        }
+        dateRange.value = [...dateRange.value, ...tail]
+      } else if (direction === 'backward') {
+        const first = dateRange.value[0]
+        const head = []
+        for (let i = ADD; i >= 1; i--) {
+          const d = new Date(first)
+          d.setDate(first.getDate() - i)
+          head.push(d)
+        }
+        // Сохраняем визуальную позицию: после prepend'а scrollLeft
+        // нужно сместить на ширину добавленных карточек, иначе пользователь
+        // «улетит» в начало.
+        const el = dateScrollEl.value
+        const before = el ? el.scrollWidth : 0
+        dateRange.value = [...head, ...dateRange.value]
+        if (el) {
+          requestAnimationFrame(() => {
+            const delta = el.scrollWidth - before
+            el.scrollLeft += delta
+          })
+        }
+      }
+    }
+
+    const onDateScroll = (event) => {
+      const el = event.currentTarget
+      if (!el) return
+      const EDGE = 120
+      const atStart = el.scrollLeft <= EDGE
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - EDGE
+      if (atEnd) extendDateRange('forward')
+      if (atStart) extendDateRange('backward')
     }
 
     const openDatePicker = () => {
@@ -732,6 +792,7 @@ export default {
       openDatePicker,
       onDatePicked,
       onDateWheel,
+      onDateScroll,
       showRoomOnMap,
       getLessonTypeClass,
       formatLessonType,
