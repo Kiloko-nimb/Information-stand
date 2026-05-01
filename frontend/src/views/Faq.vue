@@ -508,6 +508,8 @@ export default {
   line-height: 1.6;
   color: var(--text);
   font-size: 0.97rem;
+  /* Позволяет рендерить \n из faq.js как перевод строки (телефоны и т.п.). */
+  white-space: pre-line;
 }
 
 .faq-answer-actions {
