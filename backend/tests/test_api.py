@@ -17,7 +17,10 @@ def test_root_returns_online(client: TestClient) -> None:
 def test_health_check(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy"}
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "services" in data
+    assert "timestamp" in data
 
 
 class TestStaffApi:

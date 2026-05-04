@@ -8,7 +8,11 @@ from app.api import bells, schedule, staff, rooms, news
 from app.core.config import settings
 from app.core.database import SessionLocal, engine
 from app.core.migrations import apply_pending_migrations
+from app.core.exceptions import setup_exception_handlers
+from app.core.rate_limit import setup_rate_limiting, limiter
 from app.services.news_parser import fetch_news_from_website, save_news_to_db
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import logging
 
 # Настройка логирования
@@ -155,14 +159,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS для фронтенда
+# CORS - берём origins из переменных окружения
+cors_origins = settings.get_cors_origins()
+logger.info(f"CORS origins configured: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vue dev server
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting
+setup_rate_limiting(app)
+
+# Глобальные обработчики исключений
+setup_exception_handlers(app)
 
 # Подключаем роутеры
 app.include_router(schedule.router, prefix="/api/v1")
@@ -182,4 +195,27 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    """Проверка состояния сервиса."""
+    health_data = {
+        "status": "healthy",
+        "timestamp": asyncio.get_event_loop().time(),
+        "services": {
+            "api": "ok",
+            "database": "unknown"
+        }
+    }
+
+    # Проверка БД
+    db = SessionLocal()
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        health_data["services"]["database"] = "ok"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        health_data["services"]["database"] = "error"
+        health_data["status"] = "degraded"
+    finally:
+        db.close()
+
+    return health_data

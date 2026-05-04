@@ -83,6 +83,15 @@ class _FakeSession:
         self.file_bytes = file_bytes
         self.calls: list[tuple[str, dict]] = []
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def request(self, method, url, **kwargs):
+        return self.get(url, **kwargs)
+
     def get(self, url, params=None, timeout=None, stream=False):
         self.calls.append((url, params or {}))
         if url.endswith("/public/resources"):
@@ -99,6 +108,12 @@ class _PaginatingSession:
     def __init__(self, pages: list[dict]):
         self.pages = pages
         self.calls: list[tuple[str, dict]] = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
 
     def get(self, url, params=None, timeout=None, stream=False):
         self.calls.append((url, params or {}))

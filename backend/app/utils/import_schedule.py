@@ -244,6 +244,37 @@ def _iter_pair_rows(df: pd.DataFrame):
             i += 1
 
 
+# Регулярка для префиксов вида "1 час 1 п/гр", "2 час лекция", "1 час 2 п/гр практика" и т.п.
+# Эти префиксы иногда попадают в текст предмета из-за формата таблицы расписания.
+_SUBGROUP_PREFIX_RE = re.compile(
+    r"^(\d+\s*час\s*)?"            # "1 час" (опционально)
+    r"(\d+\s*п/гр\s*)?"            # "1 п/гр" (опционально)
+    r"(\d+\s*час\s*)?"            # ещё "2 час" (для случаев "1 час 1 п/гр 2 час")
+    r"(лекция|практика|лабораторная|лаб\.?\s*работа)?"  # тип занятия (опционально)
+    r"\s*",
+    re.IGNORECASE,
+)
+
+
+def _strip_subgroup_prefix(text: str) -> str:
+    """Убрать из начала строки мусорные префиксы подгрупп/часов.
+
+    Примеры:
+      "1 час 1 п/гр 2 час лекция МДК.06.03 ..." → "МДК.06.03 ..."
+      "1 час 2 п/гр МДК.06.03 ..." → "МДК.06.03 ..."
+      "лекция МДК.06.03 ..." → "МДК.06.03 ..."
+      "МДК.06.03 ..." → "МДК.06.03 ..." (без изменений)
+    """
+    m = _SUBGROUP_PREFIX_RE.match(text)
+    if m and m.end() > 0 and m.group(0).strip():
+        cleaned = text[m.end():].strip()
+        # Если после очистки осталось что-то — возвращаем,
+        # иначе оригинал (чтобы не потерять данные).
+        if cleaned:
+            return cleaned
+    return text
+
+
 def _extract_lesson_for_group(
     slots: List[pd.Series], subj_col: int, room_col: int
 ) -> Optional[Tuple[str, Optional[str], Optional[str]]]:
@@ -263,9 +294,12 @@ def _extract_lesson_for_group(
     if not texts:
         return None
 
+    # Убираем префиксы подгрупп/часов из каждого слота.
+    cleaned_texts = [_strip_subgroup_prefix(t) for t in texts]
+
     # Часто второй слот дублирует текст первого — дедуплицируем.
     dedup: List[str] = []
-    for t in texts:
+    for t in cleaned_texts:
         if t not in dedup:
             dedup.append(t)
     combined = " ".join(dedup)
@@ -300,12 +334,12 @@ def import_schedule_from_excel(
 
     db = SessionLocal()
     records_added = 0
+    # Защита от дубликатов: одна группа может встретиться на нескольких
+    # листах Excel — берём первое вхождение, остальные пропускаем.
+    seen: set = set()
 
     try:
-        # Сначала снимаем слепок старого расписания для diff'а,
-        # потом удаляем его — повторный импорт идемпотентен.
-        previous_snapshot = _snapshot_existing(db, schedule_date)
-        had_previous = bool(previous_snapshot)
+        # Удаляем старое расписание — повторный импорт идемпотентен.
         db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
         excel_file = pd.ExcelFile(file_path)
@@ -334,20 +368,17 @@ def import_schedule_from_excel(
                     continue
 
                 for group_name, subj_col, room_col in groups:
+                    key = (group_name, lesson_number)
+                    if key in seen:
+                        continue
+
                     extracted = _extract_lesson_for_group(slots, subj_col, room_col)
                     if extracted is None:
                         continue
                     subject, teacher, room = extracted
                     lesson_type = _infer_lesson_type(subject)
 
-                    if had_previous:
-                        old = previous_snapshot.get((group_name, lesson_number))
-                        is_modified = _is_changed(
-                            old, subject, teacher, room, lesson_type
-                        )
-                    else:
-                        is_modified = False
-
+                    seen.add(key)
                     db.add(
                         Schedule(
                             group_name=group_name,
@@ -360,21 +391,20 @@ def import_schedule_from_excel(
                             time_end=pair_timing.end,
                             date=schedule_date,
                             lesson_type=lesson_type,
-                            is_modified=is_modified,
+                            is_modified=False,
                         )
                     )
                     records_added += 1
 
         # Защита от тихой потери данных: если новый файл оказался
-        # пустым / нераспознаваемым (0 записей), а до импорта на эту
-        # дату уже что-то было — НЕ коммитим удаление, откатываемся.
-        # Иначе кривой PDF из автосинка тихо стирал бы день расписания.
-        if records_added == 0 and had_previous:
+        # пустым / нераспознаваемым (0 записей) — НЕ коммитим удаление,
+        # откатываемся. Иначе кривой PDF из автосинка тихо стирал бы
+        # день расписания.
+        if records_added == 0:
             db.rollback()
             print(
-                f"[WARN] {file_path}: 0 записей при наличии {len(previous_snapshot)} "
-                f"существующих на {schedule_date} — удаление откачено, "
-                "данные сохранены."
+                f"[WARN] {file_path}: 0 записей на {schedule_date} "
+                "— удаление откачено, данные сохранены."
             )
             return 0
 
@@ -433,6 +463,7 @@ def import_schedule_from_pdf(
 
     db = SessionLocal()
     records_added = 0
+    seen: set = set()
 
     try:
         with pdfplumber.open(file_path) as pdf:
@@ -454,10 +485,7 @@ def import_schedule_from_pdf(
                 return 0
             print(f"Найдено таблиц: {len(all_tables)}")
 
-            # Снимаем слепок старого расписания для diff'а, потом удаляем.
-            # Повторный импорт остаётся идемпотентным.
-            previous_snapshot = _snapshot_existing(db, schedule_date)
-            had_previous = bool(previous_snapshot)
+            # Удаляем старое расписание — повторный импорт идемпотентен.
             db.query(Schedule).filter(Schedule.date == schedule_date).delete()
 
             total_groups = 0
@@ -478,6 +506,10 @@ def import_schedule_from_pdf(
                         continue
 
                     for group_name, subj_col, room_col in groups:
+                        key = (group_name, lesson_number)
+                        if key in seen:
+                            continue
+
                         extracted = _extract_lesson_for_group(
                             slots, subj_col, room_col
                         )
@@ -486,16 +518,7 @@ def import_schedule_from_pdf(
                         subject, teacher, room = extracted
                         lesson_type = _infer_lesson_type(subject)
 
-                        if had_previous:
-                            old = previous_snapshot.get(
-                                (group_name, lesson_number)
-                            )
-                            is_modified = _is_changed(
-                                old, subject, teacher, room, lesson_type
-                            )
-                        else:
-                            is_modified = False
-
+                        seen.add(key)
                         db.add(
                             Schedule(
                                 group_name=group_name,
@@ -508,19 +531,15 @@ def import_schedule_from_pdf(
                                 time_end=pair_timing.end,
                                 date=schedule_date,
                                 lesson_type=lesson_type,
-                                is_modified=is_modified,
+                                is_modified=False,
                             )
                         )
                         records_added += 1
 
-            # Та же защита, что и в Excel-импортёре: пустой результат
-            # парсинга при наличии прежних записей — это аномалия,
-            # удалять старое нельзя.
-            if records_added == 0 and had_previous:
+            if records_added == 0:
                 db.rollback()
                 print(
-                    f"[WARN] {file_path}: 0 записей при наличии "
-                    f"{len(previous_snapshot)} существующих на "
+                    f"[WARN] {file_path}: 0 записей на "
                     f"{schedule_date} — удаление откачено, данные сохранены."
                 )
                 return 0

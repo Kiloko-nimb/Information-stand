@@ -32,11 +32,22 @@ async def get_group_schedule(
     db: Session = Depends(get_db),
 ):
     """Получить расписание для группы. Опционально фильтр по дате."""
-    query = db.query(Schedule).filter(Schedule.group_name.like(f"%{group_name}%"))
     filter_date = _parse_date_param(date)
+
+    # Сначала пробуем точное совпадение — это предотвращает возврат
+    # записей нескольких групп при LIKE (например, "ИС-1.23" совпадало
+    # и с "9ИС-1.23", что вызывало дублирование пар).
+    query = db.query(Schedule).filter(Schedule.group_name == group_name)
     if filter_date is not None:
         query = query.filter(Schedule.date == filter_date)
     schedule = query.order_by(Schedule.lesson_number).all()
+
+    if not schedule:
+        # Фолбэк на LIKE для частичного ввода.
+        query = db.query(Schedule).filter(Schedule.group_name.like(f"%{group_name}%"))
+        if filter_date is not None:
+            query = query.filter(Schedule.date == filter_date)
+        schedule = query.order_by(Schedule.lesson_number).all()
 
     if not schedule:
         raise HTTPException(status_code=404, detail="Расписание не найдено")

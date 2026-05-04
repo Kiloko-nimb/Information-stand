@@ -17,20 +17,12 @@
         >
           {{ floor }} этаж
         </button>
-        <button
-          :class="{ active: currentFloor === 'territory' }"
-          @click="currentFloor = 'territory'"
-          class="territory-btn"
-        >
-          <Icon name="map" :size="18" />
-          <span>Территория (Двор)</span>
-        </button>
       </div>
       <button
         class="free-rooms-toggle"
         :class="{ active: freeRoomsMode }"
         @click="toggleFreeRooms"
-        :disabled="freeRoomsLoading || currentFloor === 'territory'"
+        :disabled="freeRoomsLoading"
         :title="freeRoomsMode ? 'Скрыть подсветку' : 'Показать кабинеты, в которых сейчас нет занятий'"
       >
         <span class="free-rooms-dot" :class="{ on: freeRoomsMode }"></span>
@@ -40,7 +32,7 @@
 
     <transition name="free-bar">
       <div
-        v-if="freeRoomsMode && currentFloor !== 'territory'"
+        v-if="freeRoomsMode"
         class="free-rooms-bar"
       >
         <div class="free-rooms-bar-head">
@@ -93,53 +85,6 @@
         </div>
       </template>
 
-      <!-- Территория -->
-      <template v-else-if="currentFloor === 'territory'">
-        <div class="territory-map">
-          <h2>Территория колледжа</h2>
-          <div class="territory-legend">
-            <div class="legend-item">
-              <span class="legend-icon">🚬</span>
-              <span>Специально оборудованное место для курения</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">☕</span>
-              <span>Точки питания рядом</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">🅿️</span>
-              <span>Парковка</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-icon">🚪</span>
-              <span>Входы в здание</span>
-            </div>
-          </div>
-          <div class="territory-content">
-            <div class="territory-placeholder">
-              <p>Интерактивная карта территории</p>
-              <div class="territory-points">
-                <div class="point smoking-area">
-                  <span class="point-icon">🚬</span>
-                  <span class="point-label">Место для курения</span>
-                </div>
-                <div class="point food-point">
-                  <span class="point-icon">☕</span>
-                  <span class="point-label">Кофейня "Бодрость" (50м)</span>
-                </div>
-                <div class="point food-point">
-                  <span class="point-icon">🌯</span>
-                  <span class="point-label">Шаурма "У Ашота" (100м)</span>
-                </div>
-                <div class="point parking">
-                  <span class="point-icon">🅿️</span>
-                  <span class="point-label">Парковка для посетителей</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
 
     </div>
   </div>
@@ -533,149 +478,6 @@ h1 {
   color: #ffffff;
   border-color: transparent;
   box-shadow: var(--shadow-sm), var(--accent-glow);
-}
-
-.floor-selector button.territory-btn {
-  background: rgba(5, 150, 105, 0.08);
-  border-color: rgba(5, 150, 105, 0.30);
-  color: #047857;
-}
-
-.floor-selector button.territory-btn:hover {
-  background: rgba(5, 150, 105, 0.14);
-  border-color: rgba(5, 150, 105, 0.45);
-}
-
-.floor-selector button.territory-btn.active {
-  background: linear-gradient(135deg, #059669, #0ea5b7);
-  color: #ffffff;
-  border-color: transparent;
-  box-shadow: 0 0 24px rgba(5, 150, 105, 0.30);
-}
-
-/* ── Территория ── */
-.territory-map {
-  width: 100%;
-}
-
-.territory-map h2 {
-  font-family: var(--font-display);
-  color: var(--text);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin-bottom: 1.25rem;
-}
-
-.territory-legend {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  padding: 1.25rem;
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.legend-icon {
-  font-size: 1.5rem;
-}
-
-.territory-content {
-  min-height: 480px;
-}
-
-.territory-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 480px;
-  border: 1px dashed var(--border-hover);
-  border-radius: var(--radius-lg);
-  color: var(--text-muted);
-  padding: 2rem;
-}
-
-.territory-placeholder > p {
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.territory-points {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  width: 100%;
-  max-width: 900px;
-}
-
-.point {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 1.25rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: background var(--transition), border-color var(--transition), transform var(--transition);
-  cursor: pointer;
-}
-
-.point:hover {
-  transform: translateY(-3px);
-  background: var(--surface-hover);
-  border-color: var(--border-hover);
-}
-
-.point-icon {
-  font-size: 2.25rem;
-}
-
-.point-label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-align: center;
-  color: var(--text);
-}
-
-.smoking-area {
-  border-color: rgba(244, 63, 94, 0.30);
-}
-
-.smoking-area:hover {
-  border-color: rgba(244, 63, 94, 0.55);
-  box-shadow: 0 6px 24px rgba(244, 63, 94, 0.15);
-}
-
-.food-point {
-  border-color: rgba(251, 191, 36, 0.30);
-}
-
-.food-point:hover {
-  border-color: rgba(251, 191, 36, 0.55);
-  box-shadow: 0 6px 24px rgba(251, 191, 36, 0.15);
-}
-
-.parking {
-  border-color: rgba(34, 211, 238, 0.30);
-}
-
-.parking:hover {
-  border-color: rgba(34, 211, 238, 0.55);
-  box-shadow: 0 6px 24px rgba(34, 211, 238, 0.15);
 }
 
 /* ── Контейнер карты ── */

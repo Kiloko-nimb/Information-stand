@@ -27,10 +27,11 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote, urlparse, urlunparse
 
 import requests
+from app.utils.retry import RetryableSession
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ def parse_date_from_filename(name: str) -> Optional[date]:
 def list_public_folder(
     public_url: str,
     *,
-    session: Optional[requests.Session] = None,
+    session: Optional[Union[requests.Session, RetryableSession]] = None,
     limit: int = 200,
     recursive: bool = False,
 ) -> List[YandexFile]:
@@ -114,7 +115,9 @@ def list_public_folder(
     Если ``recursive=True``, обойдёт все вложенные папки. По умолчанию
     берутся файлы только из указанной папки.
     """
-    sess = session or requests.Session()
+    # Используем RetryableSession для автоматического retry при ошибках
+    sess = session or RetryableSession()
+    close_session = session is None
     public_key, inner_path = split_public_url(public_url)
 
     result: List[YandexFile] = []
@@ -196,38 +199,49 @@ def download_file(
     file_path: str,
     destination: Path,
     *,
-    session: Optional[requests.Session] = None,
+    session: Optional[Union[requests.Session, RetryableSession]] = None,
 ) -> Path:
-    """Скачать файл из публичной папки по внутреннему пути."""
-    sess = session or requests.Session()
-    public_key, _ = split_public_url(public_url)
-    resp = sess.get(
-        _DOWNLOAD_API,
-        params={"public_key": public_key, "path": file_path},
-        timeout=15,
-    )
-    resp.raise_for_status()
-    href = resp.json().get("href")
-    if not href:
-        raise RuntimeError(
-            f"Ответ Яндекс.Диска не содержит ссылки на скачивание: {resp.json()}"
-        )
+    """Скачать файл из публичной папки по внутреннему пути с retry."""
+    sess = session or RetryableSession()
+    close_session = session is None
 
-    dl = sess.get(href, stream=True, timeout=60)
-    dl.raise_for_status()
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with destination.open("wb") as f:
-        for chunk in dl.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
-    return destination
+    try:
+        public_key, _ = split_public_url(public_url)
+
+        # Получаем ссылку на скачивание с retry
+        with sess:
+            resp = sess.get(
+                _DOWNLOAD_API,
+                params={"public_key": public_key, "path": file_path},
+                timeout=15,
+            )
+        resp.raise_for_status()
+        href = resp.json().get("href")
+        if not href:
+            raise RuntimeError(
+                f"Ответ Яндекс.Диска не содержит ссылки на скачивание: {resp.json()}"
+            )
+
+        # Скачиваем файл с retry
+        with sess:
+            dl = sess.get(href, stream=True, timeout=60)
+        dl.raise_for_status()
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with destination.open("wb") as f:
+            for chunk in dl.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        return destination
+    finally:
+        if close_session and hasattr(sess, '__exit__'):
+            sess.__exit__(None, None, None)
 
 
 def sync_folder(
     public_url: str,
     download_dir: Path,
     *,
-    session: Optional[requests.Session] = None,
+    session: Optional[Union[requests.Session, RetryableSession]] = None,
     recursive: bool = False,
 ) -> List[tuple[YandexFile, Path]]:
     """
@@ -237,7 +251,7 @@ def sync_folder(
     пригодных для импорта. Уже существующие файлы не перекачиваются
     (проверка по имени и размеру).
     """
-    sess = session or requests.Session()
+    sess = session or RetryableSession()
     files = list_public_folder(public_url, session=sess, recursive=recursive)
 
     # Защита от тихой перезаписи: если в разных подпапках (recursive=True)

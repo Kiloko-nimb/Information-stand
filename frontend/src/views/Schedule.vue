@@ -155,7 +155,6 @@
             'lesson-lecture': getLessonTypeClass(item.lesson_type) === 'lecture',
             'lesson-practice': getLessonTypeClass(item.lesson_type) === 'practice',
             'lesson-lab': getLessonTypeClass(item.lesson_type) === 'lab',
-            'lesson-modified': item.is_modified
           }"
         >
           <div class="timeline-marker">
@@ -173,11 +172,6 @@
             <div class="lesson-card">
               <div class="lesson-header">
                 <h3 class="lesson-subject">{{ item.subject }}</h3>
-                <span
-                  v-if="item.is_modified"
-                  class="modified-badge"
-                  title="Это занятие изменилось с предыдущего импорта расписания"
-                >Замена</span>
                 <span class="lesson-type" :class="'type-' + getLessonTypeClass(item.lesson_type)">
                   {{ formatLessonType(item.lesson_type) }}
                 </span>
@@ -208,9 +202,6 @@
                       @click="openRoomSchedule(item.room_number)"
                     >Кабинет {{ item.room_number }}</button>
                     <span v-else class="detail-text">Кабинет —</span>
-                    <button v-if="item.room_number" class="show-on-map-btn" @click="showRoomOnMap(item.room_number)">
-                      На карте
-                    </button>
                   </template>
                 </div>
               </div>
@@ -544,7 +535,7 @@ export default {
               ? ' · дистанционно'
               : ` · ауд.${it.room_number}`)
           : ''
-        const tag = it.is_modified ? ' [ЗАМЕНА]' : ''
+        const tag = ''
         lines.push(`${lesson}. ${time} · ${subj}${teacher}${room}${tag}`)
       }
       // QR надёжно читается до ~700 байт. Трим на 800 символов.
@@ -690,10 +681,6 @@ export default {
       })
     }
 
-    const showRoomOnMap = (roomNumber) => {
-      alert(`Навигация к кабинету ${roomNumber}.\n\nЭта функция откроет карту с маршрутом до кабинета.`)
-      // В будущем: this.$router.push({ path: '/map', query: { room: roomNumber } })
-    }
 
     const getLessonTypeClass = (lessonType) => {
       if (!lessonType) return 'lecture'
@@ -793,7 +780,6 @@ export default {
       onDatePicked,
       onDateWheel,
       onDateScroll,
-      showRoomOnMap,
       getLessonTypeClass,
       formatLessonType,
       isDistanceLesson
@@ -1308,26 +1294,6 @@ h1 {
   box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
 }
 
-/* ── Бейдж «Замена» (отслеживание изменений в расписании) ── */
-.modified-badge {
-  display: inline-flex;
-  align-items: center;
-  background: linear-gradient(135deg, #d97706, #b91c1c);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-right: 0.35rem;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
-}
-
-.timeline-item.lesson-modified .lesson-card {
-  border-color: rgba(245, 158, 11, 0.55);
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25), var(--shadow-sm);
-}
 
 /* ── Модалка QR с расписанием ── */
 .share-qr-modal {
@@ -1642,29 +1608,12 @@ h1 {
   background: rgba(168, 85, 247, 0.18);
   border: 1px solid rgba(168, 85, 247, 0.45);
   border-radius: var(--radius-pill);
-  color: #e9d5ff;
+  color: #1a1a1a;
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
-.show-on-map-btn {
-  margin-left: auto;
-  padding: 0.4rem 0.9rem;
-  background: var(--info-soft);
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  border-radius: var(--radius-pill);
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--transition), transform var(--transition);
-}
-
-.show-on-map-btn:hover {
-  background: rgba(34, 211, 238, 0.25);
-  transform: translateY(-1px);
-}
 
 @media (max-width: 720px) {
   .timeline-container { padding: 1rem; }

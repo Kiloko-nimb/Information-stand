@@ -44,44 +44,13 @@
       </div>
       <div class="contacts-online-body">
         <div class="social-list">
-          <a
-            class="social-link social-link--site"
-            href="https://kraskrit.ru/"
-            target="_blank"
-            rel="noopener"
-            aria-label="Официальный сайт"
-          >
-            <span class="social-badge"><Icon name="globe" :size="20" /></span>
-            <span class="social-text">kraskrit.ru</span>
-          </a>
-          <a
-            class="social-link social-link--vk"
-            href="https://vk.com/kraskrit"
-            target="_blank"
-            rel="noopener"
-            aria-label="ВКонтакте"
-          >
-            <span class="social-badge">VK</span>
-            <span class="social-text">vk.com/kraskrit</span>
-          </a>
-          <a
+          <div
             class="social-link social-link--mail"
-            href="mailto:priem@kraskrit.ru"
             aria-label="Электронная почта приёмной"
           >
             <span class="social-badge">@</span>
             <span class="social-text">priem@kraskrit.ru</span>
-          </a>
-          <a
-            class="social-link social-link--feedback"
-            href="https://kraskrit.ru/contact-us/obr-svaz/"
-            target="_blank"
-            rel="noopener"
-            aria-label="Обратная связь"
-          >
-            <span class="social-badge"><Icon name="edit" :size="20" /></span>
-            <span class="social-text">Обратная связь</span>
-          </a>
+          </div>
         </div>
         <div class="qr-codes">
           <div class="qr-item">
@@ -332,10 +301,8 @@ export default {
   transition: background var(--transition), border-color var(--transition), transform var(--transition);
 }
 
-.social-link:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-hover);
-  transform: translateX(2px);
+div.social-link {
+  cursor: default;
 }
 
 .social-badge {
@@ -350,23 +317,8 @@ export default {
   flex-shrink: 0;
 }
 
-.social-link--vk .social-badge {
-  background: linear-gradient(135deg, #4a76a8 0%, #5181b8 100%);
-  color: #fff;
-}
-
 .social-link--mail .social-badge {
   background: linear-gradient(135deg, #2563EB 0%, #0EA5B7 100%);
-  color: #fff;
-}
-
-.social-link--site .social-badge {
-  background: linear-gradient(135deg, #0EA5B7 0%, #2563EB 100%);
-  color: #fff;
-}
-
-.social-link--feedback .social-badge {
-  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
   color: #fff;
 }
 

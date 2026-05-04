@@ -1,10 +1,7 @@
 <template>
   <div class="map-floor">
     <div class="map-header">
-      <h2>1 этаж - Интерактивная карта</h2>
-      <div v-if="currentRoom" class="selected-room-info">
-        Выбран кабинет: <strong>{{ currentRoom }}</strong>
-      </div>
+      <h2>1 этаж</h2>
     </div>
 
     <div class="map-container">
@@ -77,133 +74,111 @@
           <!-- Интерактивные кабинеты ВЕРХНИЙ УРОВЕНЬ (левое крыло) -->
           <rect x="220" y="140" width="145" height="110" 
                 class="room" 
-                :class="roomClass('214')"
-                @click="selectRoom('214')"/>
+                :class="roomClass('214')"/>
           
           <rect x="220" y="250" width="145" height="110" 
                 class="room" 
-                :class="roomClass('213')"
-                @click="selectRoom('213')"/>
+                :class="roomClass('213')"/>
           
           <rect x="220" y="360" width="145" height="80" 
                 class="room" 
-                :class="roomClass('212')"
-                @click="selectRoom('212')"/>
+                :class="roomClass('212')"/>
           
           <rect x="220" y="440" width="145" height="100" 
                 class="room" 
-                :class="roomClass('211')"
-                @click="selectRoom('211')"/>
+                :class="roomClass('211')"/>
           
           <!-- Интерактивные кабинеты ВЕРХНИЙ УРОВЕНЬ (правое крыло) -->
           <rect x="435" y="140" width="145" height="110" 
                 class="room" 
-                :class="roomClass('215')"
-                @click="selectRoom('215')"/>
+                :class="roomClass('215')"/>
           
           <rect x="435" y="250" width="145" height="110" 
                 class="room" 
-                :class="roomClass('216')"
-                @click="selectRoom('216')"/>
+                :class="roomClass('216')"/>
           
           <rect x="435" y="360" width="145" height="80" 
                 class="room" 
-                :class="roomClass('217')"
-                @click="selectRoom('217')"/>
+                :class="roomClass('217')"/>
           
           <rect x="435" y="440" width="145" height="100" 
                 class="room" 
-                :class="roomClass('218')"
-                @click="selectRoom('218')"/>
+                :class="roomClass('218')"/>
           
           <!-- Интерактивные кабинеты НИЖНИЙ УРОВЕНЬ (первый ряд y=640-710) -->
           <!-- 209 - левый маленький -->
           <rect x="60" y="640" width="160" height="70" 
                 class="room" 
-                :class="roomClass('209')"
-                @click="selectRoom('209')"/>
+                :class="roomClass('209')"/>
           
           <!-- Лестница/коридор между 220-300 -->
           
           <!-- 219 - правый большой -->
           <rect x="435" y="640" width="185" height="70" 
                 class="room" 
-                :class="roomClass('219')"
-                @click="selectRoom('219')"/>
+                :class="roomClass('219')"/>
           
           <!-- 201 - правый крайний -->
           <rect x="620" y="640" width="140" height="70" 
                 class="room" 
-                :class="roomClass('201')"
-                @click="selectRoom('201')"/>
+                :class="roomClass('201')"/>
           
           <!-- Интерактивные кабинеты НИЖНИЙ УРОВЕНЬ (второй ряд y=710-750) -->
           <!-- Кабинет (левый маленький) -->
           <rect x="60" y="710" width="102" height="40" 
                 class="room" 
-                :class="roomClass('Кабинет')"
-                @click="selectRoom('Кабинет')"/>
+                :class="roomClass('Кабинет')"/>
           
           <!-- 206 - рядом с Кабинетом -->
           <rect x="162" y="710" width="58" height="40" 
                 class="room" 
-                :class="roomClass('206')"
-                @click="selectRoom('206')"/>
+                :class="roomClass('206')"/>
           
           <!-- Приемная (центр) -->
           <rect x="365" y="640" width="70" height="70" 
                 class="room special" 
-                :class="roomClass('Приемная')"
-                @click="selectRoom('Приемная')"/>
+                :class="roomClass('Приемная')"/>
           
           <!-- 202 - правый верхний -->
           <rect x="620" y="710" width="140" height="40" 
                 class="room" 
-                :class="roomClass('202')"
-                @click="selectRoom('202')"/>
+                :class="roomClass('202')"/>
           
           <!-- Интерактивные кабинеты НИЖНИЙ УРОВЕНЬ (третий ряд y=750-830) -->
           <!-- 203 - левый крайний -->
           <rect x="60" y="750" width="145" height="80" 
                 class="room" 
-                :class="roomClass('203')"
-                @click="selectRoom('203')"/>
+                :class="roomClass('203')"/>
           
           <!-- 204 -->
           <rect x="205" y="750" width="80" height="80" 
                 class="room" 
-                :class="roomClass('204')"
-                @click="selectRoom('204')"/>
+                :class="roomClass('204')"/>
           
           <!-- 205 -->
           <rect x="285" y="750" width="110" height="80" 
                 class="room" 
-                :class="roomClass('205')"
-                @click="selectRoom('205')"/>
+                :class="roomClass('205')"/>
           
           <!-- 207 -->
           <rect x="395" y="750" width="40" height="80" 
                 class="room" 
-                :class="roomClass('207')"
-                @click="selectRoom('207')"/>
+                :class="roomClass('207')"/>
           
           <!-- 208 -->
           <rect x="435" y="750" width="65" height="80" 
                 class="room" 
-                :class="roomClass('208')"
-                @click="selectRoom('208')"/>
+                :class="roomClass('208')"/>
           
           <!-- 210 -->
           <rect x="500" y="750" width="64" height="80" 
                 class="room" 
-                :class="roomClass('210')"
-                @click="selectRoom('210')"/>
+                :class="roomClass('210')"/>
           
           <!-- Остальные помещения справа -->
           <rect x="564.5" y="750" width="195.5" height="80" 
                 class="room" 
-                :class="roomClass('Помещение')"
-                @click="selectRoom('Помещение')"/>
+                :class="roomClass('Помещение')"/>
           
           <!-- Номера кабинетов (текст) - ВЕРХНИЙ УРОВЕНЬ -->
           <text x="292" y="200" class="room-label">214</text>
@@ -275,7 +250,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 export default {
   name: 'MapFloor2',
@@ -285,27 +260,18 @@ export default {
     busyRooms: { type: Array, default: () => [] },
   },
   setup(props) {
-    const currentRoom = ref(null)
-
     const freeSet = computed(() => new Set(props.freeRooms.map((r) => String(r).trim())))
     const busySet = computed(() => new Set(props.busyRooms.map((r) => String(r).trim())))
-
-    const selectRoom = (roomNumber) => {
-      currentRoom.value = roomNumber
-    }
 
     const roomClass = (roomNumber) => {
       const num = String(roomNumber).trim()
       return {
-        active: currentRoom.value === roomNumber,
         'room--free': props.highlightFreeRooms && freeSet.value.has(num),
         'room--busy': props.highlightFreeRooms && busySet.value.has(num),
       }
     }
 
     return {
-      currentRoom,
-      selectRoom,
       roomClass,
     }
   }
@@ -330,15 +296,6 @@ export default {
   margin-bottom: 1rem;
 }
 
-.selected-room-info {
-  color: var(--text);
-  font-size: 1.2rem;
-  padding: 1rem;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-border);
-  border-radius: 15px;
-  display: inline-block;
-}
 
 .map-container {
   background: var(--surface);
@@ -383,36 +340,12 @@ text {
   font-weight: 600;
 }
 
-/* Интерактивные кабинеты - по умолчанию прозрачные */
+/* Кабинеты - по умолчанию прозрачные, некликабельные */
 .room {
   fill: transparent;
   stroke: transparent;
-  cursor: pointer;
-  transition: fill 0.2s ease, stroke 0.2s ease;
-}
-
-.room:hover {
-  fill: rgba(100, 108, 255, 0.2) !important;
-  stroke: rgba(100, 108, 255, 0.6) !important;
-  stroke-width: 2 !important;
-}
-
-.room.active {
-  fill: rgba(100, 108, 255, 0.5) !important;
-  stroke: rgba(100, 108, 255, 1) !important;
-  stroke-width: 3 !important;
-  filter: drop-shadow(0 0 10px rgba(100, 108, 255, 0.8));
-}
-
-/* Специальные помещения (Приемная) - по умолчанию прозрачные */
-.room.special {
-  fill: transparent;
-}
-
-.room.special:hover {
-  fill: rgba(241, 196, 15, 0.2) !important;
-  stroke: rgba(241, 196, 15, 0.6) !important;
-  stroke-width: 2 !important;
+  cursor: default;
+  transition: fill 0.4s ease, stroke 0.4s ease;
 }
 
 .room.room--free {
@@ -433,10 +366,4 @@ text {
   50%      { fill: rgba(34, 197, 94, 0.42) !important; }
 }
 
-.room.special.active {
-  fill: rgba(241, 196, 15, 0.5) !important;
-  stroke: rgba(241, 196, 15, 1) !important;
-  stroke-width: 3 !important;
-  filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.8));
-}
 </style>
