@@ -50,4 +50,5 @@ Thumbs.db
 .DS_Store
 
 материалы для проекта/
-backend\data\schedule-downloads\*
+backend/data/schedule-downloads/
+.pytest_cache/
