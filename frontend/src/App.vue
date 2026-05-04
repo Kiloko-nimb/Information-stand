@@ -35,6 +35,7 @@
     </main>
 
     <SnakeGame v-if="snakeOpen" @close="snakeOpen = false" />
+    <Screensaver />
 
     <transition name="kiosk-fade">
       <div
@@ -68,10 +69,11 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SnakeGame from './components/SnakeGame.vue'
+import Screensaver from './components/Screensaver.vue'
 
 export default {
   name: 'App',
-  components: { SnakeGame },
+  components: { SnakeGame, Screensaver },
   setup() {
     const isOnline = ref(navigator.onLine)
     const router = useRouter()
