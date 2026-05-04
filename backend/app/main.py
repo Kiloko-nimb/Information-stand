@@ -4,13 +4,14 @@ from contextlib import asynccontextmanager
 import asyncio
 import os
 from pathlib import Path
-from app.api import bells, schedule, staff, rooms, news
+from app.api import bells, schedule, staff, rooms, news, auth, admin, analytics
 from app.core.config import settings
 from app.core.database import SessionLocal, engine
 from app.core.migrations import apply_pending_migrations
 from app.core.exceptions import setup_exception_handlers
 from app.core.rate_limit import setup_rate_limiting, limiter
 from app.services.news_parser import fetch_news_from_website, save_news_to_db
+from app.core.analytics import AnalyticsMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 import logging
@@ -174,6 +175,9 @@ app.add_middleware(
 # Rate limiting
 setup_rate_limiting(app)
 
+# Analytics middleware — учёт посещений
+app.add_middleware(AnalyticsMiddleware)
+
 # Глобальные обработчики исключений
 setup_exception_handlers(app)
 
@@ -183,6 +187,9 @@ app.include_router(bells.router, prefix="/api/v1")
 app.include_router(staff.router, prefix="/api/v1")
 app.include_router(rooms.router, prefix="/api/v1")
 app.include_router(news.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(admin.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
 
 
 @app.get("/")

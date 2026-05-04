@@ -23,3 +23,5 @@ lxml==5.1.0
 tenacity==8.2.3        # Retry механизм
 slowapi==0.1.9         # Rate limiting для FastAPI
 limits==3.7.0          # Зависимость slowapi
+python-jose==3.3.0               # JWT токены
+python-multipart==0.0.27        # Form data для OAuth2
