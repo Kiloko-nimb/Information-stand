@@ -27,51 +27,6 @@ from app.utils.group_names import is_valid_group_name
 from app.utils.room_names import normalize_room_number
 
 
-def _snapshot_existing(db, schedule_date: date):
-    """
-    Снять слепок расписания на дату до удаления.
-
-    Используется потом, чтобы пометить изменённые занятия как
-    «замены» (``is_modified=True``).
-
-    Ключ в словаре — ``(group_name, lesson_number)``, значение — кортеж
-    ``(subject, teacher, room, lesson_type)``.
-    """
-    rows = (
-        db.query(Schedule)
-        .filter(Schedule.date == schedule_date)
-        .all()
-    )
-    return {
-        (r.group_name, r.lesson_number): (
-            r.subject,
-            r.teacher_name,
-            r.room_number,
-            r.lesson_type,
-        )
-        for r in rows
-    }
-
-
-def _is_changed(
-    old_lesson, new_subject, new_teacher, new_room, new_lesson_type
-) -> bool:
-    """
-    Отличается ли новая версия от старой по значимым полям.
-
-    ``old_lesson`` — результат ``_snapshot_existing(...)[key]`` или ``None``,
-    если в предыдущем импорте такого занятия не было.
-    """
-    if old_lesson is None:
-        # Новое занятие, которого раньше не было в предыдущем
-        # импорте — считаем заменой только если раньше были другие
-        # занятия на эту дату (проверяется на уровне вызывающего
-        # кода). На самом первом импорте все записи «новые»,
-        # поэтому отмечать все заменами было бы бессмысленно.
-        return True
-    return old_lesson != (new_subject, new_teacher, new_room, new_lesson_type)
-
-
 # "Фамилия И.О." или "Фамилия-Двойная И.О." в конце строки.
 # Допускаем пробел или его отсутствие между инициалами и точками.
 _TEACHER_RE = re.compile(

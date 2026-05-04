@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, JSON
+from sqlalchemy import Column, Integer, String
 from app.core.database import Base
 
 class Room(Base):
@@ -10,7 +10,3 @@ class Room(Base):
     floor = Column(Integer, nullable=False)
     building = Column(String(50))
     room_type = Column(String(100))  # Аудитория, лаборатория, кабинет
-    capacity = Column(Integer)
-    description = Column(Text)
-    coordinates = Column(JSON)  # {"x": 100, "y": 200} для карты
-    equipment = Column(Text)  # Оборудование в кабинете
