@@ -131,6 +131,10 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Запуск KKRIT Interactive Board API")
     try:
+        # Создать недостающие таблицы (идемпотентно — существующие не трогает)
+        import app.models  # noqa: F401 — регистрирует все модели в Base.metadata
+        from app.core.database import Base
+        Base.metadata.create_all(bind=engine)
         apply_pending_migrations(engine)
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("⚠ apply_pending_migrations упал: %s", exc)
