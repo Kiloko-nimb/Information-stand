@@ -380,12 +380,19 @@ async def get_free_rooms_now(
 
 
 @router.get("/dates")
-async def get_available_dates(db: Session = Depends(get_db)):
-    """Список дат, на которые есть расписание."""
-    rows = (
-        db.query(Schedule.date)
-        .distinct()
-        .order_by(Schedule.date)
-        .all()
-    )
+async def get_available_dates(
+    group: Optional[str] = Query(None, description="Фильтр по группе"),
+    teacher: Optional[str] = Query(None, description="Фильтр по преподавателю"),
+    room: Optional[str] = Query(None, description="Фильтр по кабинету"),
+    db: Session = Depends(get_db),
+):
+    """Список дат, на которые есть расписание (с опциональной фильтрацией)."""
+    query = db.query(Schedule.date).distinct()
+    if group:
+        query = query.filter(Schedule.group_name == group)
+    elif teacher:
+        query = query.filter(Schedule.teacher_name == teacher)
+    elif room:
+        query = query.filter(Schedule.room_number == room)
+    rows = query.order_by(Schedule.date).all()
     return [r[0].isoformat() for r in rows if r[0]]

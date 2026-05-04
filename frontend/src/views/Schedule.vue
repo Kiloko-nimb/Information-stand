@@ -29,7 +29,7 @@
           <button
             v-for="(day, index) in dateRange"
             :key="index"
-            :class="['date-card', { active: isSelectedDate(day) }]"
+            :class="['date-card', { active: isSelectedDate(day), 'has-schedule': hasScheduleOnDate(day) }]"
             @click="selectDate(day)"
           >
             <div class="date-day">{{ formatDayName(day) }}</div>
@@ -321,6 +321,7 @@ export default {
     const dateRange = ref([])
     const datePickerEl = ref(null)
     const dateScrollEl = ref(null)
+    const datesWithSchedule = ref(new Set())
 
     // Сколько дней в обе стороны держим в карусели по умолчанию.
     // На сенсорном киоске пользователь свайпает довольно агрессивно,
@@ -436,6 +437,27 @@ export default {
 
     const isSelectedDate = (date) => {
       return date.toDateString() === selectedDate.value.toDateString()
+    }
+
+    const hasScheduleOnDate = (date) => {
+      return datesWithSchedule.value.has(toDateParam(date))
+    }
+
+    const loadAvailableDates = async () => {
+      if (!searchQuery.value.trim()) {
+        datesWithSchedule.value = new Set()
+        return
+      }
+      try {
+        const params = {}
+        if (searchType.value === 'group') params.group = searchQuery.value
+        else if (searchType.value === 'teacher') params.teacher = searchQuery.value
+        else params.room = searchQuery.value
+        const response = await api.get('/schedule/dates', { params })
+        datesWithSchedule.value = new Set(response.data)
+      } catch {
+        datesWithSchedule.value = new Set()
+      }
     }
 
     // Дебаунс для быстрых кликов по карусели дат — объединяем всплеск
@@ -586,11 +608,10 @@ export default {
     const selectSearchType = (type) => {
       if (searchType.value === type) return
       searchType.value = type
-      // Переключили режим — очищаем старый запрос/результаты,
-      // иначе номер группы улетит в эндпоинт преподавателя → 404.
       searchQuery.value = ''
       scheduleData.value = []
       searched.value = false
+      datesWithSchedule.value = new Set()
     }
 
     const toDateParam = (d) => {
@@ -635,6 +656,7 @@ export default {
           signal: searchAbortController.signal,
         })
         scheduleData.value = response.data.sort((a, b) => a.lesson_number - b.lesson_number)
+        loadAvailableDates()
       } catch (error) {
         // Запрос отменён более новым search() — тихо выходим, и пусть
         // новый запрос сам управляет loading.
@@ -767,6 +789,7 @@ export default {
       formatDayNumber,
       formatMonthName,
       isSelectedDate,
+      hasScheduleOnDate,
       selectDate,
       previousDay,
       nextDay,
@@ -988,6 +1011,28 @@ h1 {
   border-color: transparent;
   color: #ffffff;
   box-shadow: var(--accent-glow);
+}
+
+.date-card.has-schedule {
+  position: relative;
+}
+
+.date-card.has-schedule::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+}
+
+.date-card.active.has-schedule::after {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
 }
 
 .date-day {
