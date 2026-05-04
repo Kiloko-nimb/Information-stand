@@ -52,6 +52,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { login, setupAdmin, isAuthenticated } from '../../services/adminService'
+import api from '../../services/api'
 
 const router = useRouter()
 const username = ref('')
@@ -61,9 +62,16 @@ const error = ref('')
 const loading = ref(false)
 const needsSetup = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   if (isAuthenticated()) {
     router.replace('/admin')
+    return
+  }
+  try {
+    const resp = await api.get('/auth/check')
+    needsSetup.value = resp.data.needs_setup
+  } catch {
+    needsSetup.value = false
   }
 })
 
@@ -76,8 +84,6 @@ async function doLogin() {
   } catch (e) {
     if (e.response?.status === 401) {
       error.value = 'Неверный логин или пароль'
-    } else if (e.response?.status === 404) {
-      needsSetup.value = true
     } else {
       error.value = e.response?.data?.detail || 'Ошибка входа'
     }

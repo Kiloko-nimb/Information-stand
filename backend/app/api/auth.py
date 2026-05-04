@@ -111,6 +111,13 @@ async def read_admin_me(current_admin: Admin = Depends(require_admin)):
     }
 
 
+@router.get("/check")
+async def check_admin_exists(db: Session = Depends(get_db)):
+    """Проверяет, существует ли хотя бы один администратор."""
+    exists = db.query(Admin).first() is not None
+    return {"needs_setup": not exists}
+
+
 @router.post("/setup")
 async def setup_admin(
     username: str,
