@@ -2,7 +2,8 @@
   <div class="login-page">
     <div class="login-card">
       <div class="login-header">
-        <h1>🛡️ Панель администратора</h1>
+        <Shield :size="32" />
+        <h1>Панель администратора</h1>
         <p>ККРИТ — Интерактивный стенд</p>
       </div>
 
@@ -11,39 +12,56 @@
         <p class="setup-notice">Администратор ещё не создан. Задайте логин и пароль.</p>
         <div class="field">
           <label>Логин</label>
-          <input v-model="username" type="text" required autocomplete="username" />
+          <input v-model="username" type="text" required autocomplete="username" @focus="activeField = 'username'" />
         </div>
         <div class="field">
           <label>Пароль</label>
-          <input v-model="password" type="password" required autocomplete="new-password" />
+          <input v-model="password" type="password" required autocomplete="new-password" @focus="activeField = 'password'" />
         </div>
         <div class="field">
           <label>Повторите пароль</label>
-          <input v-model="password2" type="password" required autocomplete="new-password" />
+          <input v-model="password2" type="password" required autocomplete="new-password" @focus="activeField = 'password2'" />
         </div>
         <button type="submit" class="btn-primary" :disabled="loading">
           {{ loading ? 'Создание...' : 'Создать администратора' }}
         </button>
         <p v-if="error" class="error">{{ error }}</p>
+        <VirtualKeyboard
+          v-if="showKb"
+          :visible="showKb"
+          :modelValue="activeField === 'username' ? username : activeField === 'password' ? password : password2"
+          @update:modelValue="onKbInput"
+        />
       </form>
 
       <!-- Login form -->
       <form v-else @submit.prevent="doLogin" class="login-form">
         <div class="field">
           <label>Логин</label>
-          <input v-model="username" type="text" required autocomplete="username" />
+          <input v-model="username" type="text" required autocomplete="username" @focus="activeField = 'username'" />
         </div>
         <div class="field">
           <label>Пароль</label>
-          <input v-model="password" type="password" required autocomplete="current-password" />
+          <input v-model="password" type="password" required autocomplete="current-password" @focus="activeField = 'password'" />
         </div>
         <button type="submit" class="btn-primary" :disabled="loading">
           {{ loading ? 'Вход...' : 'Войти' }}
         </button>
         <p v-if="error" class="error">{{ error }}</p>
+        <VirtualKeyboard
+          v-if="showKb"
+          :visible="showKb"
+          :modelValue="activeField === 'username' ? username : password"
+          @update:modelValue="onKbInput"
+        />
       </form>
 
-      <router-link to="/" class="back-link">← Вернуться на стенд</router-link>
+      <button class="kb-toggle" @click="showKb = !showKb" type="button">
+        <Keyboard :size="18" />
+        {{ showKb ? 'Скрыть клавиатуру' : 'Показать клавиатуру' }}
+      </button>
+
+      <router-link to="/" class="back-link"><ArrowLeft :size="14" /> Вернуться на стенд</router-link>
     </div>
   </div>
 </template>
@@ -51,7 +69,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Shield, ArrowLeft, Keyboard } from 'lucide-vue-next'
 import { login, setupAdmin, isAuthenticated } from '../../services/adminService'
+import VirtualKeyboard from '../../components/VirtualKeyboard.vue'
 import api from '../../services/api'
 
 const router = useRouter()
@@ -61,6 +81,8 @@ const password2 = ref('')
 const error = ref('')
 const loading = ref(false)
 const needsSetup = ref(false)
+const showKb = ref(false)
+const activeField = ref('username') // 'username' | 'password' | 'password2'
 
 onMounted(async () => {
   if (isAuthenticated()) {
@@ -74,6 +96,12 @@ onMounted(async () => {
     needsSetup.value = false
   }
 })
+
+function onKbInput(val) {
+  if (activeField.value === 'username') username.value = val
+  else if (activeField.value === 'password') password.value = val
+  else if (activeField.value === 'password2') password2.value = val
+}
 
 async function doLogin() {
   error.value = ''
@@ -136,10 +164,14 @@ async function doSetup() {
 .login-header {
   text-align: center;
   margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
 }
 .login-header h1 {
   font-size: 1.4rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 .login-header p {
   color: var(--text-muted);
@@ -216,5 +248,25 @@ async function doSetup() {
 }
 .back-link:hover {
   color: var(--text);
+}
+.kb-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+}
+.kb-toggle:hover {
+  background: rgba(99,102,241,0.08);
+  color: var(--accent, #6366f1);
 }
 </style>

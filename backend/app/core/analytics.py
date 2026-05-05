@@ -38,7 +38,17 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
         db: Session = SessionLocal()
         try:
             path = request.url.path
+            # Убираем cache-busting параметр _t
             query_str = str(request.query_params) or None
+            if query_str:
+                # Убираем _t=... из строки
+                import re
+                query_str = re.sub(r'(^|&)_t=[^&]*', '', query_str).lstrip('&') or None
+
+            # Пропускаем мусорные запросы (тестовые, с невалидными параметрами)
+            if query_str and ('not-a-' in query_str or 'UNKNOWN' in path):
+                return
+
             ip = request.client.host if request.client else None
             ua = request.headers.get("user-agent", "")[:500]
 

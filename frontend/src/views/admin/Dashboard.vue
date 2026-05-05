@@ -3,7 +3,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>🛡️ Админ</h2>
+        <Shield :size="22" />
+        <h2>Админ</h2>
       </div>
       <nav class="sidebar-nav">
         <button
@@ -12,13 +13,13 @@
           :class="['nav-item', { active: currentTab === tab.key }]"
           @click="currentTab = tab.key"
         >
-          <span class="nav-icon">{{ tab.icon }}</span>
+          <component :is="tab.icon" :size="18" class="nav-icon" />
           <span>{{ tab.label }}</span>
         </button>
       </nav>
       <div class="sidebar-footer">
         <button class="nav-item logout" @click="doLogout">
-          <span class="nav-icon">🚪</span>
+          <LogOut :size="18" class="nav-icon" />
           <span>Выход</span>
         </button>
         <router-link to="/" class="back-stand">← Стенд</router-link>
@@ -30,34 +31,35 @@
       <!-- News -->
       <section v-if="currentTab === 'news'">
         <div class="section-header">
-          <h2>📰 Новости</h2>
-          <button class="btn-primary" @click="openNewsForm()">+ Добавить</button>
+          <h2><Newspaper :size="22" class="section-icon" /> Новости</h2>
+          <button class="btn-primary" @click="openNewsForm()"><Plus :size="16" /> Добавить</button>
         </div>
         <div class="data-table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Заголовок</th>
                 <th>Иконка</th>
                 <th>Дата</th>
-                <th>Активна</th>
+                <th>Статус</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="n in newsList" :key="n.id">
-                <td>{{ n.id }}</td>
                 <td>{{ n.title }}</td>
                 <td>{{ n.icon }}</td>
                 <td>{{ formatDate(n.published_date) }}</td>
-                <td><span :class="['badge', n.is_active ? 'badge-green' : 'badge-red']">{{ n.is_active ? 'Да' : 'Нет' }}</span></td>
+                <td><span :class="['badge', n.is_active ? 'badge-green' : 'badge-red']">
+                  <component :is="n.is_active ? Eye : EyeOff" :size="12" />
+                  {{ n.is_active ? 'Активна' : 'Скрыта' }}
+                </span></td>
                 <td class="actions">
-                  <button @click="openNewsForm(n)">✏️</button>
-                  <button @click="deleteNews(n.id)">🗑️</button>
+                  <button @click="openNewsForm(n)" title="Редактировать"><Pencil :size="15" /></button>
+                  <button @click="deleteNews(n.id)" title="Удалить"><Trash2 :size="15" /></button>
                 </td>
               </tr>
-              <tr v-if="!newsList.length"><td colspan="6" class="empty">Нет новостей</td></tr>
+              <tr v-if="!newsList.length"><td colspan="5" class="empty">Нет новостей</td></tr>
             </tbody>
           </table>
         </div>
@@ -66,14 +68,13 @@
       <!-- Staff -->
       <section v-if="currentTab === 'staff'">
         <div class="section-header">
-          <h2>👥 Сотрудники</h2>
-          <button class="btn-primary" @click="openStaffForm()">+ Добавить</button>
+          <h2><Users :size="22" class="section-icon" /> Сотрудники</h2>
+          <button class="btn-primary" @click="openStaffForm()"><Plus :size="16" /> Добавить</button>
         </div>
         <div class="data-table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>ФИО</th>
                 <th>Должность</th>
                 <th>Отдел</th>
@@ -83,17 +84,16 @@
             </thead>
             <tbody>
               <tr v-for="s in staffList" :key="s.id">
-                <td>{{ s.id }}</td>
                 <td>{{ s.full_name }}</td>
                 <td>{{ s.position || '—' }}</td>
                 <td>{{ s.department || '—' }}</td>
                 <td>{{ s.room_number || '—' }}</td>
                 <td class="actions">
-                  <button @click="openStaffForm(s)">✏️</button>
-                  <button @click="deleteStaff(s.id)">🗑️</button>
+                  <button @click="openStaffForm(s)" title="Редактировать"><Pencil :size="15" /></button>
+                  <button @click="deleteStaff(s.id)" title="Удалить"><Trash2 :size="15" /></button>
                 </td>
               </tr>
-              <tr v-if="!staffList.length"><td colspan="6" class="empty">Нет сотрудников</td></tr>
+              <tr v-if="!staffList.length"><td colspan="5" class="empty">Нет сотрудников</td></tr>
             </tbody>
           </table>
         </div>
@@ -102,14 +102,13 @@
       <!-- Rooms -->
       <section v-if="currentTab === 'rooms'">
         <div class="section-header">
-          <h2>🏫 Кабинеты</h2>
-          <button class="btn-primary" @click="openRoomForm()">+ Добавить</button>
+          <h2><School :size="22" class="section-icon" /> Кабинеты</h2>
+          <button class="btn-primary" @click="openRoomForm()"><Plus :size="16" /> Добавить</button>
         </div>
         <div class="data-table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Номер</th>
                 <th>Этаж</th>
                 <th>Корпус</th>
@@ -119,17 +118,16 @@
             </thead>
             <tbody>
               <tr v-for="r in roomList" :key="r.id">
-                <td>{{ r.id }}</td>
                 <td>{{ r.room_number }}</td>
                 <td>{{ r.floor }}</td>
                 <td>{{ r.building || '—' }}</td>
                 <td>{{ r.room_type || '—' }}</td>
                 <td class="actions">
-                  <button @click="openRoomForm(r)">✏️</button>
-                  <button @click="deleteRoom(r.id)">🗑️</button>
+                  <button @click="openRoomForm(r)" title="Редактировать"><Pencil :size="15" /></button>
+                  <button @click="deleteRoom(r.id)" title="Удалить"><Trash2 :size="15" /></button>
                 </td>
               </tr>
-              <tr v-if="!roomList.length"><td colspan="6" class="empty">Нет кабинетов</td></tr>
+              <tr v-if="!roomList.length"><td colspan="5" class="empty">Нет кабинетов</td></tr>
             </tbody>
           </table>
         </div>
@@ -138,12 +136,12 @@
       <!-- Analytics -->
       <section v-if="currentTab === 'analytics'">
         <div class="section-header">
-          <h2>📊 Аналитика посещений</h2>
+          <h2><BarChart3 :size="22" class="section-icon" /> Аналитика посещений</h2>
         </div>
         <div v-if="stats" class="stats-grid">
           <div class="stat-card">
             <div class="stat-value">{{ stats.total_visits }}</div>
-            <div class="stat-label">Всего посещений</div>
+            <div class="stat-label">Всего запросов</div>
           </div>
           <div class="stat-card">
             <div class="stat-value">{{ stats.visits_today }}</div>
@@ -154,47 +152,23 @@
             <div class="stat-label">За неделю</div>
           </div>
         </div>
-        <h3 style="margin-top:1.5rem">Популярные запросы расписания</h3>
+        <h3 style="margin-top:1.5rem">Популярные запросы</h3>
         <div class="data-table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Эндпоинт</th>
-                <th>Параметры</th>
+                <th>Что искали</th>
+                <th>Тип</th>
                 <th>Запросов</th>
-                <th>Последний</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="q in (stats?.top_schedule_groups || [])" :key="q.endpoint + q.params">
-                <td>{{ q.endpoint }}</td>
-                <td>{{ q.params || '—' }}</td>
-                <td>{{ q.hit_count }}</td>
-                <td>{{ formatDate(q.last_queried) }}</td>
+              <tr v-for="q in humanReadableQueries" :key="q.label">
+                <td>{{ q.label }}</td>
+                <td><span class="badge badge-blue">{{ q.type }}</span></td>
+                <td>{{ q.count }}</td>
               </tr>
-              <tr v-if="!stats?.top_schedule_groups?.length"><td colspan="4" class="empty">Нет данных</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <h3 style="margin-top:1.5rem">Топ страниц</h3>
-        <div class="data-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Эндпоинт</th>
-                <th>Параметры</th>
-                <th>Запросов</th>
-                <th>Последний</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="q in (stats?.top_pages || [])" :key="q.endpoint + q.params">
-                <td>{{ q.endpoint }}</td>
-                <td>{{ q.params || '—' }}</td>
-                <td>{{ q.hit_count }}</td>
-                <td>{{ formatDate(q.last_queried) }}</td>
-              </tr>
-              <tr v-if="!stats?.top_pages?.length"><td colspan="4" class="empty">Нет данных</td></tr>
+              <tr v-if="!humanReadableQueries.length"><td colspan="3" class="empty">Нет данных</td></tr>
             </tbody>
           </table>
         </div>
@@ -206,7 +180,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <h3>{{ modalTitle }}</h3>
-          <button class="modal-close" @click="closeModal">✕</button>
+          <button class="modal-close" @click="closeModal"><X :size="18" /></button>
         </div>
         <form @submit.prevent="saveModal" class="modal-body">
           <div v-for="field in modalFields" :key="field.key" class="field">
@@ -239,8 +213,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, reactive, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  Shield, Newspaper, Users, School, BarChart3, LogOut, Plus,
+  Pencil, Trash2, X, Eye, EyeOff
+} from 'lucide-vue-next'
 import {
   isAuthenticated, logout as doLogoutService, getToken,
   adminListNews, adminCreateNews, adminUpdateNews, adminDeleteNews,
@@ -252,10 +230,10 @@ import api from '../../services/api'
 const router = useRouter()
 
 const tabs = [
-  { key: 'news', label: 'Новости', icon: '📰' },
-  { key: 'staff', label: 'Сотрудники', icon: '👥' },
-  { key: 'rooms', label: 'Кабинеты', icon: '🏫' },
-  { key: 'analytics', label: 'Аналитика', icon: '📊' },
+  { key: 'news', label: 'Новости', icon: Newspaper },
+  { key: 'staff', label: 'Сотрудники', icon: Users },
+  { key: 'rooms', label: 'Кабинеты', icon: School },
+  { key: 'analytics', label: 'Аналитика', icon: BarChart3 },
 ]
 const currentTab = ref('news')
 
@@ -264,6 +242,49 @@ const newsList = ref([])
 const staffList = ref([])
 const roomList = ref([])
 const stats = ref(null)
+
+const humanReadableQueries = computed(() => {
+  if (!stats.value?.top_pages) return []
+  return stats.value.top_pages.map(q => {
+    const ep = q.endpoint
+    let label = ''
+    let type = 'Другое'
+    if (ep.includes('/schedule/group/')) {
+      label = decodeURIComponent(ep.split('/schedule/group/')[1] || '')
+      type = 'Группа'
+    } else if (ep.includes('/schedule/teacher/')) {
+      label = decodeURIComponent(ep.split('/schedule/teacher/')[1] || '')
+      type = 'Преподаватель'
+    } else if (ep.includes('/schedule/room/')) {
+      label = 'Кабинет ' + decodeURIComponent(ep.split('/schedule/room/')[1] || '')
+      type = 'Кабинет'
+    } else if (ep.includes('/schedule/groups')) {
+      label = 'Список групп'
+      type = 'Справочник'
+    } else if (ep.includes('/schedule/teachers')) {
+      label = 'Список преподавателей'
+      type = 'Справочник'
+    } else if (ep.includes('/schedule/rooms')) {
+      label = 'Список кабинетов'
+      type = 'Справочник'
+    } else if (ep.includes('/schedule/now')) {
+      label = 'Текущие занятия'
+      type = 'Главная'
+    } else if (ep.includes('/schedule/bells')) {
+      label = 'Звонки'
+      type = 'Справочник'
+    } else if (ep.includes('/news')) {
+      label = 'Новости'
+      type = 'Контент'
+    } else if (ep.includes('/staff')) {
+      label = 'Сотрудники'
+      type = 'Контент'
+    } else {
+      label = ep.replace('/api/v1', '')
+    }
+    return { label, type, count: q.hit_count }
+  })
+})
 
 // Modal state
 const modalOpen = ref(false)
@@ -448,6 +469,9 @@ async function saveModal() {
 .sidebar-header {
   padding: 0 1.2rem 1rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .sidebar-header h2 {
   font-size: 1.1rem;
@@ -516,6 +540,12 @@ async function saveModal() {
 }
 .section-header h2 {
   font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.section-icon {
+  flex-shrink: 0;
 }
 
 /* Table */
@@ -579,6 +609,15 @@ async function saveModal() {
 .badge-red {
   background: rgba(239,68,68,0.15);
   color: #f87171;
+}
+.badge-blue {
+  background: rgba(99,102,241,0.12);
+  color: #6366f1;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 /* Buttons */
