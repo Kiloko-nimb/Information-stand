@@ -103,8 +103,14 @@
       <section v-if="currentTab === 'rooms'">
         <div class="section-header">
           <h2><School :size="22" class="section-icon" /> Кабинеты</h2>
-          <button class="btn-primary" @click="openRoomForm()"><Plus :size="16" /> Добавить</button>
+          <div>
+            <button class="btn-primary" @click="openRoomForm()"><Plus :size="16" /> Добавить</button>
+            <button class="btn-secondary" @click="confirmCleanupRooms()" style="margin-left: 0.5rem;">Очистить некорректные</button>
+          </div>
         </div>
+        <p class="section-hint">
+          Справочник аудиторий для поиска на стенде и привязки сотрудников к кабинетам.
+        </p>
         <div class="data-table-wrap">
           <table class="data-table">
             <thead>
@@ -138,6 +144,9 @@
         <div class="section-header">
           <h2><BarChart3 :size="22" class="section-icon" /> Аналитика посещений</h2>
         </div>
+        <p class="section-hint">
+          Показывает, какими разделами стенда пользуются чаще всего: это помогает улучшать интерфейс и контент.
+        </p>
         <div v-if="stats" class="stats-grid">
           <div class="stat-card">
             <div class="stat-value">{{ stats.total_visits }}</div>
@@ -206,6 +215,7 @@
             <button type="button" class="btn-secondary" @click="closeModal">Отмена</button>
             <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? 'Сохранение...' : 'Сохранить' }}</button>
           </div>
+          <p v-if="formError" class="form-error">{{ formError }}</p>
         </form>
       </div>
     </div>
@@ -223,7 +233,7 @@ import {
   isAuthenticated, logout as doLogoutService, getToken,
   adminListNews, adminCreateNews, adminUpdateNews, adminDeleteNews,
   adminListStaff, adminCreateStaff, adminUpdateStaff, adminDeleteStaff,
-  adminListRooms, adminCreateRoom, adminUpdateRoom, adminDeleteRoom
+  adminListRooms, adminCreateRoom, adminUpdateRoom, adminDeleteRoom, adminCleanupRooms
 } from '../../services/adminService'
 import api from '../../services/api'
 
@@ -294,6 +304,7 @@ const modalData = reactive({})
 const modalType = ref('')  // 'news' | 'staff' | 'room'
 const modalEditId = ref(null)
 const saving = ref(false)
+const formError = ref('')
 
 onMounted(() => {
   if (!isAuthenticated()) {
@@ -337,6 +348,7 @@ const NEWS_FIELDS = [
 ]
 
 function openNewsForm(item = null) {
+  formError.value = ''
   modalType.value = 'news'
   modalEditId.value = item?.id || null
   modalTitle.value = item ? 'Редактировать новость' : 'Новая новость'
@@ -367,6 +379,7 @@ const STAFF_FIELDS = [
 ]
 
 function openStaffForm(item = null) {
+  formError.value = ''
   modalType.value = 'staff'
   modalEditId.value = item?.id || null
   modalTitle.value = item ? 'Редактировать сотрудника' : 'Новый сотрудник'
@@ -395,6 +408,7 @@ const ROOM_FIELDS = [
 ]
 
 function openRoomForm(item = null) {
+  formError.value = ''
   modalType.value = 'room'
   modalEditId.value = item?.id || null
   modalTitle.value = item ? 'Редактировать кабинет' : 'Новый кабинет'
@@ -414,12 +428,20 @@ async function deleteRoom(id) {
   roomList.value = await adminListRooms()
 }
 
+async function confirmCleanupRooms() {
+  if (!confirm('Очистить некорректные номера кабинетов?')) return
+  await adminCleanupRooms()
+  roomList.value = await adminListRooms()
+}
+
 // ── Modal save ──
 function closeModal() {
+  formError.value = ''
   modalOpen.value = false
 }
 
 async function saveModal() {
+  formError.value = ''
   saving.value = true
   try {
     const payload = { ...modalData }
@@ -442,7 +464,14 @@ async function saveModal() {
     }
     closeModal()
   } catch (e) {
-    alert(e.response?.data?.detail || 'Ошибка сохранения')
+    const detail = e?.response?.data?.detail
+    if (Array.isArray(detail)) {
+      formError.value = detail.map((x) => x?.msg).filter(Boolean).join('; ') || 'Ошибка валидации'
+    } else if (typeof detail === 'string') {
+      formError.value = detail
+    } else {
+      formError.value = 'Ошибка сохранения'
+    }
   } finally {
     saving.value = false
   }
@@ -546,6 +575,12 @@ async function saveModal() {
 }
 .section-icon {
   flex-shrink: 0;
+}
+.section-hint {
+  margin: -0.7rem 0 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
 }
 
 /* Table */
@@ -721,9 +756,14 @@ async function saveModal() {
 }
 .modal-actions {
   display: flex;
-  gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: 0.5rem;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.form-error {
+  margin-top: 0.7rem;
+  color: #ef4444;
+  font-size: 0.9rem;
 }
 
 /* Stats */

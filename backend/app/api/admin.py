@@ -5,15 +5,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
 from datetime import datetime
 
 from app.core.database import get_db
 from app.api.auth import require_admin
-from app.models.admin import Admin
-from app.models.news import News
 from app.models.staff import Staff
 from app.models.room import Room
+from app.models.admin import Admin
+from app.utils.room_names import is_valid_room_number
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -241,7 +242,9 @@ async def admin_list_rooms(
     db: Session = Depends(get_db),
     _admin: Admin = Depends(require_admin),
 ):
-    return db.query(Room).order_by(Room.room_number).offset(skip).limit(limit).all()
+    rows = db.query(Room).order_by(Room.room_number).all()
+    valid_rows = [room for room in rows if is_valid_room_number(room.room_number)]
+    return valid_rows[skip: skip + limit]
 
 
 @router.post("/rooms", response_model=RoomOut, status_code=status.HTTP_201_CREATED)
@@ -250,9 +253,23 @@ async def admin_create_room(
     db: Session = Depends(get_db),
     _admin: Admin = Depends(require_admin),
 ):
-    room = Room(**data.model_dump())
+    payload = data.model_dump()
+    payload["room_number"] = payload["room_number"].strip()
+
+    if not is_valid_room_number(payload["room_number"]):
+        raise HTTPException(status_code=422, detail="Некорректный номер кабинета")
+
+    exists = db.query(Room).filter(Room.room_number == payload["room_number"]).first()
+    if exists:
+        raise HTTPException(status_code=409, detail=f"Кабинет {payload['room_number']} уже существует")
+
+    room = Room(**payload)
     db.add(room)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Кабинет с таким номером уже существует")
     db.refresh(room)
     return room
 
@@ -267,9 +284,33 @@ async def admin_update_room(
     room = db.query(Room).filter(Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Кабинет не найден")
-    for key, value in data.model_dump(exclude_unset=True).items():
+
+    updates = data.model_dump(exclude_unset=True)
+    if "room_number" in updates and updates["room_number"] is not None:
+        updates["room_number"] = updates["room_number"].strip()
+
+        if not is_valid_room_number(updates["room_number"]):
+            raise HTTPException(status_code=422, detail="Некорректный номер кабинета")
+
+        duplicate = (
+            db.query(Room)
+            .filter(Room.room_number == updates["room_number"], Room.id != room_id)
+            .first()
+        )
+        if duplicate:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Кабинет {updates['room_number']} уже существует",
+            )
+
+    for key, value in updates.items():
         setattr(room, key, value)
-    db.commit()
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Кабинет с таким номером уже существует")
     db.refresh(room)
     return room
 
@@ -285,3 +326,18 @@ async def admin_delete_room(
         raise HTTPException(status_code=404, detail="Кабинет не найден")
     db.delete(room)
     db.commit()
+
+
+@router.delete("/rooms/invalid", status_code=status.HTTP_200_OK)
+async def admin_cleanup_invalid_rooms(
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    """Удаляет из БД все кабинеты с невалидными номерами (например, текст расписания вместо номера)."""
+    all_rooms = db.query(Room).all()
+    invalid_rooms = [room for room in all_rooms if not is_valid_room_number(room.room_number)]
+    deleted_count = len(invalid_rooms)
+    for room in invalid_rooms:
+        db.delete(room)
+    db.commit()
+    return {"deleted": deleted_count, "message": f"Удалено {deleted_count} некорректных записей кабинетов"}
