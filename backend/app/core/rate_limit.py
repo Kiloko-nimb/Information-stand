@@ -8,11 +8,17 @@ from slowapi.errors import RateLimitExceeded
 from fastapi import Request, FastAPI
 from .config import settings
 
-# Создаём limiter с ключом по IP-адресу
+# slowapi.Limiter по умолчанию подхватывает локальный `.env` через
+# starlette.config.Config, который открывает файл системной кодировкой.
+# На Windows (cp1251) это падает с UnicodeDecodeError, если в `.env` есть
+# UTF-8 символы (русские комментарии, рамки `─` и т.п.). Обходим это,
+# передавая пустой `config_filename` — slowapi не будет читать `.env`,
+# а наши настройки и так берутся из pydantic-settings (`app.core.config`).
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=[f"{settings.RATE_LIMIT_REQUESTS} per {settings.RATE_LIMIT_PERIOD} seconds"]
-    if settings.RATE_LIMIT_ENABLED else []
+    if settings.RATE_LIMIT_ENABLED else [],
+    config_filename="",
 )
 
 
