@@ -113,3 +113,8 @@ export async function adminUpdateRoom(id, payload) {
 export async function adminDeleteRoom(id) {
   await api.delete(`/admin/rooms/${id}`, { headers: authHeaders() })
 }
+
+export async function adminCleanupRooms() {
+  const { data } = await api.delete(`/admin/rooms/invalid`, { headers: authHeaders() })
+  return data
+}
