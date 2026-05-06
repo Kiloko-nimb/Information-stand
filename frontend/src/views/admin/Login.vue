@@ -9,18 +9,27 @@
 
       <!-- Setup form (no admin exists yet) -->
       <form v-if="needsSetup" @submit.prevent="doSetup" class="login-form">
-        <p class="setup-notice">Администратор ещё не создан. Задайте логин и пароль.</p>
+        <p class="setup-notice">
+          <Info :size="14" /> Это первый запуск. Создайте учётную запись администратора —
+          именно она будет управлять стендом дальше. Запишите логин и пароль в надёжное место,
+          восстановления через почту нет.
+        </p>
         <div class="field">
           <label>Логин</label>
-          <input v-model="username" type="text" required autocomplete="username" />
+          <input v-model="username" type="text" required autocomplete="username"
+                 placeholder="например, admin" />
+          <p class="field-hint">Латиница, без пробелов. Используется только для входа в эту панель.</p>
         </div>
         <div class="field">
           <label>Пароль</label>
-          <input v-model="password" type="password" required autocomplete="new-password" />
+          <input v-model="password" type="password" required autocomplete="new-password"
+                 placeholder="минимум 4 символа" />
+          <p class="field-hint">Запомните или сохраните пароль. Сбросить его смогут только через файл базы данных.</p>
         </div>
         <div class="field">
           <label>Повторите пароль</label>
-          <input v-model="password2" type="password" required autocomplete="new-password" />
+          <input v-model="password2" type="password" required autocomplete="new-password"
+                 placeholder="повторите для проверки" />
         </div>
         <button type="submit" class="btn-primary" :disabled="loading">
           {{ loading ? 'Создание...' : 'Создать администратора' }}
@@ -30,18 +39,27 @@
 
       <!-- Login form -->
       <form v-else @submit.prevent="doLogin" class="login-form">
+        <p class="login-hint">
+          <Info :size="14" /> Вход только для администраторов стенда. Посетители используют главную страницу.
+        </p>
         <div class="field">
           <label>Логин</label>
-          <input v-model="username" type="text" required autocomplete="username" />
+          <input v-model="username" type="text" required autocomplete="username"
+                 placeholder="введите логин" />
         </div>
         <div class="field">
           <label>Пароль</label>
-          <input v-model="password" type="password" required autocomplete="current-password" />
+          <input v-model="password" type="password" required autocomplete="current-password"
+                 placeholder="введите пароль" />
         </div>
         <button type="submit" class="btn-primary" :disabled="loading">
           {{ loading ? 'Вход...' : 'Войти' }}
         </button>
         <p v-if="error" class="error">{{ error }}</p>
+        <p class="recovery-hint">
+          Забыли пароль? Доступ восстанавливается только через файл базы данных <code>backend/kkrit.db</code>
+          — обратитесь к разработчику или системному администратору.
+        </p>
       </form>
 
       <router-link to="/" class="back-link"><ArrowLeft :size="14" /> Вернуться на стенд</router-link>
@@ -52,7 +70,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Shield, ArrowLeft } from 'lucide-vue-next'
+import { Shield, ArrowLeft, Info } from 'lucide-vue-next'
 import { login, setupAdmin, isAuthenticated } from '../../services/adminService'
 import api from '../../services/api'
 
@@ -203,14 +221,42 @@ async function doSetup() {
   font-size: 0.9rem;
   text-align: center;
 }
-.setup-notice {
+.setup-notice,
+.login-hint {
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.75rem 0.9rem 0.75rem 2.3rem;
   font-size: 0.85rem;
   color: var(--text-muted);
+  line-height: 1.45;
+  position: relative;
+}
+.setup-notice :deep(svg),
+.login-hint :deep(svg) {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.95rem;
+  color: var(--accent, #6366f1);
+}
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+.recovery-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
   text-align: center;
+  line-height: 1.5;
+  margin-top: 0.3rem;
+}
+.recovery-hint code {
+  background: rgba(255,255,255,0.06);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
 }
 .back-link {
   display: block;
