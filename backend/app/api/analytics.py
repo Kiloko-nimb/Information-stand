@@ -63,7 +63,7 @@ async def get_stats(
         .all()
     )
 
-    # Топ запросов расписания
+    # Топ запросов расписания (отдельный список — для будущих графиков)
     top_schedule = (
         db.query(PopularQuery)
         .filter(PopularQuery.endpoint.like("%/schedule/%"))
@@ -76,7 +76,7 @@ async def get_stats(
         total_visits=total,
         visits_today=today,
         visits_week=week,
-        top_pages=top_schedule,
+        top_pages=top_pages,
         top_schedule_groups=top_schedule,
     )
 
