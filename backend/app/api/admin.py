@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.api.auth import require_admin
 from app.models.staff import Staff
 from app.models.room import Room
+from app.models.news import News
 from app.models.admin import Admin
 from app.utils.room_names import is_valid_room_number
 

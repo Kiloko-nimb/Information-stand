@@ -48,13 +48,23 @@ def is_distance_marker(value: Optional[str]) -> bool:
     return value.strip().lower() in _DISTANCE_MARKERS
 
 
+# Корпусной префикс типа «К-1», «А-2», «Сп1», «Сп2»:
+# 1–2 буквы (любого регистра), опциональный дефис, 1–3 цифры,
+# опциональный алфавитный суффикс. Используется для нестандартных
+# аудиторий (корпуса, спортзалы), которые не начинаются с цифры.
+_BUILDING_PREFIX_RE = re.compile(
+    r"^[А-ЯЁA-Zа-яёa-z]{1,2}-?\d{1,3}[а-яёa-z]?$"
+)
+
+
 def is_valid_room_number(value: Optional[str]) -> bool:
     """Похоже ли ``value`` на корректный номер аудитории.
 
     Допускаем:
     * ``112``
     * ``414а`` (с буквой в конце)
-    * ``ДО`` (дистанционное обучение)
+    * ``К-1``, ``Сп1`` (корпусной/спортзальный префикс)
+    * ``ДО`` / ``Дистанционно`` (дистанционное обучение)
     * ``Спортзал``/``Актовый зал``
 
     Отбрасываем:
@@ -65,26 +75,29 @@ def is_valid_room_number(value: Optional[str]) -> bool:
     if not value:
         return False
     s = value.strip()
-    if len(s) > 10:
-        return False
+    # Маркер дистанционной пары — особый случай. Проверяем до фильтров
+    # по длине, чтобы пропустить «Дистанционно» (12 символов).
     if is_distance_marker(s):
         return True
+    if len(s) > 10:
+        return False
     if s.lower() in ("спортзал", "сп", "акт", "актовый зал"):
         return True
     if " " in s:  # Пробелы недопустимы
         return False
     if len(s) < 2 or len(s) > 5:
         return False
-    # Должно начинаться с цифры
-    if not s[0].isdigit():
-        return False
-    # Допускаем только цифры или цифры+буква в конце
-    if len(s) >= 2:
+    # Стандартный номер: «112», «414а» — начинается с цифры.
+    if s[0].isdigit():
         if not s[:-1].isdigit():  # Все, кроме последней, должны быть цифрами
             return False
-        if len(s) == 5 and not s[-1].isalpha():  # Последняя может быть буквой
+        if len(s) == 5 and not s[-1].isalpha():  # 5-й символ — только буква
             return False
-    return True
+        return True
+    # Корпусной префикс: «К-1», «Сп1», «А-12».
+    if _BUILDING_PREFIX_RE.match(s):
+        return True
+    return False
 
 
 def normalize_room_number(value: Optional[str]) -> Optional[str]:
