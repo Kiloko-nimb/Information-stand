@@ -316,19 +316,8 @@ async def admin_update_room(
     return room
 
 
-@router.delete("/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def admin_delete_room(
-    room_id: int,
-    db: Session = Depends(get_db),
-    _admin: Admin = Depends(require_admin),
-):
-    room = db.query(Room).filter(Room.id == room_id).first()
-    if not room:
-        raise HTTPException(status_code=404, detail="Кабинет не найден")
-    db.delete(room)
-    db.commit()
-
-
+# ВНИМАНИЕ: маршрут "/rooms/invalid" должен быть зарегистрирован ДО "/rooms/{room_id}",
+# иначе FastAPI попытается привести "invalid" к int и вернёт 422.
 @router.delete("/rooms/invalid", status_code=status.HTTP_200_OK)
 async def admin_cleanup_invalid_rooms(
     db: Session = Depends(get_db),
@@ -342,3 +331,16 @@ async def admin_cleanup_invalid_rooms(
         db.delete(room)
     db.commit()
     return {"deleted": deleted_count, "message": f"Удалено {deleted_count} некорректных записей кабинетов"}
+
+
+@router.delete("/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_delete_room(
+    room_id: int,
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    room = db.query(Room).filter(Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Кабинет не найден")
+    db.delete(room)
+    db.commit()

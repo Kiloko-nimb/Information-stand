@@ -180,3 +180,41 @@ class TestRoomsApi:
     def test_room_by_unknown_number_returns_404(self, client: TestClient, seeded_db) -> None:
         response = client.get("/api/v1/rooms/UNKNOWN")
         assert response.status_code == 404
+
+
+class TestAdminRoomCleanupRouting:
+    """Регрессия: DELETE /api/v1/admin/rooms/invalid должен матчить выделенный
+    handler очистки, а не /rooms/{room_id} с room_id="invalid" (и падать в 422).
+    """
+
+    def test_cleanup_route_does_not_match_int_handler(
+        self, client: TestClient, db_session, monkeypatch
+    ) -> None:
+        # Подменяем зависимость require_admin, чтобы не возиться с JWT.
+        from app.api.auth import require_admin
+        from app.main import app
+        from app.models.admin import Admin
+        from app.models.room import Room
+
+        fake_admin = Admin(id=1, username="testadmin", hashed_password="x", is_active=True)
+        app.dependency_overrides[require_admin] = lambda: fake_admin
+
+        # Заводим один валидный кабинет и один мусорный.
+        db_session.add_all([
+            Room(room_number="305", floor=3, building="К1"),
+            Room(room_number="Ауд.", floor=0, building=""),
+        ])
+        db_session.commit()
+
+        try:
+            response = client.delete("/api/v1/admin/rooms/invalid")
+        finally:
+            app.dependency_overrides.pop(require_admin, None)
+
+        # Главное: не 422 от попытки привести "invalid" -> int.
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["deleted"] == 1
+        # Валидный кабинет остался, мусорный — удалён.
+        remaining = {r.room_number for r in db_session.query(Room).all()}
+        assert remaining == {"305"}
