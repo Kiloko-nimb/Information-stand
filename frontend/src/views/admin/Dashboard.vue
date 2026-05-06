@@ -169,10 +169,29 @@
       <section v-if="currentTab === 'analytics'">
         <div class="section-header">
           <h2><BarChart3 :size="22" class="section-icon" /> Аналитика посещений</h2>
+          <div class="section-header-actions">
+            <span v-if="statsUpdatedAt" class="stats-updated" :title="statsUpdatedAtFull">
+              Обновлено в {{ statsUpdatedAt }}
+            </span>
+            <button
+              class="btn-secondary"
+              :disabled="statsLoading"
+              @click="refreshStats"
+              title="Перечитать аналитику с сервера. Жми, если сделал поиск на стенде, а здесь ещё не появилось."
+            >
+              <RefreshCw :size="16" :class="{ 'spin': statsLoading }" />
+              {{ statsLoading ? 'Загрузка…' : 'Обновить' }}
+            </button>
+          </div>
         </div>
         <p class="section-hint">
-          <Info :size="14" /> Показывает, какими разделами стенда пользуются чаще всего и что ищут. Числа
-          помогут решить, какие секции стенда выводить на видное место, а какие убрать.
+          <Info :size="14" /> Показывает, какими разделами стенда пользуются чаще всего и что ищут.
+          Учитываются только реальные поиски посетителей — служебные запросы (вход в админку,
+          фоновые обновления звонков и текущей пары) сюда не попадают, чтобы не забивать таблицу.
+        </p>
+        <p v-if="statsError" class="stats-error">
+          <AlertTriangle :size="14" /> Не удалось получить аналитику с сервера. Проверь, что бэкенд
+          запущен, и нажми «Обновить».
         </p>
         <div v-if="stats" class="stats-grid">
           <div class="stat-card" title="Общее число обращений к АПИ стенда за всё время">
@@ -300,7 +319,8 @@ import { ref, onMounted, reactive, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Shield, Newspaper, Users, School, BarChart3, LogOut, Plus,
-  Pencil, Trash2, X, Eye, EyeOff, Info, Eraser, AlertTriangle, CheckCircle2
+  Pencil, Trash2, X, Eye, EyeOff, Info, Eraser, AlertTriangle, CheckCircle2,
+  RefreshCw
 } from 'lucide-vue-next'
 import {
   isAuthenticated, logout as doLogoutService, getToken,
@@ -325,6 +345,17 @@ const newsList = ref([])
 const staffList = ref([])
 const roomList = ref([])
 const stats = ref(null)
+const statsLoading = ref(false)
+const statsError = ref(false)
+const statsUpdatedAtRaw = ref(null)
+const statsUpdatedAt = computed(() => {
+  if (!statsUpdatedAtRaw.value) return ''
+  return statsUpdatedAtRaw.value.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+})
+const statsUpdatedAtFull = computed(() => {
+  if (!statsUpdatedAtRaw.value) return ''
+  return 'Последнее обновление: ' + statsUpdatedAtRaw.value.toLocaleString('ru-RU')
+})
 
 const humanReadableQueries = computed(() => {
   if (!stats.value?.top_pages) return []
@@ -439,11 +470,32 @@ async function loadData() {
   if (currentTab.value === 'news') newsList.value = await adminListNews()
   if (currentTab.value === 'staff') staffList.value = await adminListStaff()
   if (currentTab.value === 'rooms') roomList.value = await adminListRooms()
-  if (currentTab.value === 'analytics') {
-    try {
-      const resp = await api.get('/admin/analytics/stats', { headers: { Authorization: `Bearer ${getToken()}` } })
-      stats.value = resp.data
-    } catch { stats.value = null }
+  if (currentTab.value === 'analytics') await loadStats()
+}
+
+async function loadStats({ silent = false } = {}) {
+  statsLoading.value = true
+  try {
+    const resp = await api.get('/admin/analytics/stats', {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    })
+    stats.value = resp.data
+    statsError.value = false
+    statsUpdatedAtRaw.value = new Date()
+  } catch (e) {
+    stats.value = null
+    statsError.value = true
+    if (!silent) showToast('Не удалось загрузить аналитику', 'error')
+  } finally {
+    statsLoading.value = false
+  }
+}
+
+// Кнопка «Обновить» в шапке вкладки аналитики.
+async function refreshStats() {
+  await loadStats()
+  if (!statsError.value) {
+    showToast('Аналитика обновлена', 'success', 2200)
   }
 }
 
@@ -822,6 +874,40 @@ async function saveModal() {
 }
 .section-icon {
   flex-shrink: 0;
+}
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.stats-updated {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.stats-error {
+  margin: -0.4rem 0 1rem;
+  padding: 0.7rem 0.9rem 0.7rem 2.4rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  position: relative;
+}
+.stats-error :deep(svg) {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.95rem;
+  color: #f87171;
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 .section-hint {
   margin: -0.4rem 0 1.2rem;
