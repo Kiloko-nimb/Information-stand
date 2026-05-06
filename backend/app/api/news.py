@@ -113,10 +113,3 @@ async def refresh_news(
         "status": "started",
         "message": "Обновление новостей запущено в фоновом режиме"
     }
-
-
-@router.get("/groups/list")
-async def get_groups(db: Session = Depends(get_db)):
-    """Получить список доступных групп (для совместимости с существующим API)"""
-    # Этот endpoint может быть использован для других целей
-    return {"message": "News API active"}

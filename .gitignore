@@ -5,6 +5,7 @@ __pycache__/
 *.so
 .Python
 venv/
+.venv/
 env/
 ENV/
 *.egg-info/
@@ -26,6 +27,13 @@ npm-debug.log*
 *.swp
 *.swo
 
+# Случайные файлы расписания / данных в корне (от тестов синхронизации
+# с Яндекс.Диска или ручных импортов). Не коммитить.
+/*.xlsx
+/*.xls
+/*.docx
+/*.pdf
+
 # Environment
 .env
 .env.local
@@ -42,3 +50,5 @@ Thumbs.db
 .DS_Store
 
 материалы для проекта/
+backend/data/schedule-downloads/
+.pytest_cache/

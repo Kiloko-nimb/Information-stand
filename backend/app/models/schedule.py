@@ -1,5 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text, Date, Time
+from sqlalchemy import Boolean, Column, Date, DateTime, Integer, String, Text, Time
+from sqlalchemy.sql import func
+
 from app.core.database import Base
+
 
 class Schedule(Base):
     """Модель расписания занятий"""
@@ -16,3 +19,10 @@ class Schedule(Base):
     time_end = Column(Time)
     date = Column(Date)  # Для конкретной даты
     lesson_type = Column(String(50))  # Лекция, практика, лаб
+    # ── Метаданные для отслеживания «замен» в расписании ─────────────────
+    # imported_at: когда эта запись была импортирована (последний раз).
+    # is_modified: True, если при последнем импорте на ту же дату занятие
+    #   отличается от предыдущей версии (изменился предмет, преподаватель,
+    #   аудитория или тип). На самом первом импорте всегда False.
+    imported_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_modified = Column(Boolean, default=False, nullable=False, server_default="0")

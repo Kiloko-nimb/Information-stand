@@ -1,11 +1,11 @@
 """
 Сервис для парсинга новостей с сайта ККРИТ
 """
-import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from typing import List, Dict, Optional
 import logging
+from app.utils.retry import RetryableSession
 
 logger = logging.getLogger(__name__)
 
@@ -19,27 +19,26 @@ HEADERS = {
 
 def fetch_news_from_website() -> List[Dict]:
     """
-    Загружает и парсит новости с сайта колледжа
+    Загружает и парсит новости с сайта колледжа с автоматическим retry.
 
     Returns:
         List[Dict]: Список словарей с данными новостей
     """
     try:
         logger.info(f"Загрузка новостей с {NEWS_URL}")
-        response = requests.get(NEWS_URL, headers=HEADERS, timeout=10)
-        response.raise_for_status()
 
-        html = response.text
+        with RetryableSession() as session:
+            response = session.get(NEWS_URL, headers=HEADERS)
+            response.raise_for_status()
+            html = response.text
+
         news_list = parse_news_html(html)
 
         logger.info(f"Успешно загружено {len(news_list)} новостей")
         return news_list
 
-    except requests.RequestException as e:
-        logger.error(f"Ошибка при загрузке новостей: {e}")
-        return []
     except Exception as e:
-        logger.error(f"Неожиданная ошибка при парсинге: {e}")
+        logger.error(f"Ошибка при загрузке новостей: {e}")
         return []
 
 

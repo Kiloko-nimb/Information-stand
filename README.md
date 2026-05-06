@@ -107,6 +107,19 @@ python test_api.py
 5. ⏳ Добавить SVG карты этажей
 6. ⏳ Настроить Service Worker
 
+## 📚 Дополнительная документация
+
+Полный индекс — в [docs/README.md](docs/README.md). Ключевые документы:
+
+- [docs/QUICKSTART.md](docs/QUICKSTART.md) — быстрый старт
+- [docs/README_RUN.md](docs/README_RUN.md) — расширенная инструкция по запуску
+- [docs/CHANGELOG.md](docs/CHANGELOG.md) — история изменений
+- [docs/STATUS.md](docs/STATUS.md) / [docs/SUMMARY.md](docs/SUMMARY.md) — текущий статус и итоговая сводка
+- [docs/SCHEDULE_IMPORT.md](docs/SCHEDULE_IMPORT.md) — импорт расписания из Excel
+- [docs/NEWS_PARSING_README.md](docs/NEWS_PARSING_README.md) — парсинг новостей
+- [docs/SVG_MAPS_GUIDE.md](docs/SVG_MAPS_GUIDE.md) / [docs/INTERACTIVE_MAP.md](docs/INTERACTIVE_MAP.md) — карты этажей и навигация
+- [docs/FRONTEND_IMPROVEMENTS.md](docs/FRONTEND_IMPROVEMENTS.md) / [docs/BACKGROUND_TASKS_UPDATE.md](docs/BACKGROUND_TASKS_UPDATE.md) — заметки по подсистемам
+
 ---
 
 **Проект готов к разработке и демонстрации!** 🚀
