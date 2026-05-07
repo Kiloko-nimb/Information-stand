@@ -1,125 +1,233 @@
-# Интерактивный информационный стенд ККРИТ
+# ККРИТ — Интерактивный информационный стенд
 
-## ✅ Проект успешно развернут!
+Информационный стенд для **Кировского колледжа** (KKRIT). Физически это сенсорный экран, на котором посетители (студенты, преподаватели, гости) могут:
 
-### 🎯 Что реализовано:
+- посмотреть **расписание** на день (по группе, преподавателю или кабинету);
+- найти **сотрудника** (ФИО, должность, кафедра);
+- узнать **номер кабинета** и его расположение;
+- увидеть **новости** колледжа, текущую пару и расписание звонков;
+- воспользоваться интерактивной **картой здания**.
 
-**Backend (FastAPI):**
-- ✅ REST API на порту 8000
-- ✅ База данных SQLite с реальными данными
-- ✅ 109 сотрудников загружены из DOCX
-- ✅ 73 записи расписания загружены из PDF
-- ✅ Автодокументация API (Swagger)
-- ✅ CORS настроен для фронтенда
+Параллельно есть **админ-панель** (`/admin`), где сотрудник колледжа управляет содержимым стенда: новости, сотрудники, кабинеты, аналитика посещений. Админка также рассчитана на сенсорный экран: крупные кнопки (>= 38 px), собственные модалки вместо `confirm()`, toast-уведомления.
 
-**Frontend (Vue.js):**
-- ✅ Структура проекта создана
-- ✅ Роутинг (Home, Schedule, Staff, Map)
-- ✅ PWA конфигурация для offline-режима
-- ✅ API клиент с обработкой ошибок
-- ✅ Компоненты для всех страниц
+---
 
-**Парсинг данных:**
-- ✅ PDF парсер для расписания (pdfplumber)
-- ✅ DOCX парсер для педсостава (python-docx)
-- ✅ Скрипты загрузки данных в БД
+## Стек
 
-## 🚀 Запуск проекта
+| Слой | Технологии |
+| --- | --- |
+| Backend | Python 3.10+, FastAPI, SQLAlchemy, SQLite (`backend/kkrit.db`), uvicorn |
+| Frontend | Vue 3 (Composition API), Vite, vue-router, pinia, axios, lucide-vue-next |
+| Парсеры | `pdfplumber` (PDF расписания), `openpyxl` / `pandas` (XLSX расписания), `python-docx` (DOCX педсостава), `requests` + `beautifulsoup4` (новости с сайта колледжа) |
+| Защита | JWT-токены (admin), slowapi (rate limiting), CORS, аудит запросов через `AnalyticsMiddleware` |
+| CI | GitHub Actions — `pytest` (backend) + `vite build` (frontend) |
 
-### Backend (уже запущен)
+---
+
+## Структура репозитория
+
+```
+Information-stand/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  # точка входа FastAPI + lifespan + фоновые задачи
+│   │   ├── api/                     # роутеры: auth, admin, schedule, staff, rooms, news, analytics, bells
+│   │   ├── core/
+│   │   │   ├── analytics.py         # AnalyticsMiddleware (фильтр шума)
+│   │   │   ├── bell_schedule.py     # расписание звонков
+│   │   │   ├── config.py            # pydantic-settings конфигурация
+│   │   │   ├── database.py          # engine, SessionLocal, Base
+│   │   │   ├── exceptions.py        # глобальные обработчики ошибок
+│   │   │   ├── migrations.py        # ручные миграции (добавление колонок)
+│   │   │   └── rate_limit.py        # slowapi
+│   │   ├── models/                  # SQLAlchemy-модели: schedule, staff, room, news, admin, analytics
+│   │   ├── services/
+│   │   │   ├── yandex_disk.py       # синхронизация PDF/XLSX расписания с Яндекс.Диска
+│   │   │   └── news_parser.py       # парсер новостей с сайта колледжа
+│   │   └── utils/
+│   │       ├── import_schedule.py   # парсинг XLSX/PDF → таблица schedule
+│   │       ├── populate_rooms.py    # заполнение таблицы rooms из расписания
+│   │       ├── room_names.py        # нормализация номеров кабинетов
+│   │       ├── group_names.py       # нормализация названий групп
+│   │       └── retry.py            # retry-утилиты
+│   ├── tests/                       # pytest
+│   ├── requirements.txt
+│   ├── requirements-dev.txt         # pytest + httpx
+│   └── .env.example
+├── frontend/
+│   └── src/
+│       ├── views/
+│       │   ├── Home.vue, Schedule.vue, Staff.vue, Map.vue, Faq.vue, Quiz.vue
+│       │   └── admin/
+│       │       ├── Login.vue        # логин или форма создания первого админа
+│       │       └── Dashboard.vue    # CRUD всех сущностей + аналитика
+│       ├── components/
+│       │   ├── home/                # виджеты главной: BellsWidget, NowWidget, FeatureCards, NewsSection...
+│       │   ├── BaseModal.vue        # модальное окно
+│       │   ├── VirtualKeyboard.vue  # экранная клавиатура
+│       │   ├── Screensaver.vue      # скринсейвер при простое
+│       │   └── ...
+│       ├── composables/             # useClock, useScheduleStatus, useScreensaver
+│       ├── services/                # api.js, adminService.js, newsService.js
+│       └── router/
+├── scripts/
+│   └── cleanup_garbage_groups.py    # очистка мусорных групп
+├── load_staff.py                    # одноразовый импорт DOCX педсостава
+├── load_schedule.py                 # CLI-обёртка над import_schedule
+├── init_db.py                       # ручное создание таблиц (обычно не нужно — main.py делает это сам)
+└── docs/                            # дополнительная документация
+```
+
+---
+
+## Откуда берутся данные
+
+| Сущность | Источник | Когда подгружается |
+| --- | --- | --- |
+| **Расписание** | Публичная папка Яндекс.Диска (XLSX/PDF) | Автоматически: фоновая задача раз в N часов (по умолчанию 3), плюс через 1 минуту после старта бэкенда |
+| **Кабинеты** | Уникальные `room_number` из расписания | Автоматически вместе с импортом расписания (`populate_rooms`) |
+| **Новости** | Сайт колледжа (HTML-парсер) | Автоматически: через 30 сек после старта бэкенда, затем каждые 6 часов |
+| **Сотрудники** | DOCX-файл педсостава | Вручную, один раз: `python load_staff.py`, или через админ-панель |
+| **Админ** | — | Вручную при первом запуске: `/admin/login` предложит создать администратора |
+
+### Яндекс.Диск
+
+В `backend/.env` задаётся переменная `YANDEX_DISK_PUBLIC_URL`. Если она указана, фоновая задача автоматически скачивает файлы в `data/schedule-downloads/` и импортирует расписание. Манифест уже скачанных файлов — `.imported.json`.
+
+Ручной импорт:
+```bash
+python load_schedule.py path/to/file.xlsx --date YYYY-MM-DD
+```
+
+---
+
+## Запуск локально
+
+### Backend
+
 ```bash
 cd backend
-python run.py
-```
-API: http://localhost:8000
-Docs: http://localhost:8000/docs
+python -m venv venv
+source venv/bin/activate        # Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
 
-### Frontend (нужно запустить)
+# первый запуск — создаст kkrit.db и подтянет данные с Яндекса
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+- API: http://localhost:8000
+- Swagger: http://localhost:8000/docs (при `DEBUG=True`)
+
+### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-App: http://localhost:5173
 
-## 📊 Статистика
+- Приложение: http://localhost:5173
+- Админка: http://localhost:5173/admin
 
-- **Сотрудников в БД**: 109
-- **Записей расписания**: 73
-- **Групп**: ~40
-- **API endpoints**: 9+
-- **Страниц фронтенда**: 4
+### Переменные окружения
 
-## 🧪 Тестирование
+Скопируй `.env.example` в `.env` и настрой:
+
+- `backend/.env` — `DATABASE_URL`, `SECRET_KEY`, `YANDEX_DISK_PUBLIC_URL`, CORS, rate limiting и др.
+- `frontend/.env` — `VITE_KIOSK_TIMEOUT_SEC`, `VITE_KIOSK_WARNING_SEC`, `VITE_KIOSK_4K_MODE`
+
+---
+
+## Тесты и сборка
 
 ```bash
-# Проверка API
-curl http://localhost:8000/
-curl http://localhost:8000/api/v1/staff/
-curl "http://localhost:8000/api/v1/staff/search?query=Алексеев"
-curl "http://localhost:8000/api/v1/schedule/group/9ИС-1.25"
+# Backend — pytest
+cd backend
+pip install -r requirements-dev.txt
+pytest -q
 
-# Или запустить тесты
-python test_api.py
+# Frontend — vite build
+cd frontend
+npm run build
 ```
 
-## 📁 Файлы проекта
+CI (GitHub Actions) запускает оба шага на каждый PR и push в `main`.
 
-**Скрипты:**
-- `init_db.py` - создание таблиц БД
-- `load_staff.py` - загрузка сотрудников
-- `load_schedule.py` - загрузка расписания
-- `test_api.py` - тестирование API
+---
 
-**Данные:**
-- `13.04.2026.pdf` - расписание на 13 апреля
-- `ped._sostav_dlya_sayta_10.09.2025.docx` - педсостав
-- `backend/kkrit.db` - база данных SQLite
+## API
 
-## 🎓 Для защиты диплома
+Все маршруты префиксованы `/api/v1`.
 
-**Технический стек:**
-- Python 3.10 + FastAPI + SQLAlchemy
-- Vue.js 3 + Vite + PWA
-- SQLite
-- pdfplumber, python-docx
+### Публичные
 
-**Ключевые особенности:**
-1. Автоматический парсинг PDF и DOCX
-2. RESTful API с документацией
-3. Offline-first архитектура (PWA)
-4. Реальные данные ККРИТ
-5. Поиск по расписанию и сотрудникам
+| Метод | Путь | Описание |
+| --- | --- | --- |
+| `GET` | `/schedule/groups` | Список групп |
+| `GET` | `/schedule/teachers` | Список преподавателей |
+| `GET` | `/schedule/rooms` | Список кабинетов (из расписания) |
+| `GET` | `/schedule/group/{name}` | Расписание группы |
+| `GET` | `/schedule/teacher/{name}` | Расписание преподавателя |
+| `GET` | `/schedule/room/{number}` | Расписание кабинета |
+| `GET` | `/schedule/now` | Текущая пара |
+| `GET` | `/schedule/bells` | Расписание звонков |
+| `GET` | `/staff/` | Справочник сотрудников |
+| `GET` | `/staff/search?query=...` | Поиск сотрудников |
+| `GET` | `/rooms/{room_number}` | Карточка кабинета |
+| `GET` | `/news/` | Список новостей |
+| `GET` | `/health` | Проверка состояния сервиса |
 
-**Что можно показать:**
-- Парсинг PDF → данные в БД
-- API с автодокументацией
-- Поиск расписания по группе
-- Поиск сотрудников по ФИО
-- Offline-режим (индикатор)
+### Аутентификация
 
-## 📝 Следующие шаги
+| Метод | Путь | Описание |
+| --- | --- | --- |
+| `GET` | `/auth/check` | Нужен ли первичный setup |
+| `POST` | `/auth/setup` | Создание первого администратора |
+| `POST` | `/auth/login` | Логин (form-data: `username`, `password`) → JWT |
+| `GET` | `/auth/me` | Текущий пользователь |
 
-1. ✅ Backend работает
-2. ✅ Данные загружены
-3. ⏳ Запустить frontend (`npm run dev`)
-4. ⏳ Протестировать UI
-5. ⏳ Добавить SVG карты этажей
-6. ⏳ Настроить Service Worker
+### Admin (требуют JWT)
 
-## 📚 Дополнительная документация
+| Метод | Путь | Описание |
+| --- | --- | --- |
+| CRUD | `/admin/news` | Управление новостями |
+| CRUD | `/admin/staff` | Управление сотрудниками |
+| CRUD | `/admin/rooms` | Управление кабинетами |
+| `DELETE` | `/admin/rooms/invalid` | Удалить кабинеты с невалидными номерами |
+| `GET` | `/admin/analytics/stats` | Статистика поисковых запросов (без шума) |
+| `GET` | `/admin/analytics/recent` | Лента последних запросов |
 
-Полный индекс — в [docs/README.md](docs/README.md). Ключевые документы:
+---
+
+## После удаления БД (пересоздание с нуля)
+
+1. **Запусти бэкенд** — таблицы создадутся автоматически.
+2. **Открой `/admin/login`** — появится форма «Создать администратора». Если показывает обычный логин — очисти `localStorage` в DevTools.
+3. **Подожди 1–2 минуты** — фоновые задачи подтянут расписание с Яндекс.Диска и новости с сайта колледжа. Кабинеты заполнятся автоматически из расписания.
+4. **Сотрудников загрузи вручную**: `python load_staff.py` из корня репо.
+
+---
+
+## Известные особенности
+
+- **Windows + SQLite WAL**: при аварийном завершении бэкенда БД может повредиться. Решение — удалить `kkrit.db`, `kkrit.db-shm`, `kkrit.db-wal` и перезапустить uvicorn.
+- **Кодировка `.env` на Windows**: файл должен быть в UTF-8. Загрузка через pydantic-settings обеспечивает это автоматически.
+- **Поллинг каждые 30 секунд**: `AnalyticsMiddleware` фильтрует служебные запросы (`/admin/*`, `/auth/*`, `/schedule/now`, `/schedule/bells`), чтобы не засорять аналитику.
+- **Кнопка «Очистить мусор»** в разделе «Кабинеты» удаляет только кабинеты с невалидными номерами. Валидные не трогает.
+
+---
+
+## Документация
+
+Дополнительные документы в папке [`docs/`](docs/):
 
 - [docs/QUICKSTART.md](docs/QUICKSTART.md) — быстрый старт
 - [docs/README_RUN.md](docs/README_RUN.md) — расширенная инструкция по запуску
 - [docs/CHANGELOG.md](docs/CHANGELOG.md) — история изменений
-- [docs/STATUS.md](docs/STATUS.md) / [docs/SUMMARY.md](docs/SUMMARY.md) — текущий статус и итоговая сводка
+- [docs/ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) — руководство администратора
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — руководство пользователя
 - [docs/SCHEDULE_IMPORT.md](docs/SCHEDULE_IMPORT.md) — импорт расписания из Excel
 - [docs/NEWS_PARSING_README.md](docs/NEWS_PARSING_README.md) — парсинг новостей
-- [docs/SVG_MAPS_GUIDE.md](docs/SVG_MAPS_GUIDE.md) / [docs/INTERACTIVE_MAP.md](docs/INTERACTIVE_MAP.md) — карты этажей и навигация
-- [docs/FRONTEND_IMPROVEMENTS.md](docs/FRONTEND_IMPROVEMENTS.md) / [docs/BACKGROUND_TASKS_UPDATE.md](docs/BACKGROUND_TASKS_UPDATE.md) — заметки по подсистемам
-
----
-
-**Проект готов к разработке и демонстрации!** 🚀
+- [docs/SVG_MAPS_GUIDE.md](docs/SVG_MAPS_GUIDE.md) — карты этажей
+- [docs/INTERACTIVE_MAP.md](docs/INTERACTIVE_MAP.md) — интерактивная навигация
+- [docs/STATUS.md](docs/STATUS.md) — текущий статус проекта
