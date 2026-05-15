@@ -114,7 +114,6 @@ def extract_news_data(block) -> Optional[Dict]:
         return {
             'title': title,
             'description': description[:500],  # Ограничиваем длину
-            'content': description,
             'icon': icon,
             'published_date': published_date,
             'source_url': source_url,
