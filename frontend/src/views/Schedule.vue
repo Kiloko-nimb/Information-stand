@@ -201,6 +201,13 @@
                       :title="`Открыть расписание кабинета`"
                       @click="openRoomSchedule(item.room_number)"
                     >Кабинет {{ item.room_number }}</button>
+                    <button
+                      v-if="item.room_number"
+                      class="detail-map-btn"
+                      :title="`Показать кабинет ${item.room_number} на карте`"
+                      aria-label="Показать на карте"
+                      @click="openRoomOnMap(item.room_number)"
+                    ><Icon name="target" :size="16" /></button>
                     <span v-else class="detail-text">Кабинет —</span>
                   </template>
                 </div>
@@ -242,6 +249,7 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../services/api'
 import { generateQRCode } from '../utils/qrGenerator'
 import Icon from '../components/Icon.vue'
@@ -530,6 +538,15 @@ export default {
       search()
     }
 
+    const router = useRouter()
+
+    const openRoomOnMap = (roomNumber) => {
+      if (!roomNumber) return
+      const value = String(roomNumber).trim()
+      if (!value) return
+      router.push({ path: '/map', query: { room: value } })
+    }
+
     const openRoomSchedule = (roomNumber) => {
       if (!roomNumber) return
       searchType.value = 'room'
@@ -770,6 +787,7 @@ export default {
       selectQuickPick,
       openTeacherSchedule,
       openRoomSchedule,
+      openRoomOnMap,
       shareQR,
       openShareQR,
       closeShareQR,
@@ -1187,6 +1205,35 @@ h1 {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+.detail-map-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 0.4rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), background var(--transition), transform var(--transition);
+  flex-shrink: 0;
+}
+
+.detail-map-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--surface-hover);
+  transform: scale(1.05);
+}
+
+.detail-map-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .loading,
