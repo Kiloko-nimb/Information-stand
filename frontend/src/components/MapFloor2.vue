@@ -258,16 +258,19 @@ export default {
     highlightFreeRooms: { type: Boolean, default: false },
     freeRooms: { type: Array, default: () => [] },
     busyRooms: { type: Array, default: () => [] },
+    highlightedRoom: { type: String, default: null },
   },
   setup(props) {
     const freeSet = computed(() => new Set(props.freeRooms.map((r) => String(r).trim())))
     const busySet = computed(() => new Set(props.busyRooms.map((r) => String(r).trim())))
+    const target = computed(() => (props.highlightedRoom ? String(props.highlightedRoom).trim() : null))
 
     const roomClass = (roomNumber) => {
       const num = String(roomNumber).trim()
       return {
         'room--free': props.highlightFreeRooms && freeSet.value.has(num),
         'room--busy': props.highlightFreeRooms && busySet.value.has(num),
+        'room--target': target.value !== null && target.value === num,
       }
     }
 
@@ -346,6 +349,24 @@ text {
   stroke: transparent;
   cursor: default;
   transition: fill 0.4s ease, stroke 0.4s ease;
+}
+
+.room.room--target {
+  fill: rgba(37, 99, 235, 0.35) !important;
+  stroke: #2563eb !important;
+  stroke-width: 3 !important;
+  animation: room-target-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes room-target-pulse {
+  0%, 100% {
+    fill: rgba(37, 99, 235, 0.35) !important;
+    stroke-opacity: 1;
+  }
+  50% {
+    fill: rgba(37, 99, 235, 0.55) !important;
+    stroke-opacity: 0.6;
+  }
 }
 
 .room.room--free {

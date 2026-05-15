@@ -7,6 +7,21 @@
 
     <h1>Навигация по колледжу</h1>
 
+    <transition name="free-bar">
+      <div v-if="highlightedRoom" class="route-bar">
+        <div class="route-bar-text">
+          <Icon name="target" :size="18" />
+          <span>
+            Маршрут до <strong>кабинета {{ highlightedRoom }}</strong>
+            <template v-if="!isRoomOnInteractiveFloor">
+              — подсветка на этом этаже пока не поддерживается
+            </template>
+          </span>
+        </div>
+        <button class="route-bar-clear" type="button" @click="clearHighlightedRoom">Сбросить</button>
+      </div>
+    </transition>
+
     <div class="map-controls">
       <div class="floor-selector">
         <button
@@ -74,6 +89,7 @@
               :highlight-free-rooms="freeRoomsMode"
               :free-rooms="freeRoomNumbers"
               :busy-rooms="busyRoomNumbers"
+              :highlighted-room="highlightedRoom"
             />
             <img v-else :src="`/floor${currentFloor}.svg`" :alt="`План ${currentFloor} этажа`" class="floor-svg-img" draggable="false" />
           </div>
@@ -92,9 +108,18 @@
 
 <script>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import MapFloor2 from '../components/MapFloor2.vue'
 import Icon from '../components/Icon.vue'
 import api from '../services/api'
+
+// Кабинеты, физически размеченные в SVG-компоненте MapFloor2 (он рисуется
+// при currentFloor === 1). На этажах 2-4 пока статичные SVG без room-геометрии,
+// поэтому точечная подсветка там невозможна.
+const INTERACTIVE_FLOOR1_ROOMS = new Set([
+  '201', '202', '203', '204', '205', '206', '207', '208', '209', '210',
+  '211', '212', '213', '214', '215', '216', '217', '218', '219',
+])
 
 export default {
   name: 'Map',
@@ -103,8 +128,15 @@ export default {
     Icon
   },
   setup() {
+    const route = useRoute()
+    const router = useRouter()
     const floors = [1, 2, 3, 4]
     const currentFloor = ref(1)
+    const highlightedRoom = ref(null)
+
+    const isRoomOnInteractiveFloor = computed(
+      () => !!highlightedRoom.value && INTERACTIVE_FLOOR1_ROOMS.has(highlightedRoom.value),
+    )
 
     // ─── Свободные кабинеты «прямо сейчас» ───
     const freeRoomsMode = ref(false)
@@ -230,6 +262,55 @@ export default {
       document.removeEventListener('mouseup', onMouseUp)
     })
 
+    // Наведение на кабинет из ?room=XXX. Этаж тянем из backend’а,
+    // но для кабинетов, которые физически размечены в MapFloor2,
+    // форсируем этаж = 1 — иначе подсветка не сработает из-за
+    // несовпадения populate_rooms._get_floor() и реальной SVG-разметки.
+    const resolveRoomFloor = async (roomNumber) => {
+      if (INTERACTIVE_FLOOR1_ROOMS.has(roomNumber)) return 1
+      try {
+        const { data } = await api.get(`/rooms/${encodeURIComponent(roomNumber)}`)
+        if (data && typeof data.floor === 'number' && floors.includes(data.floor)) {
+          return data.floor
+        }
+      } catch (e) {
+        // Кабинета нет в справочнике — фолбэк по первой цифре.
+      }
+      return FALLBACK_FLOOR_BY_PREFIX(roomNumber)
+    }
+
+    const applyRoomFromQuery = async (raw) => {
+      const value = typeof raw === 'string' ? raw.trim() : ''
+      if (!value) {
+        highlightedRoom.value = null
+        return
+      }
+      highlightedRoom.value = value
+      const floor = await resolveRoomFloor(value)
+      if (floor && floor !== currentFloor.value) {
+        currentFloor.value = floor
+      }
+    }
+
+    const clearHighlightedRoom = () => {
+      highlightedRoom.value = null
+      const { room: _room, ...rest } = route.query
+      router.replace({ path: route.path, query: rest })
+    }
+
+    onMounted(() => {
+      if (route.query.room) {
+        applyRoomFromQuery(route.query.room)
+      }
+    })
+
+    watch(
+      () => route.query.room,
+      (val) => {
+        applyRoomFromQuery(val)
+      },
+    )
+
     return {
       floors,
       currentFloor,
@@ -249,6 +330,9 @@ export default {
       freeRoomNumbers,
       busyRoomNumbers,
       toggleFreeRooms,
+      highlightedRoom,
+      isRoomOnInteractiveFloor,
+      clearHighlightedRoom,
     }
   }
 }
@@ -455,6 +539,50 @@ h1 {
   font-size: 0.92rem;
   color: var(--text-muted);
   font-style: italic;
+}
+
+/* ── Полоса «маршрут до кабинета XXX» ── */
+.route-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent, #2563eb);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.1rem;
+  margin: 0 0 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.route-bar-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.route-bar-text strong {
+  color: var(--accent, var(--text));
+}
+
+.route-bar-clear {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.route-bar-clear:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
 }
 
 .free-bar-enter-active,
