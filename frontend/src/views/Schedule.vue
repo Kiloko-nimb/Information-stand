@@ -249,7 +249,7 @@
 
 <script>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../services/api'
 import { generateQRCode } from '../utils/qrGenerator'
 import Icon from '../components/Icon.vue'
@@ -805,12 +805,28 @@ export default {
       return currentTime >= startTime && currentTime <= endTime
     }
 
+    // Поддерживаем deep-link: /schedule?type=room&q=207 или ?type=teacher&q=Иванов.
+    // Используется RoomInfoPanel-ом на карте («Открыть полное расписание»),
+    // а заодно даёт честный URL для шеринга найденной выборки.
+    const route = useRoute()
+    const applyQueryToSearch = () => {
+      const t = String(route.query.type || '').toLowerCase()
+      const q = typeof route.query.q === 'string' ? route.query.q.trim() : ''
+      if (!q) return
+      if (t === 'group' || t === 'teacher' || t === 'room') {
+        searchType.value = t
+        searchQuery.value = q
+        search()
+      }
+    }
+
     onMounted(() => {
       loadGroups()
       loadTeachers()
       loadRooms()
       generateDateRange()
       scrollSelectedIntoCenter()
+      applyQueryToSearch()
     })
 
     onUnmounted(() => {

@@ -90,6 +90,8 @@
               :free-rooms="freeRoomNumbers"
               :busy-rooms="busyRoomNumbers"
               :highlighted-room="highlightedRoom"
+              :room-types="roomTypesByNumber"
+              @room-click="onRoomClick"
             />
             <img v-else :src="`/floor${currentFloor}.svg`" :alt="`План ${currentFloor} этажа`" class="floor-svg-img" draggable="false" />
           </div>
@@ -98,6 +100,19 @@
             <button @click="zoom(-0.2)" title="Отдалить">−</button>
             <button @click="resetView" title="Сбросить">⟳</button>
           </div>
+          <RoomInfoPanel
+            :room-number="openRoomNumber"
+            :room-type="openRoomNumber ? (roomTypesByNumber[openRoomNumber] || null) : null"
+            @close="closeRoomPanel"
+          />
+        </div>
+        <div v-if="currentFloor === 1" class="map-legend" aria-label="Легенда по типам кабинетов">
+          <span class="legend-title">Цвет кабинета:</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--auditorium"></span>Аудитория</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--lab"></span>Лаборатория</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--sport"></span>Спортзал</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--hall"></span>Актовый зал</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Администрация</span>
         </div>
       </template>
 
@@ -111,6 +126,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MapFloor2 from '../components/MapFloor2.vue'
 import Icon from '../components/Icon.vue'
+import RoomInfoPanel from '../components/RoomInfoPanel.vue'
 import api from '../services/api'
 
 // Кабинеты, физически размеченные в SVG-компоненте MapFloor2 (он рисуется
@@ -125,6 +141,7 @@ export default {
   name: 'Map',
   components: {
     MapFloor2,
+    RoomInfoPanel,
     Icon
   },
   setup() {
@@ -227,8 +244,11 @@ export default {
     }
 
     const startPan = (event) => {
-      // Не перехватываем клики с кнопок зума и интерактивных элементов
-      if (event.target && event.target.closest && event.target.closest('.zoom-controls, button, a, [data-room]')) return
+      // Не перехватываем клики с кнопок зума и интерактивных элементов.
+      // .room-info-panel — это выехавшая панель расписания по кабинету:
+      // без этого исключения mousedown на ней срабатывал бы как панование карты,
+      // и при любом движении мыши внутри панели карта бы уезжала в сторону.
+      if (event.target && event.target.closest && event.target.closest('.zoom-controls, button, a, [data-room], .room-info-panel, .map-legend')) return
       isPanning.value = true
       startX.value = event.clientX - panX.value
       startY.value = event.clientY - panY.value
@@ -298,7 +318,39 @@ export default {
       router.replace({ path: route.path, query: rest })
     }
 
+    // ── Справочник кабинетов 1-го этажа: нужен для раскраски по типам и для
+    //    заголовка панели. Грузим один раз при монтировании. На floor=1 обычно ~20
+    //    комнат — поднимать всех (`/rooms/`) нет нужды.
+    const roomTypesByNumber = ref({})
+    const loadRoomTypes = async () => {
+      try {
+        const { data } = await api.get('/rooms/floor/1')
+        const map = {}
+        for (const r of data || []) {
+          if (r && r.room_number) map[String(r.room_number).trim()] = r.room_type || null
+        }
+        roomTypesByNumber.value = map
+      } catch (e) {
+        roomTypesByNumber.value = {}
+      }
+    }
+
+    // ── Открытая карточка расписания по кабинету (из клика по SVG-rect).
+    //    Одновременно выставляем highlightedRoom, чтобы при открытой панели сам
+    //    кабинет на карте пульсировал — визуальная связь «выбрано вот это».
+    const openRoomNumber = ref(null)
+    const onRoomClick = (roomNumber) => {
+      const num = String(roomNumber || '').trim()
+      if (!num) return
+      openRoomNumber.value = num
+      highlightedRoom.value = num
+    }
+    const closeRoomPanel = () => {
+      openRoomNumber.value = null
+    }
+
     onMounted(() => {
+      loadRoomTypes()
       if (route.query.room) {
         applyRoomFromQuery(route.query.room)
       }
@@ -333,6 +385,10 @@ export default {
       highlightedRoom,
       isRoomOnInteractiveFloor,
       clearHighlightedRoom,
+      roomTypesByNumber,
+      openRoomNumber,
+      onRoomClick,
+      closeRoomPanel,
     }
   }
 }
@@ -722,4 +778,44 @@ h1 {
   border-color: var(--accent-border);
   transform: scale(1.08);
 }
+
+/* ── Легенда: какой цвет = какой тип кабинета ── */
+.map-legend {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 1rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.legend-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  display: inline-block;
+}
+
+.legend-swatch--auditorium { background: rgba(59, 130, 246, 0.18);  border-color: rgba(37, 99, 235, 0.45); }
+.legend-swatch--lab        { background: rgba(139, 92, 246, 0.22);  border-color: rgba(124, 58, 237, 0.5); }
+.legend-swatch--sport      { background: rgba(34, 197, 94, 0.22);   border-color: rgba(22, 163, 74, 0.5); }
+.legend-swatch--hall       { background: rgba(249, 115, 22, 0.22);  border-color: rgba(234, 88, 12, 0.5); }
+.legend-swatch--admin      { background: rgba(245, 158, 11, 0.25);  border-color: rgba(217, 119, 6, 0.55); }
 </style>

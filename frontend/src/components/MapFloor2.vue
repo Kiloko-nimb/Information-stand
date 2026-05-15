@@ -5,9 +5,27 @@
     </div>
 
     <div class="map-container">
-      <svg width="820" height="900" viewBox="0 0 820 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        width="820"
+        height="900"
+        viewBox="0 0 820 900"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        @click="handleSvgClick"
+      >
+        <defs>
+          <!-- Мягкий точечный фон — чтобы карта перестала выглядеть чисто белым чертежом. -->
+          <pattern id="bg-dots" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
+            <rect width="22" height="22" fill="#f8fafc"/>
+            <circle cx="11" cy="11" r="1" fill="#cbd5e1" opacity="0.65"/>
+          </pattern>
+          <!-- Мягкая тень под комнатами, чтобы они казались объёмными. -->
+          <filter id="room-shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.08"/>
+          </filter>
+        </defs>
         <g clip-path="url(#clip0_9_2)">
-          <rect width="820" height="900" fill="white"/>
+          <rect width="820" height="900" fill="url(#bg-dots)"/>
           
           <!-- Основные линии здания -->
           <line x1="365" y1="538.75" x2="437" y2="538.75" stroke="#1A1A1A" stroke-width="2.5"/>
@@ -74,111 +92,111 @@
           <!-- Интерактивные кабинеты ВЕРХНИЙ УРОВЕНЬ (левое крыло) -->
           <rect x="220" y="140" width="145" height="110" 
                 class="room" 
-                :class="roomClass('214')"/>
+                v-bind="roomBind('214')"/>
           
           <rect x="220" y="250" width="145" height="110" 
                 class="room" 
-                :class="roomClass('213')"/>
+                v-bind="roomBind('213')"/>
           
           <rect x="220" y="360" width="145" height="80" 
                 class="room" 
-                :class="roomClass('212')"/>
+                v-bind="roomBind('212')"/>
           
           <rect x="220" y="440" width="145" height="100" 
                 class="room" 
-                :class="roomClass('211')"/>
+                v-bind="roomBind('211')"/>
           
           <!-- Интерактивные кабинеты ВЕРХНИЙ УРОВЕНЬ (правое крыло) -->
           <rect x="435" y="140" width="145" height="110" 
                 class="room" 
-                :class="roomClass('215')"/>
+                v-bind="roomBind('215')"/>
           
           <rect x="435" y="250" width="145" height="110" 
                 class="room" 
-                :class="roomClass('216')"/>
+                v-bind="roomBind('216')"/>
           
           <rect x="435" y="360" width="145" height="80" 
                 class="room" 
-                :class="roomClass('217')"/>
+                v-bind="roomBind('217')"/>
           
           <rect x="435" y="440" width="145" height="100" 
                 class="room" 
-                :class="roomClass('218')"/>
+                v-bind="roomBind('218')"/>
           
           <!-- Интерактивные кабинеты НИЖНИЙ УРОВЕНЬ (первый ряд y=640-710) -->
           <!-- 209 - левый маленький -->
           <rect x="60" y="640" width="160" height="70" 
                 class="room" 
-                :class="roomClass('209')"/>
+                v-bind="roomBind('209')"/>
           
           <!-- Лестница/коридор между 220-300 -->
           
           <!-- 219 - правый большой -->
           <rect x="435" y="640" width="185" height="70" 
                 class="room" 
-                :class="roomClass('219')"/>
+                v-bind="roomBind('219')"/>
           
           <!-- 201 - правый крайний -->
           <rect x="620" y="640" width="140" height="70" 
                 class="room" 
-                :class="roomClass('201')"/>
+                v-bind="roomBind('201')"/>
           
           <!-- Интерактивные кабинеты НИЖНИЙ УРОВЕНЬ (второй ряд y=710-750) -->
           <!-- Кабинет (левый маленький) -->
           <rect x="60" y="710" width="102" height="40" 
                 class="room" 
-                :class="roomClass('Кабинет')"/>
+                v-bind="roomBind('Кабинет')"/>
           
           <!-- 206 - рядом с Кабинетом -->
           <rect x="162" y="710" width="58" height="40" 
                 class="room" 
-                :class="roomClass('206')"/>
+                v-bind="roomBind('206')"/>
           
           <!-- Приемная (центр) -->
           <rect x="365" y="640" width="70" height="70" 
                 class="room special" 
-                :class="roomClass('Приемная')"/>
+                v-bind="roomBind('Приемная')"/>
           
           <!-- 202 - правый верхний -->
           <rect x="620" y="710" width="140" height="40" 
                 class="room" 
-                :class="roomClass('202')"/>
+                v-bind="roomBind('202')"/>
           
           <!-- Интерактивные кабинеты НИЖНИЙ УРОВЕНЬ (третий ряд y=750-830) -->
           <!-- 203 - левый крайний -->
           <rect x="60" y="750" width="145" height="80" 
                 class="room" 
-                :class="roomClass('203')"/>
+                v-bind="roomBind('203')"/>
           
           <!-- 204 -->
           <rect x="205" y="750" width="80" height="80" 
                 class="room" 
-                :class="roomClass('204')"/>
+                v-bind="roomBind('204')"/>
           
           <!-- 205 -->
           <rect x="285" y="750" width="110" height="80" 
                 class="room" 
-                :class="roomClass('205')"/>
+                v-bind="roomBind('205')"/>
           
           <!-- 207 -->
           <rect x="395" y="750" width="40" height="80" 
                 class="room" 
-                :class="roomClass('207')"/>
+                v-bind="roomBind('207')"/>
           
           <!-- 208 -->
           <rect x="435" y="750" width="65" height="80" 
                 class="room" 
-                :class="roomClass('208')"/>
+                v-bind="roomBind('208')"/>
           
           <!-- 210 -->
           <rect x="500" y="750" width="64" height="80" 
                 class="room" 
-                :class="roomClass('210')"/>
+                v-bind="roomBind('210')"/>
           
           <!-- Остальные помещения справа -->
           <rect x="564.5" y="750" width="195.5" height="80" 
                 class="room" 
-                :class="roomClass('Помещение')"/>
+                v-bind="roomBind('Помещение')"/>
           
           <!-- Номера кабинетов (текст) - ВЕРХНИЙ УРОВЕНЬ -->
           <text x="292" y="200" class="room-label">214</text>
@@ -252,6 +270,18 @@
 <script>
 import { computed } from 'vue'
 
+// Мапинг room_type (из backend.populate_rooms._get_room_type) в ID CSS-класса.
+// Бэкенд возвращает одну из четырёх лейблов, ключевое слово Приёмная/Приемная
+// обрабатываем локально (в справочнике этого типа нет, рисуем вручную).
+const TYPE_KEY_BY_LABEL = {
+  'Аудитория': 'auditorium',
+  'Лаборатория': 'lab',
+  'Спортзал': 'sport',
+  'Актовый зал': 'hall',
+  'Приёмная': 'admin',
+  'Приемная': 'admin',
+}
+
 export default {
   name: 'MapFloor2',
   props: {
@@ -259,23 +289,56 @@ export default {
     freeRooms: { type: Array, default: () => [] },
     busyRooms: { type: Array, default: () => [] },
     highlightedRoom: { type: String, default: null },
+    // Мап roomNumber → room_type из /rooms/floor/1. Если пустой, все комнаты
+    // рисуются нейтральным типом (other).
+    roomTypes: { type: Object, default: () => ({}) },
   },
-  setup(props) {
+  emits: ['room-click'],
+  setup(props, { emit }) {
     const freeSet = computed(() => new Set(props.freeRooms.map((r) => String(r).trim())))
     const busySet = computed(() => new Set(props.busyRooms.map((r) => String(r).trim())))
     const target = computed(() => (props.highlightedRoom ? String(props.highlightedRoom).trim() : null))
 
-    const roomClass = (roomNumber) => {
+    // Номерные кабинеты (201-219 и тп) кликабельны и получают data-room.
+    // Строковые ("Кабинет", "Приемная", "Помещение") — только визуальные.
+    const roomBind = (roomNumber) => {
       const num = String(roomNumber).trim()
+      const isInteractive = /^\d+$/.test(num)
+      const typeLabel = isInteractive ? props.roomTypes[num] : null
+      let typeKey = TYPE_KEY_BY_LABEL[typeLabel] || 'other'
+      if (!isInteractive) {
+        // Для именованных в SVG помещений класс подбираем вручную.
+        if (num.toLowerCase().includes('прием') || num.toLowerCase().includes('приём')) {
+          typeKey = 'admin'
+        } else {
+          typeKey = 'other'
+        }
+      }
       return {
-        'room--free': props.highlightFreeRooms && freeSet.value.has(num),
-        'room--busy': props.highlightFreeRooms && busySet.value.has(num),
-        'room--target': target.value !== null && target.value === num,
+        'data-room': isInteractive ? num : null,
+        class: [
+          `room--type-${typeKey}`,
+          {
+            'room--interactive': isInteractive,
+            'room--free': props.highlightFreeRooms && freeSet.value.has(num),
+            'room--busy': props.highlightFreeRooms && busySet.value.has(num),
+            'room--target': target.value !== null && target.value === num,
+          },
+        ],
       }
     }
 
+    const handleSvgClick = (event) => {
+      const t = event.target
+      if (!t || typeof t.getAttribute !== 'function') return
+      const num = t.getAttribute('data-room')
+      if (!num) return
+      emit('room-click', num)
+    }
+
     return {
-      roomClass,
+      roomBind,
+      handleSvgClick,
     }
   }
 }
@@ -343,12 +406,32 @@ text {
   font-weight: 600;
 }
 
-/* Кабинеты - по умолчанию прозрачные, некликабельные */
+/* Кабинеты. Базовый .room прозрачный (фолбэк), цвет и тень приходят через
+   .room--type-XXX. Плюс лёгкая внутренняя тень через SVG-фильтр — она живёт на
+   родительском звене .map-container svg, чтобы не пересчитывать для каждого <rect>. */
 .room {
   fill: transparent;
   stroke: transparent;
   cursor: default;
-  transition: fill 0.4s ease, stroke 0.4s ease;
+  transition: fill 0.25s ease, stroke 0.25s ease, fill-opacity 0.25s ease, stroke-opacity 0.25s ease;
+  filter: url(#room-shadow);
+}
+
+.room.room--interactive {
+  cursor: pointer;
+}
+
+.room--type-auditorium { fill: #3b82f6; fill-opacity: 0.10; stroke: #2563eb; stroke-opacity: 0.5; stroke-width: 1.2; }
+.room--type-lab        { fill: #8b5cf6; fill-opacity: 0.12; stroke: #7c3aed; stroke-opacity: 0.55; stroke-width: 1.2; }
+.room--type-sport      { fill: #22c55e; fill-opacity: 0.12; stroke: #16a34a; stroke-opacity: 0.55; stroke-width: 1.2; }
+.room--type-hall       { fill: #f97316; fill-opacity: 0.12; stroke: #ea580c; stroke-opacity: 0.55; stroke-width: 1.2; }
+.room--type-admin      { fill: #f59e0b; fill-opacity: 0.14; stroke: #d97706; stroke-opacity: 0.6;  stroke-width: 1.2; }
+.room--type-other      { fill: #94a3b8; fill-opacity: 0.08; stroke: #64748b; stroke-opacity: 0.45; stroke-width: 1; }
+
+.room.room--interactive:hover {
+  fill-opacity: 0.25;
+  stroke-opacity: 1;
+  stroke-width: 2;
 }
 
 .room.room--target {
