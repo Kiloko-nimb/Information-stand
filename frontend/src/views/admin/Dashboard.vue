@@ -115,6 +115,59 @@
         </div>
       </section>
 
+      <!-- Groups -->
+      <section v-if="currentTab === 'groups'">
+        <div class="section-header">
+          <h2><GraduationCap :size="22" class="section-icon" /> Группы</h2>
+          <div class="header-actions">
+            <button class="btn-primary" @click="openGroupForm()" title="Добавить новую группу вручную">
+              <Plus :size="16" /> Добавить
+            </button>
+            <button class="btn-secondary" @click="confirmSyncGroups()"
+                    title="Импортировать группы из загруженного расписания">
+              <RefreshCw :size="16" /> Синхронизировать
+            </button>
+          </div>
+        </div>
+        <p class="section-hint">
+          <Info :size="14" /> Справочник учебных групп. Именно этот список видят на странице расписания.
+          Нажмите <strong>«Синхронизировать»</strong>, чтобы подтянуть группы из загруженного расписания.
+          При переименовании группы все записи расписания обновятся автоматически.
+        </p>
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Курс</th>
+                <th>Специальность</th>
+                <th>Статус</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="g in groupList" :key="g.id">
+                <td>{{ g.name }}</td>
+                <td>{{ g.course || '—' }}</td>
+                <td>{{ g.specialty || '—' }}</td>
+                <td><span :class="['badge', g.is_active ? 'badge-green' : 'badge-red']">
+                  <component :is="g.is_active ? Eye : EyeOff" :size="12" />
+                  {{ g.is_active ? 'Активна' : 'Скрыта' }}
+                </span></td>
+                <td class="actions">
+                  <button @click="openGroupForm(g)" title="Изменить эту группу"><Pencil :size="15" /></button>
+                  <button @click="deleteGroup(g)" title="Удалить группу из справочника" class="action-danger"><Trash2 :size="15" /></button>
+                </td>
+              </tr>
+              <tr v-if="!groupList.length"><td colspan="5" class="empty">
+                Пока нет групп. Нажмите <strong>«Синхронизировать»</strong>, чтобы импортировать из расписания,
+                или <strong>«Добавить»</strong> вручную.
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Rooms -->
       <section v-if="currentTab === 'rooms'">
         <div class="section-header">
@@ -320,13 +373,14 @@ import { useRouter } from 'vue-router'
 import {
   Shield, Newspaper, Users, School, BarChart3, LogOut, Plus,
   Pencil, Trash2, X, Eye, EyeOff, Info, Eraser, AlertTriangle, CheckCircle2,
-  RefreshCw
+  RefreshCw, GraduationCap
 } from 'lucide-vue-next'
 import {
   isAuthenticated, logout as doLogoutService, getToken,
   adminListNews, adminCreateNews, adminUpdateNews, adminDeleteNews,
   adminListStaff, adminCreateStaff, adminUpdateStaff, adminDeleteStaff,
-  adminListRooms, adminCreateRoom, adminUpdateRoom, adminDeleteRoom, adminCleanupRooms
+  adminListRooms, adminCreateRoom, adminUpdateRoom, adminDeleteRoom, adminCleanupRooms,
+  adminListGroups, adminCreateGroup, adminUpdateGroup, adminDeleteGroup, adminSyncGroups
 } from '../../services/adminService'
 import api from '../../services/api'
 
@@ -335,6 +389,7 @@ const router = useRouter()
 const tabs = [
   { key: 'news', label: 'Новости', icon: Newspaper },
   { key: 'staff', label: 'Сотрудники', icon: Users },
+  { key: 'groups', label: 'Группы', icon: GraduationCap },
   { key: 'rooms', label: 'Кабинеты', icon: School },
   { key: 'analytics', label: 'Аналитика', icon: BarChart3 },
 ]
@@ -343,6 +398,7 @@ const currentTab = ref('news')
 // Data lists
 const newsList = ref([])
 const staffList = ref([])
+const groupList = ref([])
 const roomList = ref([])
 const stats = ref(null)
 const statsLoading = ref(false)
@@ -469,6 +525,7 @@ watch(currentTab, () => loadData())
 async function loadData() {
   if (currentTab.value === 'news') newsList.value = await adminListNews()
   if (currentTab.value === 'staff') staffList.value = await adminListStaff()
+  if (currentTab.value === 'groups') groupList.value = await adminListGroups()
   if (currentTab.value === 'rooms') roomList.value = await adminListRooms()
   if (currentTab.value === 'analytics') await loadStats()
 }
@@ -645,6 +702,86 @@ async function deleteStaff(item) {
   }
 }
 
+// ── Groups ──
+const GROUP_FIELDS = [
+  {
+    key: 'name', label: 'Название группы', required: true,
+    placeholder: 'Например: 9ИС-1.23',
+    hint: 'Точное название как в расписании. При переименовании все записи расписания обновятся автоматически.',
+  },
+  {
+    key: 'course', label: 'Курс', type: 'number', step: '1',
+    placeholder: '1',
+    hint: 'Необязательно. Число от 1 до 6.',
+  },
+  {
+    key: 'specialty', label: 'Специальность',
+    placeholder: 'Информационные системы и программирование',
+    hint: 'Необязательно. Полное название специальности.',
+  },
+  {
+    key: 'is_active', label: 'Статус',
+    type: 'select',
+    options: [{ value: true, label: 'Активна (видна в расписании)' }, { value: false, label: 'Скрыта (не показывается)' }],
+    hint: '«Скрытая» группа не будет отображаться на странице расписания, но останется в базе.',
+  },
+]
+
+function openGroupForm(item = null) {
+  formError.value = ''
+  modalType.value = 'group'
+  modalEditId.value = item?.id || null
+  modalTitle.value = item ? 'Редактировать группу' : 'Новая группа'
+  modalIntro.value = item
+    ? 'При изменении названия группы все записи расписания с этим именем будут переименованы автоматически.'
+    : 'Группа появится в списке на странице расписания. Можно также импортировать группы из расписания кнопкой «Синхронизировать».'
+  modalFields.value = GROUP_FIELDS
+  Object.keys(modalData).forEach(k => delete modalData[k])
+  if (item) {
+    Object.assign(modalData, { name: item.name, course: item.course || '', specialty: item.specialty || '', is_active: item.is_active })
+  } else {
+    Object.assign(modalData, { name: '', course: '', specialty: '', is_active: true })
+  }
+  modalOpen.value = true
+}
+
+async function deleteGroup(item) {
+  const ok = await askConfirm({
+    title: 'Удалить группу?',
+    message: `Группа <strong>«${escapeHtml(item.name)}»</strong> будет удалена из справочника.`,
+    detail: 'Записи расписания для этой группы останутся, но группа пропадёт из списка на странице расписания.',
+  })
+  if (!ok) return
+  try {
+    await adminDeleteGroup(item.id)
+    groupList.value = await adminListGroups()
+    showToast('Группа удалена', 'success')
+  } catch (e) {
+    showToast('Не удалось удалить группу', 'error')
+  }
+}
+
+async function confirmSyncGroups() {
+  const ok = await askConfirm({
+    title: 'Синхронизировать группы?',
+    message: 'Все группы из текущего расписания будут добавлены в справочник. Существующие не дублируются.',
+    confirmLabel: 'Да, импортировать',
+  })
+  if (!ok) return
+  try {
+    const resp = await adminSyncGroups()
+    groupList.value = await adminListGroups()
+    const count = resp?.added ?? 0
+    if (count === 0) {
+      showToast('Новых групп не найдено — справочник актуален', 'info', 4500)
+    } else {
+      showToast(`Добавлено ${count} ${pluralize(count, 'группа', 'группы', 'групп')}`, 'success', 4500)
+    }
+  } catch (e) {
+    showToast('Не удалось синхронизировать группы', 'error')
+  }
+}
+
 // ── Rooms ──
 const ROOM_FIELDS = [
   {
@@ -755,6 +892,13 @@ async function saveModal() {
       if (modalEditId.value) await adminUpdateStaff(modalEditId.value, payload)
       else await adminCreateStaff(payload)
       staffList.value = await adminListStaff()
+    } else if (modalType.value === 'group') {
+      if (payload.course) payload.course = parseInt(payload.course)
+      else payload.course = null
+      if (typeof payload.is_active === 'string') payload.is_active = payload.is_active === 'true'
+      if (modalEditId.value) await adminUpdateGroup(modalEditId.value, payload)
+      else await adminCreateGroup(payload)
+      groupList.value = await adminListGroups()
     } else if (modalType.value === 'room') {
       if (modalEditId.value) await adminUpdateRoom(modalEditId.value, payload)
       else await adminCreateRoom(payload)

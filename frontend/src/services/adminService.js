@@ -118,3 +118,28 @@ export async function adminCleanupRooms() {
   const { data } = await api.delete(`/admin/rooms/invalid`, { headers: authHeaders() })
   return data
 }
+
+// Groups
+export async function adminListGroups(skip = 0, limit = 200) {
+  const { data } = await api.get(`/admin/groups`, { params: { skip, limit }, headers: authHeaders() })
+  return data
+}
+
+export async function adminCreateGroup(payload) {
+  const { data } = await api.post(`/admin/groups`, payload, { headers: authHeaders() })
+  return data
+}
+
+export async function adminUpdateGroup(id, payload) {
+  const { data } = await api.put(`/admin/groups/${id}`, payload, { headers: authHeaders() })
+  return data
+}
+
+export async function adminDeleteGroup(id) {
+  await api.delete(`/admin/groups/${id}`, { headers: authHeaders() })
+}
+
+export async function adminSyncGroups() {
+  const { data } = await api.post(`/admin/groups/sync`, null, { headers: authHeaders() })
+  return data
+}

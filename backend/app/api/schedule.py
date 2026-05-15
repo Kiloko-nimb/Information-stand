@@ -92,9 +92,21 @@ async def get_room_schedule(
 async def get_all_groups(db: Session = Depends(get_db)):
     """Получить список всех групп.
 
-    Фильтрует мусорные имена («Ауд.», «.», пустые) из старых импортов,
-    чтобы фронт не показывал «не группа а набор букв».
+    Если справочник ``groups`` заполнен — берём оттуда (только активные).
+    Иначе фолбэк на ``DISTINCT group_name`` из расписания.
     """
+    from app.models.group import Group
+
+    catalog_groups = (
+        db.query(Group)
+        .filter(Group.is_active == True)  # noqa: E712
+        .order_by(Group.name)
+        .all()
+    )
+    if catalog_groups:
+        return [{"name": g.name} for g in catalog_groups]
+
+    # Фолбэк — справочник ещё не заполнен
     groups = (
         db.query(Schedule.group_name)
         .distinct()

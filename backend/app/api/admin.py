@@ -15,7 +15,10 @@ from app.models.staff import Staff
 from app.models.room import Room
 from app.models.news import News
 from app.models.admin import Admin
+from app.models.group import Group
+from app.models.schedule import Schedule
 from app.utils.room_names import is_valid_room_number
+from app.utils.group_names import is_valid_group_name
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -87,6 +90,32 @@ class StaffOut(BaseModel):
     photo_url: Optional[str]
     email: Optional[str]
     phone: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+# ── Группы ──
+class GroupCreate(BaseModel):
+    name: str
+    course: Optional[int] = None
+    specialty: Optional[str] = None
+    is_active: bool = True
+
+
+class GroupUpdate(BaseModel):
+    name: Optional[str] = None
+    course: Optional[int] = None
+    specialty: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class GroupOut(BaseModel):
+    id: int
+    name: str
+    course: Optional[int]
+    specialty: Optional[str]
+    is_active: bool
 
     class Config:
         from_attributes = True
@@ -331,6 +360,133 @@ async def admin_cleanup_invalid_rooms(
         db.delete(room)
     db.commit()
     return {"deleted": deleted_count, "message": f"Удалено {deleted_count} некорректных записей кабинетов"}
+
+
+# ═══════════════════════════════════════════════════════════
+#  Группы CRUD
+# ═══════════════════════════════════════════════════════════
+
+@router.get("/groups", response_model=List[GroupOut])
+async def admin_list_groups(
+    skip: int = 0,
+    limit: int = 200,
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    return (
+        db.query(Group)
+        .order_by(Group.name)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+@router.post("/groups", response_model=GroupOut, status_code=status.HTTP_201_CREATED)
+async def admin_create_group(
+    data: GroupCreate,
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    name = data.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Имя группы не может быть пустым")
+    exists = db.query(Group).filter(Group.name == name).first()
+    if exists:
+        raise HTTPException(status_code=409, detail=f"Группа «{name}» уже существует")
+    group = Group(name=name, course=data.course, specialty=data.specialty, is_active=data.is_active)
+    db.add(group)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Группа с таким именем уже существует")
+    db.refresh(group)
+    return group
+
+
+@router.put("/groups/{group_id}", response_model=GroupOut)
+async def admin_update_group(
+    group_id: int,
+    data: GroupUpdate,
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Группа не найдена")
+
+    updates = data.model_dump(exclude_unset=True)
+    old_name = group.name
+
+    if "name" in updates and updates["name"] is not None:
+        new_name = updates["name"].strip()
+        if not new_name:
+            raise HTTPException(status_code=422, detail="Имя группы не может быть пустым")
+        duplicate = (
+            db.query(Group)
+            .filter(Group.name == new_name, Group.id != group_id)
+            .first()
+        )
+        if duplicate:
+            raise HTTPException(status_code=409, detail=f"Группа «{new_name}» уже существует")
+        updates["name"] = new_name
+
+        # Переименовать группу во всех записях расписания
+        if new_name != old_name:
+            db.query(Schedule).filter(Schedule.group_name == old_name).update(
+                {Schedule.group_name: new_name}, synchronize_session="fetch"
+            )
+
+    for key, value in updates.items():
+        setattr(group, key, value)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Группа с таким именем уже существует")
+    db.refresh(group)
+    return group
+
+
+@router.delete("/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_delete_group(
+    group_id: int,
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Группа не найдена")
+    db.delete(group)
+    db.commit()
+
+
+@router.post("/groups/sync", status_code=status.HTTP_200_OK)
+async def admin_sync_groups_from_schedule(
+    db: Session = Depends(get_db),
+    _admin: Admin = Depends(require_admin),
+):
+    """Импортировать группы из расписания в справочник (без дублирования)."""
+    schedule_groups = (
+        db.query(Schedule.group_name)
+        .distinct()
+        .order_by(Schedule.group_name)
+        .all()
+    )
+    existing_names = {g.name for g in db.query(Group.name).all()}
+    added = 0
+    for (gname,) in schedule_groups:
+        if not gname or not is_valid_group_name(gname):
+            continue
+        if gname in existing_names:
+            continue
+        db.add(Group(name=gname))
+        existing_names.add(gname)
+        added += 1
+    db.commit()
+    return {"added": added, "message": f"Добавлено {added} групп из расписания"}
 
 
 @router.delete("/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
