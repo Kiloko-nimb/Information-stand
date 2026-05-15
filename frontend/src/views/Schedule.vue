@@ -387,7 +387,13 @@ export default {
       }
     }
 
+    // Ставим в true перед программным scrollTo, чтобы onDateScroll не вызывал
+    // extendDateRange. Иначе во время scroll'а через край размер массива
+    // меняется и считанный таргет становится неверным.
+    let suppressScrollEdgeCheck = false
+
     const onDateScroll = (event) => {
+      if (suppressScrollEdgeCheck) return
       const el = event.currentTarget
       if (!el) return
       const EDGE = 120
@@ -397,17 +403,31 @@ export default {
       if (atStart) extendDateRange('backward')
     }
 
-    // Центрирует выбранную дату в видимой области карусели. Смещение
-    // вычисляем от .date-card.active относительно контейнера через offsetLeft
-    // (надёжнее getBoundingClientRect, тк не зависит от вьюпорта).
-    const scrollSelectedIntoCenter = (smooth = true) => {
+    // Центрирует .date-card.active в видимой области карусели. Используем
+    // getBoundingClientRect, а не offsetLeft: у .date-cards-container нет
+    // position:relative, поэтому offsetParent у .date-card — body, и offsetLeft
+    // возвращает координату относительно всей страницы, а не скролл-контейнера.
+    const scrollSelectedIntoCenter = () => {
       nextTick(() => {
         const container = dateScrollEl.value
         if (!container) return
         const active = container.querySelector('.date-card.active')
         if (!active) return
-        const target = active.offsetLeft + active.offsetWidth / 2 - container.clientWidth / 2
-        container.scrollTo({ left: Math.max(0, target), behavior: smooth ? 'smooth' : 'instant' })
+        const containerRect = container.getBoundingClientRect()
+        const activeRect = active.getBoundingClientRect()
+        const delta =
+          (activeRect.left + activeRect.width / 2) -
+          (containerRect.left + containerRect.width / 2)
+        const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth)
+        const target = Math.max(0, Math.min(maxScroll, container.scrollLeft + delta))
+        suppressScrollEdgeCheck = true
+        container.scrollTo({ left: target, behavior: 'instant' })
+        // Снимаем флаг после того, как браузер обработает scroll-событие.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            suppressScrollEdgeCheck = false
+          })
+        })
       })
     }
 
@@ -428,7 +448,7 @@ export default {
       const picked = new Date(yyyy, mm - 1, dd)
       selectedDate.value = picked
       generateDateRange()
-      scrollSelectedIntoCenter(false)
+      scrollSelectedIntoCenter()
       debouncedSearch()
     }
 
@@ -496,8 +516,13 @@ export default {
       }, 180)
     }
 
+    // При любом выборе даты пересобираем dateRange, чтобы активная была
+    // в центре массива (индекс DATE_RANGE_BACKWARD = 7) и вокруг было
+    // достаточно карточек, чтобы скролл был возможен. Иначе при клике
+    // по крайней карточке maxScroll-кламп не даёт её реально центрировать.
     const selectDate = (date) => {
       selectedDate.value = date
+      generateDateRange()
       scrollSelectedIntoCenter()
       debouncedSearch()
     }
@@ -507,7 +532,7 @@ export default {
       newDate.setDate(newDate.getDate() - 1)
       selectedDate.value = newDate
       generateDateRange()
-      scrollSelectedIntoCenter(false)
+      scrollSelectedIntoCenter()
       debouncedSearch()
     }
 
@@ -516,7 +541,7 @@ export default {
       newDate.setDate(newDate.getDate() + 1)
       selectedDate.value = newDate
       generateDateRange()
-      scrollSelectedIntoCenter(false)
+      scrollSelectedIntoCenter()
       debouncedSearch()
     }
 
@@ -528,7 +553,7 @@ export default {
     const goToToday = () => {
       selectedDate.value = new Date()
       generateDateRange()
-      scrollSelectedIntoCenter(false)
+      scrollSelectedIntoCenter()
       debouncedSearch()
     }
 
@@ -785,7 +810,7 @@ export default {
       loadTeachers()
       loadRooms()
       generateDateRange()
-      scrollSelectedIntoCenter(false)
+      scrollSelectedIntoCenter()
     })
 
     onUnmounted(() => {
