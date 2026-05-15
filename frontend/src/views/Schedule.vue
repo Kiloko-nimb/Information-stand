@@ -248,7 +248,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 import { generateQRCode } from '../utils/qrGenerator'
@@ -397,6 +397,20 @@ export default {
       if (atStart) extendDateRange('backward')
     }
 
+    // Центрирует выбранную дату в видимой области карусели. Смещение
+    // вычисляем от .date-card.active относительно контейнера через offsetLeft
+    // (надёжнее getBoundingClientRect, тк не зависит от вьюпорта).
+    const scrollSelectedIntoCenter = (smooth = true) => {
+      nextTick(() => {
+        const container = dateScrollEl.value
+        if (!container) return
+        const active = container.querySelector('.date-card.active')
+        if (!active) return
+        const target = active.offsetLeft + active.offsetWidth / 2 - container.clientWidth / 2
+        container.scrollTo({ left: Math.max(0, target), behavior: smooth ? 'smooth' : 'instant' })
+      })
+    }
+
     const openDatePicker = () => {
       const el = datePickerEl.value
       if (!el) return
@@ -414,6 +428,7 @@ export default {
       const picked = new Date(yyyy, mm - 1, dd)
       selectedDate.value = picked
       generateDateRange()
+      scrollSelectedIntoCenter(false)
       debouncedSearch()
     }
 
@@ -483,6 +498,7 @@ export default {
 
     const selectDate = (date) => {
       selectedDate.value = date
+      scrollSelectedIntoCenter()
       debouncedSearch()
     }
 
@@ -491,6 +507,7 @@ export default {
       newDate.setDate(newDate.getDate() - 1)
       selectedDate.value = newDate
       generateDateRange()
+      scrollSelectedIntoCenter(false)
       debouncedSearch()
     }
 
@@ -499,6 +516,7 @@ export default {
       newDate.setDate(newDate.getDate() + 1)
       selectedDate.value = newDate
       generateDateRange()
+      scrollSelectedIntoCenter(false)
       debouncedSearch()
     }
 
@@ -510,6 +528,7 @@ export default {
     const goToToday = () => {
       selectedDate.value = new Date()
       generateDateRange()
+      scrollSelectedIntoCenter(false)
       debouncedSearch()
     }
 
@@ -766,6 +785,7 @@ export default {
       loadTeachers()
       loadRooms()
       generateDateRange()
+      scrollSelectedIntoCenter(false)
     })
 
     onUnmounted(() => {
