@@ -181,10 +181,10 @@
         <text x="712.34" y="737.92" class="room-label">302</text>
         <text x="668.29" y="683.65" class="room-label">301</text>
         <text x="480.97" y="683.53" class="room-label">318</text>
-        <text x="311.92" y="683.38" class="room-label small">Туалет М</text>
-        <text x="253.99" y="683.93" class="room-label small">Лестница</text>
-        <text x="546.01" y="683.65" class="room-label small">Лестница</text>
-        <text x="400.0" y="118.97" class="room-label small">Лестница</text>
+        <text x="311.92" y="683.38" class="room-label">М</text>
+        <text x="253.99" y="683.93" class="room-label">Л</text>
+        <text x="546.01" y="683.65" class="room-label">Л</text>
+        <text x="400.0" y="118.97" class="room-label">Л</text>
       </svg>
     </div>
   </div>
@@ -339,14 +339,16 @@ text {
   cursor: pointer;
 }
 
-.room--type-auditorium { fill: #3b82f6; fill-opacity: 0.10; stroke: #2563eb; stroke-opacity: 0.5; stroke-width: 1.2; }
-.room--type-lab        { fill: #8b5cf6; fill-opacity: 0.12; stroke: #7c3aed; stroke-opacity: 0.55; stroke-width: 1.2; }
-.room--type-sport      { fill: #22c55e; fill-opacity: 0.12; stroke: #16a34a; stroke-opacity: 0.55; stroke-width: 1.2; }
-.room--type-hall       { fill: #f97316; fill-opacity: 0.12; stroke: #ea580c; stroke-opacity: 0.55; stroke-width: 1.2; }
-.room--type-admin      { fill: #f59e0b; fill-opacity: 0.14; stroke: #d97706; stroke-opacity: 0.6;  stroke-width: 1.2; }
-.room--type-wc         { fill: #64748b; fill-opacity: 0.10; stroke: #475569; stroke-opacity: 0.45; stroke-width: 1; }
-.room--type-stairs     { fill: #6366f1; fill-opacity: 0.12; stroke: #4f46e5; stroke-opacity: 0.5;  stroke-width: 1.2; stroke-dasharray: 6 4; }
-.room--type-other      { fill: #94a3b8; fill-opacity: 0.08; stroke: #64748b; stroke-opacity: 0.45; stroke-width: 1; }
+.room--type-auditorium { fill: #3b82f6; fill-opacity: 0.22; stroke: #1d4ed8; stroke-opacity: 0.7;  stroke-width: 1.3; }
+.room--type-lab        { fill: #8b5cf6; fill-opacity: 0.26; stroke: #6d28d9; stroke-opacity: 0.75; stroke-width: 1.3; }
+.room--type-sport      { fill: #22c55e; fill-opacity: 0.26; stroke: #15803d; stroke-opacity: 0.75; stroke-width: 1.3; }
+.room--type-hall       { fill: #f97316; fill-opacity: 0.26; stroke: #c2410c; stroke-opacity: 0.75; stroke-width: 1.3; }
+.room--type-admin      { fill: #f59e0b; fill-opacity: 0.30; stroke: #b45309; stroke-opacity: 0.8;  stroke-width: 1.3; }
+/* Туалеты — отчётливый тёплый розовый, чтобы не сливаться с пустым (--other) и не путаться с лестницей. */
+.room--type-wc         { fill: #ec4899; fill-opacity: 0.22; stroke: #be185d; stroke-opacity: 0.7;  stroke-width: 1.3; }
+.room--type-stairs     { fill: #6366f1; fill-opacity: 0.26; stroke: #4338ca; stroke-opacity: 0.75; stroke-width: 1.3; stroke-dasharray: 6 4; }
+/* Кабинеты без известного типа — почти прозрачные, чтобы не конкурировать с цветными типами и не выглядеть «использованной» подсветкой. */
+.room--type-other      { fill: #cbd5e1; fill-opacity: 0.10; stroke: #94a3b8; stroke-opacity: 0.55; stroke-width: 1; }
 
 .room.room--interactive:hover {
   fill-opacity: 0.25;

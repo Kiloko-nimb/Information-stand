@@ -136,9 +136,12 @@
           <span class="legend-item"><span class="legend-swatch legend-swatch--sport"></span>Спортзал</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--hall"></span>Актовый зал</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Администрация</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--wc"></span>Туалет</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--stairs"></span>Лестница</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--wc"></span>Туалет (<b>Ж</b>/<b>М</b>)</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--stairs"></span>Лестница (<b>Л</b>)</span>
         </div>
+        <p v-if="currentFloor !== 1" class="map-legend-hint">
+          На карте: <b>Л</b> — лестница, <b>Ж</b> — женский туалет, <b>М</b> — мужской туалет.
+        </p>
       </template>
 
 
@@ -834,6 +837,19 @@ h1 {
   color: var(--text-muted);
 }
 
+.map-legend-hint {
+  margin: 0.4rem 0 0;
+  padding: 0 0.2rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.map-legend-hint b {
+  color: var(--text);
+  font-weight: 700;
+}
+
 .legend-title {
   font-weight: 700;
   color: var(--text);
@@ -853,13 +869,14 @@ h1 {
   display: inline-block;
 }
 
-.legend-swatch--auditorium { background: rgba(59, 130, 246, 0.18);  border-color: rgba(37, 99, 235, 0.45); }
-.legend-swatch--lab        { background: rgba(139, 92, 246, 0.22);  border-color: rgba(124, 58, 237, 0.5); }
-.legend-swatch--sport      { background: rgba(34, 197, 94, 0.22);   border-color: rgba(22, 163, 74, 0.5); }
-.legend-swatch--hall       { background: rgba(249, 115, 22, 0.22);  border-color: rgba(234, 88, 12, 0.5); }
-.legend-swatch--admin      { background: rgba(245, 158, 11, 0.25);  border-color: rgba(217, 119, 6, 0.55); }
-.legend-swatch--wc         { background: rgba(100, 116, 139, 0.18); border-color: rgba(71, 85, 105, 0.45); }
-.legend-swatch--stairs     { background: rgba(99, 102, 241, 0.20);  border-color: rgba(79, 70, 229, 0.5); background-image: repeating-linear-gradient(135deg, transparent 0, transparent 3px, rgba(79, 70, 229, 0.45) 3px, rgba(79, 70, 229, 0.45) 4px); }
+/* Цвета свотчей в легенде должны совпадать с .room--type-* в MapFloor*.vue. */
+.legend-swatch--auditorium { background: rgba(59, 130, 246, 0.32);  border-color: rgba(29, 78, 216, 0.7); }
+.legend-swatch--lab        { background: rgba(139, 92, 246, 0.36);  border-color: rgba(109, 40, 217, 0.75); }
+.legend-swatch--sport      { background: rgba(34, 197, 94, 0.36);   border-color: rgba(21, 128, 61, 0.75); }
+.legend-swatch--hall       { background: rgba(249, 115, 22, 0.36);  border-color: rgba(194, 65, 12, 0.75); }
+.legend-swatch--admin      { background: rgba(245, 158, 11, 0.40);  border-color: rgba(180, 83, 9, 0.8); }
+.legend-swatch--wc         { background: rgba(236, 72, 153, 0.32);  border-color: rgba(190, 24, 93, 0.7); }
+.legend-swatch--stairs     { background: rgba(99, 102, 241, 0.36);  border-color: rgba(67, 56, 202, 0.75); background-image: repeating-linear-gradient(135deg, transparent 0, transparent 3px, rgba(67, 56, 202, 0.6) 3px, rgba(67, 56, 202, 0.6) 4px); }
 
 /* ── Заглушка для 1-го этажа ── */
 .floor-placeholder {

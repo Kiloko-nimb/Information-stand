@@ -143,8 +143,7 @@
           <path d="M 220,173.75 H 364" stroke="#1a1a1a" stroke-width="2.5" id="path134" style="display:inline"/>
 
         <!-- Кабинеты и именованные помещения. -->
-<rect x="415.3" y="122.62" width="143.06" height="109.51" rx="4" ry="4" class="room" v-bind="roomBind('215')"/>
-        <rect x="220.95" y="249.87" width="144.6" height="111.05" rx="4" ry="4" class="room" v-bind="roomBind('213')"/>
+<rect x="220.95" y="249.87" width="144.6" height="111.05" rx="4" ry="4" class="room" v-bind="roomBind('213')"/>
         <rect x="220.95" y="360.93" width="143.83" height="79.05" rx="4" ry="4" class="room" v-bind="roomBind('212')"/>
         <rect x="434.58" y="249.87" width="143.83" height="109.9" rx="4" ry="4" class="room" v-bind="roomBind('216')"/>
         <rect x="435.35" y="360.93" width="144.22" height="79.05" rx="4" ry="4" class="room" v-bind="roomBind('217')"/>
@@ -166,10 +165,10 @@
         <rect x="504.56" y="641.26" width="63.05" height="68.44" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-right')"/>
         <rect x="394.82" y="750.1" width="40.35" height="79.35" rx="4" ry="4" class="room" v-bind="roomBind('rect-reception')"/>
         <rect x="220.86" y="141.51" width="144.51" height="107.7" rx="4" ry="4" class="room" v-bind="roomBind('214')"/>
+        <rect x="435.17" y="141.24" width="143.15" height="107.97" rx="4" ry="4" class="room" v-bind="roomBind('215')"/>
 
         <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
-<text x="486.83" y="185.38" class="room-label">215</text>
-        <text x="293.25" y="313.39" class="room-label">213</text>
+<text x="293.25" y="313.39" class="room-label">213</text>
         <text x="292.87" y="408.45" class="room-label">212</text>
         <text x="506.5" y="312.82" class="room-label">216</text>
         <text x="507.46" y="408.45" class="room-label">217</text>
@@ -185,12 +184,13 @@
         <text x="245.05" y="797.04" class="room-label">208</text>
         <text x="132.84" y="797.23" class="room-label">210</text>
         <text x="140.15" y="683.66" class="room-label">209</text>
-        <text x="332.52" y="683.12" class="room-label small">Туалет Ж</text>
-        <text x="399.3" y="118.57" class="room-label small">Лестница</text>
-        <text x="260.19" y="683.19" class="room-label small">Лестница</text>
-        <text x="536.09" y="683.48" class="room-label small">Лестница</text>
+        <text x="332.52" y="683.12" class="room-label">Ж</text>
+        <text x="399.3" y="118.57" class="room-label">Л</text>
+        <text x="260.19" y="683.19" class="room-label">Л</text>
+        <text x="536.09" y="683.48" class="room-label">Л</text>
         <text x="415.0" y="797.77" class="room-label small">Приёмная</text>
         <text x="293.12" y="203.36" class="room-label">214</text>
+        <text x="506.75" y="203.23" class="room-label">215</text>
       </svg>
     </div>
   </div>
@@ -345,14 +345,16 @@ text {
   cursor: pointer;
 }
 
-.room--type-auditorium { fill: #3b82f6; fill-opacity: 0.10; stroke: #2563eb; stroke-opacity: 0.5; stroke-width: 1.2; }
-.room--type-lab        { fill: #8b5cf6; fill-opacity: 0.12; stroke: #7c3aed; stroke-opacity: 0.55; stroke-width: 1.2; }
-.room--type-sport      { fill: #22c55e; fill-opacity: 0.12; stroke: #16a34a; stroke-opacity: 0.55; stroke-width: 1.2; }
-.room--type-hall       { fill: #f97316; fill-opacity: 0.12; stroke: #ea580c; stroke-opacity: 0.55; stroke-width: 1.2; }
-.room--type-admin      { fill: #f59e0b; fill-opacity: 0.14; stroke: #d97706; stroke-opacity: 0.6;  stroke-width: 1.2; }
-.room--type-wc         { fill: #64748b; fill-opacity: 0.10; stroke: #475569; stroke-opacity: 0.45; stroke-width: 1; }
-.room--type-stairs     { fill: #6366f1; fill-opacity: 0.12; stroke: #4f46e5; stroke-opacity: 0.5;  stroke-width: 1.2; stroke-dasharray: 6 4; }
-.room--type-other      { fill: #94a3b8; fill-opacity: 0.08; stroke: #64748b; stroke-opacity: 0.45; stroke-width: 1; }
+.room--type-auditorium { fill: #3b82f6; fill-opacity: 0.22; stroke: #1d4ed8; stroke-opacity: 0.7;  stroke-width: 1.3; }
+.room--type-lab        { fill: #8b5cf6; fill-opacity: 0.26; stroke: #6d28d9; stroke-opacity: 0.75; stroke-width: 1.3; }
+.room--type-sport      { fill: #22c55e; fill-opacity: 0.26; stroke: #15803d; stroke-opacity: 0.75; stroke-width: 1.3; }
+.room--type-hall       { fill: #f97316; fill-opacity: 0.26; stroke: #c2410c; stroke-opacity: 0.75; stroke-width: 1.3; }
+.room--type-admin      { fill: #f59e0b; fill-opacity: 0.30; stroke: #b45309; stroke-opacity: 0.8;  stroke-width: 1.3; }
+/* Туалеты — отчётливый тёплый розовый, чтобы не сливаться с пустым (--other) и не путаться с лестницей. */
+.room--type-wc         { fill: #ec4899; fill-opacity: 0.22; stroke: #be185d; stroke-opacity: 0.7;  stroke-width: 1.3; }
+.room--type-stairs     { fill: #6366f1; fill-opacity: 0.26; stroke: #4338ca; stroke-opacity: 0.75; stroke-width: 1.3; stroke-dasharray: 6 4; }
+/* Кабинеты без известного типа — почти прозрачные, чтобы не конкурировать с цветными типами и не выглядеть «использованной» подсветкой. */
+.room--type-other      { fill: #cbd5e1; fill-opacity: 0.10; stroke: #94a3b8; stroke-opacity: 0.55; stroke-width: 1; }
 
 .room.room--interactive:hover {
   fill-opacity: 0.25;
