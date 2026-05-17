@@ -41,17 +41,22 @@ for prefix, uri in NS.items():
 INKSCAPE_LABEL = f"{{{NS['inkscape']}}}label"
 
 # Vue-side labels for named (non-numbered) rects. Keys are the suffix after
-# "rect-" in the Inkscape label.
+# "rect-" in the Inkscape label. Короткие односимвольные подписи лучше
+# читаются на карте; расшифровка живёт в легенде на странице.
 NAMED_LABEL_TEXT = {
-    "stairs-left": "Лестница",
-    "stairs-center": "Лестница",
-    "stairs-right": "Лестница",
-    "wc-w": "Туалет Ж",
-    "wc-m": "Туалет М",
+    "stairs-left": "Л",
+    "stairs-center": "Л",
+    "stairs-right": "Л",
+    "wc-w": "Ж",
+    "wc-m": "М",
     "reception": "Приёмная",
     "hall": "Актовый зал",
     "gym": "Спортзал",
 }
+
+# Подписи, которые рисуются крупно (как и номера кабинетов) — единичные
+# буквы достаточно короткие, чтобы поместиться, и заметнее «крупным» шрифтом.
+LARGE_NAMED_LABELS = {"Л", "Ж", "М"}
 
 # Russian floor names for the header.
 FLOOR_NAME = {2: "2 этаж", 3: "3 этаж", 4: "4 этаж"}
@@ -184,8 +189,11 @@ def _render_room_block(label: str, geom: dict[str, float]) -> tuple[str, str]:
         return rect, ""
     cx = x + w / 2
     cy = y + h / 2 + 8  # +8: rough vertical centering for 24px text
-    css_class = "room-label"
-    if not bind_name.isdigit():
+    # Цифры кабинетов и однобуквенные подписи (Л/Ж/М) — крупный шрифт.
+    # Длинные слова ("Приёмная", "Актовый зал") — мелкий.
+    if bind_name.isdigit() or text_content in LARGE_NAMED_LABELS:
+        css_class = "room-label"
+    else:
         css_class = "room-label small"
     text = (
         f'<text x="{round(cx, 2)}" y="{round(cy, 2)}" class="{css_class}">'
@@ -431,14 +439,16 @@ text {{
   cursor: pointer;
 }}
 
-.room--type-auditorium {{ fill: #3b82f6; fill-opacity: 0.10; stroke: #2563eb; stroke-opacity: 0.5; stroke-width: 1.2; }}
-.room--type-lab        {{ fill: #8b5cf6; fill-opacity: 0.12; stroke: #7c3aed; stroke-opacity: 0.55; stroke-width: 1.2; }}
-.room--type-sport      {{ fill: #22c55e; fill-opacity: 0.12; stroke: #16a34a; stroke-opacity: 0.55; stroke-width: 1.2; }}
-.room--type-hall       {{ fill: #f97316; fill-opacity: 0.12; stroke: #ea580c; stroke-opacity: 0.55; stroke-width: 1.2; }}
-.room--type-admin      {{ fill: #f59e0b; fill-opacity: 0.14; stroke: #d97706; stroke-opacity: 0.6;  stroke-width: 1.2; }}
-.room--type-wc         {{ fill: #64748b; fill-opacity: 0.10; stroke: #475569; stroke-opacity: 0.45; stroke-width: 1; }}
-.room--type-stairs     {{ fill: #6366f1; fill-opacity: 0.12; stroke: #4f46e5; stroke-opacity: 0.5;  stroke-width: 1.2; stroke-dasharray: 6 4; }}
-.room--type-other      {{ fill: #94a3b8; fill-opacity: 0.08; stroke: #64748b; stroke-opacity: 0.45; stroke-width: 1; }}
+.room--type-auditorium {{ fill: #3b82f6; fill-opacity: 0.22; stroke: #1d4ed8; stroke-opacity: 0.7;  stroke-width: 1.3; }}
+.room--type-lab        {{ fill: #8b5cf6; fill-opacity: 0.26; stroke: #6d28d9; stroke-opacity: 0.75; stroke-width: 1.3; }}
+.room--type-sport      {{ fill: #22c55e; fill-opacity: 0.26; stroke: #15803d; stroke-opacity: 0.75; stroke-width: 1.3; }}
+.room--type-hall       {{ fill: #f97316; fill-opacity: 0.26; stroke: #c2410c; stroke-opacity: 0.75; stroke-width: 1.3; }}
+.room--type-admin      {{ fill: #f59e0b; fill-opacity: 0.30; stroke: #b45309; stroke-opacity: 0.8;  stroke-width: 1.3; }}
+/* Туалеты — отчётливый тёплый розовый, чтобы не сливаться с пустым (--other) и не путаться с лестницей. */
+.room--type-wc         {{ fill: #ec4899; fill-opacity: 0.22; stroke: #be185d; stroke-opacity: 0.7;  stroke-width: 1.3; }}
+.room--type-stairs     {{ fill: #6366f1; fill-opacity: 0.26; stroke: #4338ca; stroke-opacity: 0.75; stroke-width: 1.3; stroke-dasharray: 6 4; }}
+/* Кабинеты без известного типа — почти прозрачные, чтобы не конкурировать с цветными типами и не выглядеть «использованной» подсветкой. */
+.room--type-other      {{ fill: #cbd5e1; fill-opacity: 0.10; stroke: #94a3b8; stroke-opacity: 0.55; stroke-width: 1; }}
 
 .room.room--interactive:hover {{
   fill-opacity: 0.25;

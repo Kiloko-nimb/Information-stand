@@ -22,8 +22,8 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="3.6675272"
-     inkscape:cx="282.07017"
-     inkscape:cy="194.27259"
+     inkscape:cx="392.77146"
+     inkscape:cy="180.63942"
      inkscape:window-width="2560"
      inkscape:window-height="1369"
      inkscape:window-x="-8"
@@ -850,14 +850,6 @@
        style="display:inline" />
     <rect
        style="fill-opacity:1;fill-rule:nonzero"
-       id="rect147"
-       width="143.05913"
-       height="109.51157"
-       x="415.29562"
-       y="122.6221"
-       inkscape:label="rect215" />
-    <rect
-       style="fill-opacity:1;fill-rule:nonzero"
        id="rect153"
        width="144.60155"
        height="111.05399"
@@ -1032,6 +1024,13 @@
        x="220.85725"
        y="141.51224"
        inkscape:label="rect214" />
+    <rect
+       id="rect1"
+       width="143.14822"
+       height="107.97466"
+       x="435.17059"
+       y="141.23958"
+       inkscape:label="rect215" />
   </g>
   <defs
      id="defs134">
