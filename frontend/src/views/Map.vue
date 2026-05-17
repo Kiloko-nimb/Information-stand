@@ -84,16 +84,39 @@
             :class="{ 'is-panning': isPanning }"
             :style="{ transform: `translate3d(${panX}px, ${panY}px, 0) scale(${zoomLevel})` }"
           >
+            <div v-if="currentFloor === 1" class="floor-placeholder">
+              <Icon name="map" :size="48" />
+              <h3>1 этаж</h3>
+              <p>Интерактивная карта 1-го этажа в подготовке.</p>
+              <p class="floor-placeholder-hint">Пока доступны 2, 3 и 4 этажи.</p>
+            </div>
             <MapFloor2
-              v-if="currentFloor === 1"
+              v-else-if="currentFloor === 2"
               :highlight-free-rooms="freeRoomsMode"
               :free-rooms="freeRoomNumbers"
               :busy-rooms="busyRoomNumbers"
               :highlighted-room="highlightedRoom"
-              :room-types="roomTypesByNumber"
+              :room-types="roomTypesByFloor[2] || {}"
               @room-click="onRoomClick"
             />
-            <img v-else :src="`/floor${currentFloor}.svg`" :alt="`План ${currentFloor} этажа`" class="floor-svg-img" draggable="false" />
+            <MapFloor3
+              v-else-if="currentFloor === 3"
+              :highlight-free-rooms="freeRoomsMode"
+              :free-rooms="freeRoomNumbers"
+              :busy-rooms="busyRoomNumbers"
+              :highlighted-room="highlightedRoom"
+              :room-types="roomTypesByFloor[3] || {}"
+              @room-click="onRoomClick"
+            />
+            <MapFloor4
+              v-else-if="currentFloor === 4"
+              :highlight-free-rooms="freeRoomsMode"
+              :free-rooms="freeRoomNumbers"
+              :busy-rooms="busyRoomNumbers"
+              :highlighted-room="highlightedRoom"
+              :room-types="roomTypesByFloor[4] || {}"
+              @room-click="onRoomClick"
+            />
           </div>
           <div class="zoom-controls">
             <button @click="zoom(0.2)" title="Приблизить">+</button>
@@ -106,13 +129,15 @@
             @close="closeRoomPanel"
           />
         </div>
-        <div v-if="currentFloor === 1" class="map-legend" aria-label="Легенда по типам кабинетов">
+        <div v-if="currentFloor !== 1" class="map-legend" aria-label="Легенда по типам кабинетов">
           <span class="legend-title">Цвет кабинета:</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--auditorium"></span>Аудитория</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--lab"></span>Лаборатория</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--sport"></span>Спортзал</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--hall"></span>Актовый зал</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Администрация</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--wc"></span>Туалет</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--stairs"></span>Лестница</span>
         </div>
       </template>
 
@@ -125,22 +150,22 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MapFloor2 from '../components/MapFloor2.vue'
+import MapFloor3 from '../components/MapFloor3.vue'
+import MapFloor4 from '../components/MapFloor4.vue'
 import Icon from '../components/Icon.vue'
 import RoomInfoPanel from '../components/RoomInfoPanel.vue'
 import api from '../services/api'
 
-// Кабинеты, физически размеченные в SVG-компоненте MapFloor2 (он рисуется
-// при currentFloor === 1). На этажах 2-4 пока статичные SVG без room-геометрии,
-// поэтому точечная подсветка там невозможна.
-const INTERACTIVE_FLOOR1_ROOMS = new Set([
-  '201', '202', '203', '204', '205', '206', '207', '208', '209', '210',
-  '211', '212', '213', '214', '215', '216', '217', '218', '219',
-])
+// Этажи, для которых есть интерактивная Vue-карта (с подсветкой/кликом).
+// Floor 1 пока заглушка — карта в подготовке.
+const INTERACTIVE_FLOORS = new Set([2, 3, 4])
 
 export default {
   name: 'Map',
   components: {
     MapFloor2,
+    MapFloor3,
+    MapFloor4,
     RoomInfoPanel,
     Icon
   },
@@ -148,11 +173,12 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const floors = [1, 2, 3, 4]
-    const currentFloor = ref(1)
+    // По умолчанию открываем 2-й этаж: 1-й ещё не подготовлен (заглушка).
+    const currentFloor = ref(2)
     const highlightedRoom = ref(null)
 
     const isRoomOnInteractiveFloor = computed(
-      () => !!highlightedRoom.value && INTERACTIVE_FLOOR1_ROOMS.has(highlightedRoom.value),
+      () => !!highlightedRoom.value && INTERACTIVE_FLOORS.has(currentFloor.value),
     )
 
     // ─── Свободные кабинеты «прямо сейчас» ───
@@ -282,12 +308,10 @@ export default {
       document.removeEventListener('mouseup', onMouseUp)
     })
 
-    // Наведение на кабинет из ?room=XXX. Этаж тянем из backend’а,
-    // но для кабинетов, которые физически размечены в MapFloor2,
-    // форсируем этаж = 1 — иначе подсветка не сработает из-за
-    // несовпадения populate_rooms._get_floor() и реальной SVG-разметки.
+    // Наведение на кабинет из ?room=XXX. Этаж определяем по первой цифре
+    // номера (201 → 2 этаж, 305 → 3 этаж и т.д.). Если справочник на бэке
+    // отдаёт другой этаж — доверяем бэку.
     const resolveRoomFloor = async (roomNumber) => {
-      if (INTERACTIVE_FLOOR1_ROOMS.has(roomNumber)) return 1
       try {
         const { data } = await api.get(`/rooms/${encodeURIComponent(roomNumber)}`)
         if (data && typeof data.floor === 'number' && floors.includes(data.floor)) {
@@ -318,21 +342,36 @@ export default {
       router.replace({ path: route.path, query: rest })
     }
 
-    // ── Справочник кабинетов 1-го этажа: нужен для раскраски по типам и для
-    //    заголовка панели. Грузим один раз при монтировании. На floor=1 обычно ~20
-    //    комнат — поднимать всех (`/rooms/`) нет нужды.
-    const roomTypesByNumber = ref({})
-    const loadRoomTypes = async () => {
-      try {
-        const { data } = await api.get('/rooms/floor/1')
-        const map = {}
-        for (const r of data || []) {
-          if (r && r.room_number) map[String(r.room_number).trim()] = r.room_type || null
-        }
-        roomTypesByNumber.value = map
-      } catch (e) {
-        roomTypesByNumber.value = {}
+    // ── Справочник кабинетов по этажам: нужен для раскраски по типам и для
+    //    заголовка панели с расписанием. Грузим параллельно для всех
+    //    интерактивных этажей при монтировании. У нас ~20 комнат на этаж,
+    //    отдельный список выгоднее, чем `/rooms/`.
+    const roomTypesByFloor = ref({})
+    // Плоский мап roomNumber → room_type для RoomInfoPanel-а (он не знает этажа).
+    const roomTypesByNumber = computed(() => {
+      const out = {}
+      for (const floor of Object.keys(roomTypesByFloor.value)) {
+        Object.assign(out, roomTypesByFloor.value[floor])
       }
+      return out
+    })
+    const loadRoomTypes = async () => {
+      const next = {}
+      await Promise.all(
+        Array.from(INTERACTIVE_FLOORS).map(async (floor) => {
+          try {
+            const { data } = await api.get(`/rooms/floor/${floor}`)
+            const m = {}
+            for (const r of data || []) {
+              if (r && r.room_number) m[String(r.room_number).trim()] = r.room_type || null
+            }
+            next[floor] = m
+          } catch (e) {
+            next[floor] = {}
+          }
+        }),
+      )
+      roomTypesByFloor.value = next
     }
 
     // ── Открытая карточка расписания по кабинету (из клика по SVG-rect).
@@ -385,6 +424,7 @@ export default {
       highlightedRoom,
       isRoomOnInteractiveFloor,
       clearHighlightedRoom,
+      roomTypesByFloor,
       roomTypesByNumber,
       openRoomNumber,
       onRoomClick,
@@ -818,4 +858,38 @@ h1 {
 .legend-swatch--sport      { background: rgba(34, 197, 94, 0.22);   border-color: rgba(22, 163, 74, 0.5); }
 .legend-swatch--hall       { background: rgba(249, 115, 22, 0.22);  border-color: rgba(234, 88, 12, 0.5); }
 .legend-swatch--admin      { background: rgba(245, 158, 11, 0.25);  border-color: rgba(217, 119, 6, 0.55); }
+.legend-swatch--wc         { background: rgba(100, 116, 139, 0.18); border-color: rgba(71, 85, 105, 0.45); }
+.legend-swatch--stairs     { background: rgba(99, 102, 241, 0.20);  border-color: rgba(79, 70, 229, 0.5); background-image: repeating-linear-gradient(135deg, transparent 0, transparent 3px, rgba(79, 70, 229, 0.45) 3px, rgba(79, 70, 229, 0.45) 4px); }
+
+/* ── Заглушка для 1-го этажа ── */
+.floor-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--surface-strong);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  min-height: 320px;
+  gap: 0.5rem;
+}
+
+.floor-placeholder h3 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--text);
+}
+
+.floor-placeholder p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.floor-placeholder-hint {
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
 </style>

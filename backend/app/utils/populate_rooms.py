@@ -73,8 +73,22 @@ def populate_rooms(db: Optional[Session] = None) -> int:
 
     added = 0
     skipped = 0
+    refreshed = 0
     try:
-        existing_numbers = {r.room_number for r in db.query(Room.room_number).all()}
+        existing_rooms = {r.room_number: r for r in db.query(Room).all()}
+
+        # Освежаем поле floor у уже существующих записей. Старый сид мог
+        # проставить всем floor=1; теперь корректный этаж выводится из
+        # первой цифры номера кабинета (201→2, 305→3 и т.д.). Тип кабинета
+        # и здание не трогаем — их мог вручную проставить администратор
+        # для красоты демо.
+        for room_number, room in existing_rooms.items():
+            if not room_number or not is_valid_room_number(room_number):
+                continue
+            new_floor = _get_floor(room_number)
+            if room.floor != new_floor:
+                room.floor = new_floor
+                refreshed += 1
 
         unique_rooms = (
             db.query(Schedule.room_number)
@@ -94,7 +108,7 @@ def populate_rooms(db: Optional[Session] = None) -> int:
                 continue
             if room_number.strip().lower() == "до":
                 continue
-            if room_number in existing_numbers:
+            if room_number in existing_rooms:
                 skipped += 1
                 continue
             db.add(
@@ -105,10 +119,12 @@ def populate_rooms(db: Optional[Session] = None) -> int:
                     building=_get_building(room_number),
                 )
             )
-            existing_numbers.add(room_number)
+            existing_rooms[room_number] = None  # placeholder
             added += 1
 
         db.commit()
+        if refreshed:
+            logger.info("rooms: обновлено метаданных у %d существующих записей", refreshed)
         if added or skipped:
             logger.info(
                 "rooms: добавлено %d, пропущено существующих %d (всего уникальных в расписании: %d)",
