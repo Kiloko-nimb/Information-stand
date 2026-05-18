@@ -25,9 +25,10 @@
           </filter>
         </defs>
 
-        <rect width="820" height="900" fill="url(#bg-dots-3)"/>
+        <rect x="0" y="0" width="820" height="900" fill="url(#bg-dots-3)"/>
 
-        <!-- Стены, двери и прочая графика из исходного Inkscape-файла. -->
+        <g>
+          <!-- Стены, двери и прочая графика из исходного Inkscape-файла. -->
 <line x1="365" y1="538.75" x2="437" y2="538.75" stroke="#1A1A1A" stroke-width="2.5" id="line1"/>
           <path d="M220 140H365V90H435V140H580V540H435V640H760V830H60V640H365V540H220V140Z" stroke="#1A1A1A" stroke-width="5" stroke-linecap="square" id="path2"/>
           <path d="M365 140V540" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="square" id="path3"/>
@@ -140,51 +141,55 @@
           <path d="M400.5 93V130.5" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="square" id="path129"/>
           <path d="M736 772V757" stroke="#FCFCFC" stroke-width="7" id="path130"/>
 
-        <!-- Кабинеты и именованные помещения. -->
+          <!-- Кабинеты и именованные помещения. -->
 <rect x="221.53" y="141.71" width="143.25" height="107.97" rx="4" ry="4" class="room" v-bind="roomBind('314')"/>
-        <rect x="435.73" y="141.32" width="142.87" height="108.16" rx="4" ry="4" class="room" v-bind="roomBind('315')"/>
-        <rect x="221.72" y="250.26" width="142.67" height="71.92" rx="4" ry="4" class="room" v-bind="roomBind('313')"/>
-        <rect x="435.15" y="250.26" width="142.67" height="73.07" rx="4" ry="4" class="room" v-bind="roomBind('316')"/>
-        <rect x="221.4" y="323.38" width="142.88" height="162.78" rx="4" ry="4" class="room" v-bind="roomBind('312')"/>
-        <rect x="435.17" y="323.38" width="142.06" height="163.6" rx="4" ry="4" class="room" v-bind="roomBind('317')"/>
-        <rect x="221.95" y="487.79" width="142.33" height="50.17" rx="4" ry="4" class="room" v-bind="roomBind('311')"/>
-        <rect x="60.53" y="641.58" width="159.24" height="67.62" rx="4" ry="4" class="room" v-bind="roomBind('309')"/>
-        <rect x="61.35" y="710.29" width="100.61" height="39.26" rx="4" ry="4" class="room" v-bind="roomBind('308')"/>
-        <rect x="61.89" y="750.91" width="142.6" height="77.44" rx="4" ry="4" class="room" v-bind="roomBind('307')"/>
-        <rect x="204.77" y="750.64" width="97.34" height="77.98" rx="4" ry="4" class="room" v-bind="roomBind('306')"/>
-        <rect x="301.84" y="750.37" width="132.79" height="77.98" rx="4" ry="4" class="room" v-bind="roomBind('305')"/>
-        <rect x="434.9" y="750.64" width="140.69" height="78.25" rx="4" ry="4" class="room" v-bind="roomBind('304')"/>
-        <rect x="575.86" y="750.37" width="183.23" height="78.25" rx="4" ry="4" class="room" v-bind="roomBind('303')"/>
-        <rect x="666.12" y="710.56" width="92.43" height="38.72" rx="4" ry="4" class="room" v-bind="roomBind('302')"/>
-        <rect x="577.77" y="641.3" width="181.05" height="68.71" rx="4" ry="4" class="room" v-bind="roomBind('301')"/>
-        <rect x="447.71" y="641.58" width="66.53" height="67.89" rx="4" ry="4" class="room" v-bind="roomBind('318')"/>
-        <rect x="286.84" y="641.03" width="50.17" height="68.71" rx="4" ry="4" class="room" v-bind="roomBind('rect-wc-m')"/>
-        <rect x="220.31" y="641.3" width="67.35" height="69.26" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-left')"/>
-        <rect x="513.97" y="641.3" width="64.08" height="68.71" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-right')"/>
-        <rect x="365.64" y="90.52" width="68.71" height="40.9" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-center')"/>
+          <rect x="435.73" y="141.32" width="142.87" height="108.16" rx="4" ry="4" class="room" v-bind="roomBind('315')"/>
+          <rect x="221.72" y="250.26" width="142.67" height="71.92" rx="4" ry="4" class="room" v-bind="roomBind('313')"/>
+          <rect x="435.15" y="250.26" width="142.67" height="73.07" rx="4" ry="4" class="room" v-bind="roomBind('316')"/>
+          <rect x="221.4" y="323.38" width="142.88" height="162.78" rx="4" ry="4" class="room" v-bind="roomBind('312')"/>
+          <rect x="435.17" y="323.38" width="142.06" height="163.6" rx="4" ry="4" class="room" v-bind="roomBind('317')"/>
+          <rect x="221.95" y="487.79" width="142.33" height="50.17" rx="4" ry="4" class="room" v-bind="roomBind('311')"/>
+          <rect x="60.53" y="641.58" width="159.24" height="67.62" rx="4" ry="4" class="room" v-bind="roomBind('309')"/>
+          <rect x="61.35" y="710.29" width="100.61" height="39.26" rx="4" ry="4" class="room" v-bind="roomBind('308')"/>
+          <rect x="61.89" y="750.91" width="142.6" height="77.44" rx="4" ry="4" class="room" v-bind="roomBind('307')"/>
+          <rect x="204.77" y="750.64" width="97.34" height="77.98" rx="4" ry="4" class="room" v-bind="roomBind('306')"/>
+          <rect x="301.84" y="750.37" width="132.79" height="77.98" rx="4" ry="4" class="room" v-bind="roomBind('305')"/>
+          <rect x="434.9" y="750.64" width="140.69" height="78.25" rx="4" ry="4" class="room" v-bind="roomBind('304')"/>
+          <rect x="575.86" y="750.37" width="183.23" height="78.25" rx="4" ry="4" class="room" v-bind="roomBind('303')"/>
+          <rect x="666.12" y="710.56" width="92.43" height="38.72" rx="4" ry="4" class="room" v-bind="roomBind('302')"/>
+          <rect x="577.77" y="641.3" width="181.05" height="68.71" rx="4" ry="4" class="room" v-bind="roomBind('301')"/>
+          <rect x="447.71" y="641.58" width="66.53" height="67.89" rx="4" ry="4" class="room" v-bind="roomBind('318')"/>
+          <rect x="286.84" y="641.03" width="50.17" height="68.71" rx="4" ry="4" class="room" v-bind="roomBind('rect-wc-m')"/>
+          <rect x="220.31" y="641.3" width="67.35" height="69.26" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-left')"/>
+          <rect x="513.97" y="641.3" width="64.08" height="68.71" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-right')"/>
+          <rect x="365.64" y="90.52" width="68.71" height="40.9" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-center')"/>
 
-        <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
+          <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
 <text x="293.15" y="203.69" class="room-label">314</text>
-        <text x="507.17" y="203.4" class="room-label">315</text>
-        <text x="293.06" y="294.22" class="room-label">313</text>
-        <text x="506.48" y="294.79" class="room-label">316</text>
-        <text x="292.84" y="412.77" class="room-label">312</text>
-        <text x="506.2" y="413.18" class="room-label">317</text>
-        <text x="293.12" y="520.88" class="room-label">311</text>
-        <text x="140.15" y="683.39" class="room-label">309</text>
-        <text x="111.66" y="737.92" class="room-label">308</text>
-        <text x="133.19" y="797.63" class="room-label">307</text>
-        <text x="253.44" y="797.63" class="room-label">306</text>
-        <text x="368.23" y="797.36" class="room-label">305</text>
-        <text x="505.25" y="797.76" class="room-label">304</text>
-        <text x="667.48" y="797.5" class="room-label">303</text>
-        <text x="712.34" y="737.92" class="room-label">302</text>
-        <text x="668.29" y="683.65" class="room-label">301</text>
-        <text x="480.97" y="683.53" class="room-label">318</text>
-        <text x="311.92" y="683.38" class="room-label">М</text>
-        <text x="253.99" y="683.93" class="room-label">Л</text>
-        <text x="546.01" y="683.65" class="room-label">Л</text>
-        <text x="400.0" y="118.97" class="room-label">Л</text>
+          <text x="507.17" y="203.4" class="room-label">315</text>
+          <text x="293.06" y="294.22" class="room-label">313</text>
+          <text x="506.48" y="294.79" class="room-label">316</text>
+          <text x="292.84" y="412.77" class="room-label">312</text>
+          <text x="506.2" y="413.18" class="room-label">317</text>
+          <text x="293.12" y="520.88" class="room-label">311</text>
+          <text x="140.15" y="683.39" class="room-label">309</text>
+          <text x="111.66" y="737.92" class="room-label">308</text>
+          <text x="133.19" y="797.63" class="room-label">307</text>
+          <text x="253.44" y="797.63" class="room-label">306</text>
+          <text x="368.23" y="797.36" class="room-label">305</text>
+          <text x="505.25" y="797.76" class="room-label">304</text>
+          <text x="667.48" y="797.5" class="room-label">303</text>
+          <text x="712.34" y="737.92" class="room-label">302</text>
+          <text x="668.29" y="683.65" class="room-label">301</text>
+          <text x="480.97" y="683.53" class="room-label">318</text>
+          <text x="311.92" y="683.38" class="room-label">М</text>
+          <text x="253.99" y="683.93" class="room-label">Л</text>
+          <text x="546.01" y="683.65" class="room-label">Л</text>
+          <text x="400.0" y="118.97" class="room-label">Л</text>
+        </g>
+
+        <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->
+
       </svg>
     </div>
   </div>
@@ -213,6 +218,12 @@ const NAMED_TYPE_KEY = {
   'rect-stairs-right': 'stairs',
   'rect-hall': 'hall',
   'rect-gym': 'sport',
+  'rect-library': 'library',
+  'rect-reading': 'library',
+  'rect-medical': 'medical',
+  'rect-bufet': 'food',
+  'rect-canteen': 'food',
+  'rect-garderob': 'garderob',
 }
 
 export default {
@@ -347,8 +358,42 @@ text {
 /* Туалеты — отчётливый тёплый розовый, чтобы не сливаться с пустым (--other) и не путаться с лестницей. */
 .room--type-wc         { fill: #ec4899; fill-opacity: 0.22; stroke: #be185d; stroke-opacity: 0.7;  stroke-width: 1.3; }
 .room--type-stairs     { fill: #6366f1; fill-opacity: 0.26; stroke: #4338ca; stroke-opacity: 0.75; stroke-width: 1.3; stroke-dasharray: 6 4; }
+/* Библиотека и читальный зал — бирюзовый. */
+.room--type-library    { fill: #14b8a6; fill-opacity: 0.24; stroke: #0f766e; stroke-opacity: 0.75; stroke-width: 1.3; }
+/* Медпункт — ярко-красный, чтобы было заметно в экстренном случае. */
+.room--type-medical    { fill: #ef4444; fill-opacity: 0.22; stroke: #b91c1c; stroke-opacity: 0.8;  stroke-width: 1.3; }
+/* Буфет и столовая — тёплый жёлтый. */
+.room--type-food       { fill: #eab308; fill-opacity: 0.30; stroke: #a16207; stroke-opacity: 0.8;  stroke-width: 1.3; }
+/* Гардероб — нейтральный сине-серый. */
+.room--type-garderob   { fill: #64748b; fill-opacity: 0.20; stroke: #334155; stroke-opacity: 0.7;  stroke-width: 1.3; }
 /* Кабинеты без известного типа — почти прозрачные, чтобы не конкурировать с цветными типами и не выглядеть «использованной» подсветкой. */
 .room--type-other      { fill: #cbd5e1; fill-opacity: 0.10; stroke: #94a3b8; stroke-opacity: 0.55; stroke-width: 1; }
+
+/* «Вы здесь» — маркер инфо-стенда. */
+.stand-marker {
+  pointer-events: none;
+}
+
+.stand-marker .stand-halo {
+  fill: rgba(37, 99, 235, 0.25);
+  animation: stand-halo-pulse-3 1.8s ease-in-out infinite;
+}
+
+.stand-marker .stand-dot {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+@keyframes stand-halo-pulse-3 {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.15; transform: scale(1.6); }
+}
+
+.stand-marker .stand-halo {
+  transform-origin: center;
+  transform-box: fill-box;
+}
 
 .room.room--interactive:hover {
   fill-opacity: 0.25;
