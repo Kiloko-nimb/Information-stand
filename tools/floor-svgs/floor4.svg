@@ -6,7 +6,7 @@
    fill="none"
    version="1.1"
    id="svg131"
-   sodipodi:docname="4этаж.svg"
+   sodipodi:docname="4 этаж(с кабинетами).svg"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -21,9 +21,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.64833333"
-     inkscape:cx="-14.652956"
-     inkscape:cy="266.06684"
+     inkscape:zoom="1.8337636"
+     inkscape:cx="378.18398"
+     inkscape:cy="721.19439"
      inkscape:window-width="2560"
      inkscape:window-height="1369"
      inkscape:window-x="-8"
@@ -821,6 +821,13 @@
        x="366.7095"
        y="91.580978"
        inkscape:label="rect-stairs-center" />
+    <rect
+       id="rect2"
+       width="100.88541"
+       height="39.808838"
+       x="61.076576"
+       y="710.0152"
+       inkscape:label="rect408" />
   </g>
   <defs
      id="defs131">

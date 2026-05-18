@@ -158,6 +158,7 @@
         <rect x="514.4" y="641.26" width="62.66" height="68.64" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-right')"/>
         <rect x="219.99" y="641.84" width="66.9" height="67.87" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-left')"/>
         <rect x="366.71" y="91.58" width="67.29" height="39.33" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-center')"/>
+        <rect x="61.08" y="710.02" width="100.89" height="39.81" rx="4" ry="4" class="room" v-bind="roomBind('408')"/>
 
         <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
 <text x="506.74" y="203.09" class="room-label">415</text>
@@ -178,6 +179,7 @@
         <text x="545.73" y="683.58" class="room-label">Л</text>
         <text x="253.44" y="683.78" class="room-label">Л</text>
         <text x="400.35" y="119.25" class="room-label">Л</text>
+        <text x="111.53" y="737.92" class="room-label">408</text>
       </svg>
     </div>
   </div>
