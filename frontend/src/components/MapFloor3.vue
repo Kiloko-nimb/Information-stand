@@ -165,27 +165,27 @@
           <rect x="365.64" y="90.52" width="68.71" height="40.9" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-center')"/>
 
           <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
-<text x="293.15" y="203.69" class="room-label">314</text>
-          <text x="507.17" y="203.4" class="room-label">315</text>
-          <text x="293.06" y="294.22" class="room-label">313</text>
-          <text x="506.48" y="294.79" class="room-label">316</text>
-          <text x="292.84" y="412.77" class="room-label">312</text>
-          <text x="506.2" y="413.18" class="room-label">317</text>
-          <text x="293.12" y="520.88" class="room-label">311</text>
-          <text x="140.15" y="683.39" class="room-label">309</text>
-          <text x="111.66" y="737.92" class="room-label">308</text>
-          <text x="133.19" y="797.63" class="room-label">307</text>
-          <text x="253.44" y="797.63" class="room-label">306</text>
-          <text x="368.23" y="797.36" class="room-label">305</text>
-          <text x="505.25" y="797.76" class="room-label">304</text>
-          <text x="667.48" y="797.5" class="room-label">303</text>
-          <text x="712.34" y="737.92" class="room-label">302</text>
-          <text x="668.29" y="683.65" class="room-label">301</text>
-          <text x="480.97" y="683.53" class="room-label">318</text>
-          <text x="311.92" y="683.38" class="room-label">М</text>
-          <text x="253.99" y="683.93" class="room-label">Л</text>
-          <text x="546.01" y="683.65" class="room-label">Л</text>
-          <text x="400.0" y="118.97" class="room-label">Л</text>
+<text x="293.15" y="204.33" class="room-label">314</text>
+          <text x="507.17" y="204.04" class="room-label">315</text>
+          <text x="293.06" y="294.86" class="room-label">313</text>
+          <text x="506.48" y="295.43" class="room-label">316</text>
+          <text x="292.84" y="413.41" class="room-label">312</text>
+          <text x="506.2" y="413.82" class="room-label">317</text>
+          <text x="293.12" y="521.51" class="room-label">311</text>
+          <text x="140.15" y="684.03" class="room-label">309</text>
+          <text x="111.66" y="738.56" class="room-label">308</text>
+          <text x="133.19" y="798.27" class="room-label">307</text>
+          <text x="253.44" y="798.27" class="room-label">306</text>
+          <text x="368.23" y="798.0" class="room-label">305</text>
+          <text x="505.25" y="798.4" class="room-label">304</text>
+          <text x="667.48" y="798.13" class="room-label">303</text>
+          <text x="712.34" y="738.56" class="room-label">302</text>
+          <text x="668.29" y="684.29" class="room-label">301</text>
+          <text x="480.97" y="684.17" class="room-label">318</text>
+          <text x="311.92" y="684.02" class="room-label">М</text>
+          <text x="253.99" y="684.57" class="room-label">Л</text>
+          <text x="546.01" y="684.29" class="room-label">Л</text>
+          <text x="400.0" y="119.61" class="room-label">Л</text>
         </g>
 
         <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->

@@ -262,8 +262,61 @@ def _label_text(bind_name: str) -> str | None:
     return None
 
 
+# Средняя ширина глифа в долях font-size. Для кириллицы и цифр
+# в обычных sans-serif (которые браузер подберёт) это ± 0.55.
+GLYPH_WIDTH_EM = 0.55
+# Отступ от стенок кабинета при измерении "влезёт ли подпись".
+LABEL_PADDING = 6  # по пикселей с каждой стороны
+# Границы font-size для авто-фита.
+MIN_LABEL_FONT = 9
+MAX_LABEL_FONT_LARGE = 24  # цифры/Л/Ж/М
+MAX_LABEL_FONT_SMALL = 14  # длинные слова
+
+
+def _fit_font_size(text: str, max_width: float, ideal_size: float) -> float:
+    """Найти максимальный font-size ≤ ideal_size, при котором text влезает в max_width."""
+    if not text or max_width <= 0:
+        return ideal_size
+    needed = len(text) * GLYPH_WIDTH_EM
+    if needed * ideal_size <= max_width:
+        return ideal_size
+    fitted = max_width / needed
+    return max(MIN_LABEL_FONT, fitted)
+
+
+def _split_two_lines(text: str) -> tuple[str, str] | None:
+    """Попытаться разбить подпись на две ровные строки по пробелу.
+
+    "Актовый зал" → ("Актовый", "зал").
+    "Читальный зал" → ("Читальный", "зал").
+    Если пробелов нет — возвращаем None (одна строка останется).
+    """
+    if " " not in text:
+        return None
+    words = text.split(" ")
+    if len(words) == 2:
+        return words[0], words[1]
+    # Эвристика «пополам»: берём точку разбивки, при которой длины
+    # строк максимально близки. На наших подписях всё равно в худшем случае
+    # 2-3 слова, поэтому брутфорсъем.
+    best = None
+    target = sum(len(w) for w in words) / 2
+    for i in range(1, len(words)):
+        left = " ".join(words[:i])
+        right = " ".join(words[i:])
+        diff = abs(len(left) - target) + abs(len(right) - target)
+        if best is None or diff < best[0]:
+            best = (diff, left, right)
+    assert best is not None
+    return best[1], best[2]
+
+
 def _render_room_block(label: str, geom: dict[str, float]) -> tuple[str, str]:
-    """Return (rect_markup, text_markup) for a single room."""
+    """Return (rect_markup, text_markup) for a single room.
+
+    Подпись автоматически уменьшается до ширины кабинета,
+    а если и после уменьшения не влезает — разбивается на две строки.
+    """
     bind_name = _bind_name_for_label(label)
     # Round to 2 decimals to keep the file readable; Inkscape generates
     # ridiculous precision otherwise.
@@ -280,17 +333,54 @@ def _render_room_block(label: str, geom: dict[str, float]) -> tuple[str, str]:
     text_content = _label_text(bind_name)
     if text_content is None:
         return rect, ""
+
     cx = x + w / 2
-    cy = y + h / 2 + 8  # +8: rough vertical centering for 24px text
-    # Цифры кабинетов и однобуквенные подписи (Л/Ж/М) — крупный шрифт.
-    # Длинные слова ("Приёмная", "Актовый зал") — мелкий.
-    if bind_name.isdigit() or text_content in LARGE_NAMED_LABELS:
-        css_class = "room-label"
-    else:
-        css_class = "room-label small"
+    cy = y + h / 2
+    available_width = max(w - 2 * LABEL_PADDING, 1)
+    is_large = bind_name.isdigit() or text_content in LARGE_NAMED_LABELS
+    ideal = MAX_LABEL_FONT_LARGE if is_large else MAX_LABEL_FONT_SMALL
+
+    # Однострочный вариант.
+    single_size = _fit_font_size(text_content, available_width, ideal)
+    # Если влезает приёмлемым шрифтом — строим одной строкой.
+    if single_size >= ideal * 0.7 or " " not in text_content:
+        size_attr = f' font-size="{_fmt(round(single_size, 2))}"' if single_size < ideal else ""
+        # +0.36*size — примерное вертикальное центрирование базовой линии.
+        text_y = round(cy + single_size * 0.36, 2)
+        css_class = "room-label" if is_large else "room-label small"
+        text = (
+            f'<text x="{round(cx, 2)}" y="{text_y}" class="{css_class}"{size_attr}>'
+            f"{text_content}</text>"
+        )
+        return rect, text
+
+    # Двухстрочный вариант: «Читальный\nзал».
+    split = _split_two_lines(text_content)
+    if split is None:
+        # Не разбивается — оставляем одной строкой на минимальном шрифте.
+        size_attr = f' font-size="{_fmt(round(single_size, 2))}"'
+        text_y = round(cy + single_size * 0.36, 2)
+        text = (
+            f'<text x="{round(cx, 2)}" y="{text_y}" class="room-label small"{size_attr}>'
+            f"{text_content}</text>"
+        )
+        return rect, text
+
+    line1, line2 = split
+    longest = max(len(line1), len(line2))
+    fitted = available_width / (longest * GLYPH_WIDTH_EM) if longest else ideal
+    two_size = min(ideal, fitted)
+    two_size = max(MIN_LABEL_FONT, two_size)
+    line_height = two_size * 1.05
+    # Центрируем блок из двух строк по вертикали относительно cy.
+    y1 = round(cy - line_height / 2 + two_size * 0.36, 2)
+    y2 = round(cy + line_height / 2 + two_size * 0.36, 2)
+    size_attr = f' font-size="{_fmt(round(two_size, 2))}"'
     text = (
-        f'<text x="{round(cx, 2)}" y="{round(cy, 2)}" class="{css_class}">'
-        f"{text_content}</text>"
+        f'<text x="{round(cx, 2)}" y="{y1}" class="room-label small"{size_attr}>'
+        f"{line1}</text>"
+        f'\n          <text x="{round(cx, 2)}" y="{y2}" class="room-label small"{size_attr}>'
+        f"{line2}</text>"
     )
     return rect, text
 
@@ -342,6 +432,9 @@ def _render_non_room_children(root_g: ET.Element, rooms: set[int], vb_w: float, 
     - vectorized glyph paths (room numbers drawn as text in Inkscape and
       converted to outlines) — we add fresh, Vue-controlled <text>
       labels instead,
+    - raw <text> elements typed by the user in Inkscape (пользовательские
+      «Б», «Буфет», «Столовая» и т.п.) — мы рисуем свои подписи с авто-фитом
+      и единым стилем,
     - the `stand` ellipse/rect (rendered separately as a «вы здесь» marker).
     """
     out_parts = []
@@ -354,6 +447,9 @@ def _render_non_room_children(root_g: ET.Element, rooms: set[int], vb_w: float, 
         if tag == "rect" and _is_background_rect(child, vb_w, vb_h):
             continue
         if tag in ("namedview", "metadata", "defs"):
+            continue
+        # Live <text> typed inside Inkscape (не переведён в кривые) — выкидываем.
+        if tag in ("text", "flowRoot"):
             continue
         if _is_glyph_path(child):
             continue

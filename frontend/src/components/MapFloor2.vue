@@ -169,29 +169,29 @@
           <rect x="435.17" y="141.24" width="143.15" height="107.97" rx="4" ry="4" class="room" v-bind="roomBind('215')"/>
 
           <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
-<text x="293.25" y="313.39" class="room-label">213</text>
-          <text x="292.87" y="408.45" class="room-label">212</text>
-          <text x="506.5" y="312.82" class="room-label">216</text>
-          <text x="507.46" y="408.45" class="room-label">217</text>
-          <text x="506.49" y="497.71" class="room-label">218</text>
-          <text x="292.87" y="497.53" class="room-label">211</text>
-          <text x="712.4" y="737.56" class="room-label">202</text>
-          <text x="469.47" y="683.0" class="room-label">219</text>
-          <text x="340.3" y="797.34" class="room-label">207</text>
-          <text x="467.35" y="797.72" class="room-label">205</text>
-          <text x="531.94" y="797.91" class="room-label">204</text>
-          <text x="667.87" y="683.59" class="room-label">201</text>
-          <text x="667.1" y="797.34" class="room-label">203</text>
-          <text x="245.05" y="797.04" class="room-label">208</text>
-          <text x="132.84" y="797.23" class="room-label">210</text>
-          <text x="140.15" y="683.66" class="room-label">209</text>
-          <text x="332.52" y="683.12" class="room-label">Ж</text>
-          <text x="399.3" y="118.57" class="room-label">Л</text>
-          <text x="260.19" y="683.19" class="room-label">Л</text>
-          <text x="536.09" y="683.48" class="room-label">Л</text>
-          <text x="415.0" y="797.77" class="room-label small">Приёмная</text>
-          <text x="293.12" y="203.36" class="room-label">214</text>
-          <text x="506.75" y="203.23" class="room-label">215</text>
+<text x="293.25" y="314.03" class="room-label">213</text>
+          <text x="292.87" y="409.09" class="room-label">212</text>
+          <text x="506.5" y="313.46" class="room-label">216</text>
+          <text x="507.46" y="409.09" class="room-label">217</text>
+          <text x="506.49" y="498.35" class="room-label">218</text>
+          <text x="292.87" y="498.17" class="room-label">211</text>
+          <text x="712.4" y="738.2" class="room-label">202</text>
+          <text x="469.47" y="683.63" class="room-label">219</text>
+          <text x="340.3" y="797.98" class="room-label">207</text>
+          <text x="467.35" y="798.36" class="room-label">205</text>
+          <text x="531.94" y="798.55" class="room-label">204</text>
+          <text x="667.87" y="684.23" class="room-label">201</text>
+          <text x="667.1" y="797.98" class="room-label">203</text>
+          <text x="245.05" y="797.68" class="room-label">208</text>
+          <text x="132.84" y="797.87" class="room-label">210</text>
+          <text x="140.15" y="684.3" class="room-label">209</text>
+          <text x="332.52" y="683.75" class="room-label">Ж</text>
+          <text x="399.3" y="119.21" class="room-label">Л</text>
+          <text x="260.19" y="683.83" class="room-label">Л</text>
+          <text x="536.09" y="684.12" class="room-label">Л</text>
+          <text x="415.0" y="793.01" class="room-label small" font-size="9">Приёмная</text>
+          <text x="293.12" y="204.0" class="room-label">214</text>
+          <text x="506.75" y="203.87" class="room-label">215</text>
         </g>
 
         <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->
