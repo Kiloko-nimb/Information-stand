@@ -1,10 +1,12 @@
 <!--
   RoomInfoPanel — выезжающая справа панель с расписанием выбранного кабинета
-  на сегодня. Показывает, идёт ли сейчас в кабинете пара, и предлагает
-  открыть полное расписание.
+  на выбранный день (по умолчанию — сегодня). Если выбрана
+  сегодняшняя дата — дополнительно показывает, идёт ли пара
+  сейчас, и подсвечивает текущую пару в списке.
 
-  Грузит данные сама: GET /schedule/room/{room}?date=YYYY-MM-DD на сегодня
-  плюс GET /schedule/now, чтобы выделить «текущую» пару.
+  Грузит данные сама:
+    GET /schedule/room/{room}?date=YYYY-MM-DD     — на выбранный день,
+    GET /schedule/now                              — только когда выбрана сегодня.
 -->
 <template>
   <transition name="room-panel">
@@ -40,7 +42,7 @@
           </div>
 
           <div v-if="todaySchedule.length > 0" class="room-info-panel-list">
-            <div class="room-info-panel-list-title">Сегодня в этом кабинете:</div>
+            <div class="room-info-panel-list-title">{{ headerDateLabel }}</div>
             <ul>
               <li
                 v-for="(item, idx) in todaySchedule"
@@ -56,7 +58,8 @@
           </div>
 
           <div v-else class="room-info-panel-empty">
-            На сегодня занятий в этом кабинете нет.
+            <template v-if="isToday">На сегодня занятий в этом кабинете нет.</template>
+            <template v-else>В выбранный день занятий в этом кабинете нет.</template>
           </div>
         </template>
       </div>
@@ -100,6 +103,11 @@ export default {
     // для лейбла и цветной точки в заголовке. Если не передан —
     // подтянем из /rooms/{number} при открытии.
     roomType: { type: String, default: null },
+    // Дата, на которую показывать расписание. По умолчанию — сегодня.
+    // Если выбрана не сегодняшняя дата, «сейчас»-логика не
+    // применяется — панель показывает расписание без подсветки
+    // текущей пары и без строки «сейчас идёт».
+    selectedDate: { type: Date, default: null },
   },
   emits: ['close'],
   setup(props) {
@@ -110,35 +118,67 @@ export default {
 
     const typeKey = computed(() => TYPE_KEY_BY_LABEL[props.roomType] || 'other')
 
+    // Считаем, что выбрана «сегодняшняя» дата в двух случаях:
+    //   • пропс selectedDate не передан (null) — легаси контракт,
+    //   • или дата равна сегодняшней (по локальному toDateString).
+    const isToday = computed(() => {
+      if (!props.selectedDate) return true
+      return props.selectedDate.toDateString() === new Date().toDateString()
+    })
+    const headerDateLabel = computed(() => {
+      if (isToday.value) return 'Сегодня в этом кабинете:'
+      const d = props.selectedDate || new Date()
+      const days = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
+      const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
+      return `${d.getDate()} ${months[d.getMonth()]} (${days[d.getDay()]}) в этом кабинете:`
+    })
+
+    // «Сейчас»-привязка работает только для сегодняшней даты; в остальных случаях
+    // оба спорных computed-а возвращают null, то есть UI не пытается
+    // подсветить какую-либо пару как текущую.
     const nowMatch = computed(() => {
+      if (!isToday.value) return null
       const cur = nowStatus.value && nowStatus.value.current
       if (!cur) return null
       return todaySchedule.value.find((s) => Number(s.lesson_number) === Number(cur.lesson_number)) || null
     })
 
     const nextMatch = computed(() => {
+      if (!isToday.value) return null
       const nx = nowStatus.value && nowStatus.value.next
       if (!nx) return null
       return todaySchedule.value.find((s) => Number(s.lesson_number) === Number(nx.lesson_number)) || null
     })
 
     const stateLabel = computed(() => {
-      if (nowMatch.value) return 'Сейчас в кабинете идёт пара'
-      if (!todaySchedule.value.length) return 'Сегодня кабинет свободен'
-      if (nextMatch.value) return `Сейчас свободен. Следующая пара в ${formatTime(nextMatch.value.time_start)}`
-      const status = nowStatus.value && nowStatus.value.status
-      if (status === 'weekend') return 'Сегодня выходной'
-      if (status === 'after_classes') return 'Пары на сегодня закончились'
-      if (status === 'before_classes') return 'Пары ещё не начались'
-      return 'Сейчас свободен'
+      if (isToday.value) {
+        if (nowMatch.value) return 'Сейчас в кабинете идёт пара'
+        if (!todaySchedule.value.length) return 'Сегодня кабинет свободен'
+        if (nextMatch.value) return `Сейчас свободен. Следующая пара в ${formatTime(nextMatch.value.time_start)}`
+        const status = nowStatus.value && nowStatus.value.status
+        if (status === 'weekend') return 'Сегодня выходной'
+        if (status === 'after_classes') return 'Пары на сегодня закончились'
+        if (status === 'before_classes') return 'Пары ещё не начались'
+        return 'Сейчас свободен'
+      }
+      // Другой день: показываем факт в прошедшем/будущем времени,
+      // без отношения к реальному времени.
+      const count = todaySchedule.value.length
+      if (count === 0) return 'В этот день занятий нет'
+      return count === 1
+        ? 'В этот день 1 занятие'
+        : count < 5
+          ? `В этот день ${count} занятия`
+          : `В этот день ${count} занятий`
     })
 
     const stateBadgeClass = computed(() => ({
-      'room-info-panel-state--busy': !!nowMatch.value,
-      'room-info-panel-state--free': !nowMatch.value,
+      'room-info-panel-state--busy': isToday.value && !!nowMatch.value,
+      'room-info-panel-state--free': !(isToday.value && !!nowMatch.value),
     }))
 
     const isCurrentItem = (item) => {
+      if (!isToday.value) return false
       const cur = nowStatus.value && nowStatus.value.current
       if (!cur) return false
       return Number(item.lesson_number) === Number(cur.lesson_number)
@@ -159,17 +199,26 @@ export default {
       }
       loading.value = true
       try {
-        const today = toLocalDateParam(new Date())
-        // Параллельно — у нас и так маленькая БД, второй запрос не мешает.
-        const [schedRes, nowRes] = await Promise.all([
-          api.get(`/schedule/room/${encodeURIComponent(num)}`, { params: { date: today } }),
-          api.get('/schedule/now'),
-        ])
+        const targetDate = props.selectedDate || new Date()
+        const dateParam = toLocalDateParam(targetDate)
+        // /schedule/now запрашиваем только когда выбрана сегодняшняя дата —
+        // для других дат понятие «текущая пара» не применимо.
+        const isTodayParam =
+          dateParam === toLocalDateParam(new Date())
+        const requests = [
+          api.get(`/schedule/room/${encodeURIComponent(num)}`, { params: { date: dateParam } }),
+        ]
+        if (isTodayParam) {
+          requests.push(api.get('/schedule/now'))
+        }
+        const responses = await Promise.all(requests)
+        const schedRes = responses[0]
+        const nowRes = isTodayParam ? responses[1] : null
         // Сортируем по номеру пары на всякий случай (бэк уже сортирует).
         todaySchedule.value = Array.isArray(schedRes.data)
           ? [...schedRes.data].sort((a, b) => (a.lesson_number || 0) - (b.lesson_number || 0))
           : []
-        nowStatus.value = nowRes.data
+        nowStatus.value = nowRes ? nowRes.data : null
       } catch (e) {
         // Скрытно — на UI просто покажется «занятий нет».
         todaySchedule.value = []
@@ -179,7 +228,11 @@ export default {
       }
     }
 
-    watch(() => props.roomNumber, () => { load() }, { immediate: true })
+    watch(
+      [() => props.roomNumber, () => props.selectedDate],
+      () => { load() },
+      { immediate: true },
+    )
 
     const openSchedule = () => {
       if (!props.roomNumber) return
@@ -193,6 +246,8 @@ export default {
       stateLabel,
       stateBadgeClass,
       typeKey,
+      isToday,
+      headerDateLabel,
       isCurrentItem,
       formatTime,
       openSchedule,

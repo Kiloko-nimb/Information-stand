@@ -7,6 +7,8 @@
 
     <h1>Навигация по колледжу</h1>
 
+    <DateCarousel v-model="selectedDate" class="map-date-carousel" />
+
     <transition name="free-bar">
       <div v-if="highlightedRoom" class="route-bar">
         <div class="route-bar-text">
@@ -37,8 +39,8 @@
         class="free-rooms-toggle"
         :class="{ active: freeRoomsMode }"
         @click="toggleFreeRooms"
-        :disabled="freeRoomsLoading"
-        :title="freeRoomsMode ? 'Скрыть подсветку' : 'Показать кабинеты, в которых сейчас нет занятий'"
+        :disabled="freeRoomsLoading || !isTodaySelected"
+        :title="freeRoomsToggleTitle"
       >
         <span class="free-rooms-dot" :class="{ on: freeRoomsMode }"></span>
         <span>{{ freeRoomsMode ? 'Свободные сейчас: ВКЛ' : 'Свободные сейчас' }}</span>
@@ -126,6 +128,7 @@
           <RoomInfoPanel
             :room-number="openRoomNumber"
             :room-type="openRoomNumber ? (roomTypesByNumber[openRoomNumber] || null) : null"
+            :selected-date="selectedDate"
             @close="closeRoomPanel"
           />
         </div>
@@ -157,6 +160,7 @@ import MapFloor3 from '../components/MapFloor3.vue'
 import MapFloor4 from '../components/MapFloor4.vue'
 import Icon from '../components/Icon.vue'
 import RoomInfoPanel from '../components/RoomInfoPanel.vue'
+import DateCarousel from '../components/DateCarousel.vue'
 import api from '../services/api'
 
 // Этажи, для которых есть интерактивная Vue-карта (с подсветкой/кликом).
@@ -170,6 +174,7 @@ export default {
     MapFloor3,
     MapFloor4,
     RoomInfoPanel,
+    DateCarousel,
     Icon
   },
   setup() {
@@ -179,6 +184,21 @@ export default {
     // По умолчанию открываем 2-й этаж: 1-й ещё не подготовлен (заглушка).
     const currentFloor = ref(2)
     const highlightedRoom = ref(null)
+
+    // Выбранная пользователем дата (для фильтра расписания в поповере).
+    // По умолчанию — сегодня. Меняется через <DateCarousel />.
+    const selectedDate = ref(new Date())
+    const isTodaySelected = computed(
+      () => selectedDate.value.toDateString() === new Date().toDateString(),
+    )
+    const freeRoomsToggleTitle = computed(() => {
+      if (!isTodaySelected.value) {
+        return 'Доступно только когда выбрана сегодняшняя дата'
+      }
+      return freeRoomsMode.value
+        ? 'Скрыть подсветку'
+        : 'Показать кабинеты, в которых сейчас нет занятий'
+    })
 
     const isRoomOnInteractiveFloor = computed(
       () => !!highlightedRoom.value && INTERACTIVE_FLOORS.has(currentFloor.value),
@@ -230,11 +250,24 @@ export default {
     }
 
     const toggleFreeRooms = async () => {
+      // «Свободные сейчас» — это срез по текущей паре; для будущих/прошлых
+      // дат бэк не отдаёт корректный ответ, поэтому тоггл доступен только
+      // когда выбрана сегодняшняя дата.
+      if (!isTodaySelected.value) return
       freeRoomsMode.value = !freeRoomsMode.value
       if (freeRoomsMode.value && freeRoomsList.value.length === 0) {
         await loadFreeRooms()
       }
     }
+
+    // При смене выбранной даты выключаем подсветку свободных кабинетов,
+    // если дата перестала быть сегодняшней — данные устарели и стали
+    // неприменимыми.
+    watch(isTodaySelected, (isToday) => {
+      if (!isToday) {
+        freeRoomsMode.value = false
+      }
+    })
 
     let freeRoomsRefresh = null
     onMounted(() => {
@@ -424,6 +457,9 @@ export default {
       freeRoomNumbers,
       busyRoomNumbers,
       toggleFreeRooms,
+      freeRoomsToggleTitle,
+      isTodaySelected,
+      selectedDate,
       highlightedRoom,
       isRoomOnInteractiveFloor,
       clearHighlightedRoom,
@@ -482,6 +518,10 @@ h1 {
   letter-spacing: -0.025em;
   margin-bottom: 1.5rem;
   color: var(--text);
+}
+
+.map-date-carousel {
+  margin-bottom: 1.25rem;
 }
 
 /* ── Панель управления ── */
