@@ -104,7 +104,6 @@
           <path d="m 823.74393,756.47624 v 47" stroke="#1a1a1a" stroke-width="2.16795" id="path129" style="display:inline" clip-path="none"/>
           <path d="m 823.61893,772.10124 v 15" stroke="#fcfcfc" stroke-width="7" id="path130" style="display:inline" clip-path="none"/>
           <path d="m 197.1791,803.46287 245.3176,0.48608" stroke="#1a1a1a" stroke-width="3.57692" id="path126-9" style="display:inline" clip-path="none"/>
-          <text id="text4" style="text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect4);display:inline;fill:#1a1a1a;fill-opacity:1" transform="matrix(1.5,0,0,1.5,-92.798118,-273.9092)" clip-path="none"><tspan x="318.33398" y="668.20187" id="tspan2">Б</tspan></text>
           <path d="m 404.13982,804.43382 h 15" stroke="#fcfcfc" stroke-width="7" id="path37-5-1" style="display:inline" clip-path="none"/>
           <path d="m 306.9513,804.839 h 58.42163" stroke="#fcfcfc" stroke-width="13.8146" id="path37-5-1-7" style="display:inline" clip-path="none"/>
           <path d="m 658.31053,804.31259 h 28.49683" stroke="#fcfcfc" stroke-width="9.6483" id="path43-2" style="display:inline" clip-path="none"/>
@@ -145,21 +144,22 @@
           <rect x="44.68" y="686.17" width="150.5" height="274.5" rx="4" ry="4" class="room" v-bind="roomBind('rect-hall')"/>
 
           <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
-<text x="277.24" y="731.01" class="room-label">112</text>
-          <text x="547.94" y="730.21" class="room-label small">Гардероб</text>
-          <text x="289.62" y="847.76" class="room-label small">Столовая</text>
-          <text x="389.61" y="730.26" class="room-label small">Буфет</text>
-          <text x="411.76" y="848.12" class="room-label">102</text>
-          <text x="672.5" y="730.34" class="room-label">Л</text>
-          <text x="461.6" y="729.78" class="room-label">Л</text>
-          <text x="790.63" y="730.67" class="room-label small">Медпункт</text>
-          <text x="730.76" y="729.54" class="room-label">101</text>
-          <text x="672.38" y="847.86" class="room-label">109</text>
-          <text x="617.13" y="730.54" class="room-label">115</text>
-          <text x="733.95" y="847.73" class="room-label small">Читальный зал</text>
-          <text x="829.38" y="848.04" class="room-label small">Библиотека</text>
-          <text x="970.93" y="832.92" class="room-label small">Спортзал</text>
-          <text x="119.93" y="831.42" class="room-label small">Актовый зал</text>
+<text x="277.24" y="731.65" class="room-label">112</text>
+          <text x="547.94" y="727.25" class="room-label small">Гардероб</text>
+          <text x="289.62" y="844.8" class="room-label small">Столовая</text>
+          <text x="389.61" y="727.3" class="room-label small">Буфет</text>
+          <text x="411.76" y="848.76" class="room-label">102</text>
+          <text x="672.5" y="730.98" class="room-label">Л</text>
+          <text x="461.6" y="730.42" class="room-label">Л</text>
+          <text x="790.63" y="727.11" class="room-label small" font-size="12.33">Медпункт</text>
+          <text x="730.76" y="730.18" class="room-label">101</text>
+          <text x="672.38" y="848.5" class="room-label">109</text>
+          <text x="617.13" y="730.02" class="room-label" font-size="20.76">115</text>
+          <text x="733.95" y="838.11" class="room-label small" font-size="9.82">Читальный</text>
+          <text x="733.95" y="848.42" class="room-label small" font-size="9.82">зал</text>
+          <text x="829.38" y="845.08" class="room-label small">Библиотека</text>
+          <text x="970.93" y="829.96" class="room-label small">Спортзал</text>
+          <text x="119.93" y="828.46" class="room-label small">Актовый зал</text>
         </g>
 
         <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->

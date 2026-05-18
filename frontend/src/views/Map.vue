@@ -135,24 +135,28 @@
             @close="closeRoomPanel"
           />
         </div>
-        <div class="map-legend" aria-label="Легенда по типам кабинетов">
-          <span class="legend-title">Цвет кабинета:</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--auditorium"></span>Аудитория</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--lab"></span>Лаборатория</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--sport"></span>Спортзал</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--hall"></span>Актовый зал</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Приёмная</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--library"></span>Библиотека / читальный зал</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--medical"></span>Медпункт</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--food"></span>Буфет / столовая</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--garderob"></span>Гардероб</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--wc"></span>Туалет (<b>Ж</b>/<b>М</b>)</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--stairs"></span>Лестница (<b>Л</b>)</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--stand"></span>Инфо-стенд («вы здесь»)</span>
-        </div>
-        <p class="map-legend-hint">
-          На карте: <b>Л</b> — лестница, <b>Ж</b> — женский туалет, <b>М</b> — мужской туалет.
-        </p>
+        <details class="map-legend-wrap" open>
+          <summary class="map-legend-summary">
+            Легенда
+            <span class="map-legend-hint-inline">
+              <b>Л</b> — лестница, <b>Ж</b>/<b>М</b> — туалет
+            </span>
+          </summary>
+          <div class="map-legend" aria-label="Легенда по типам кабинетов">
+            <span class="legend-item"><span class="legend-swatch legend-swatch--auditorium"></span>Аудитория</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--lab"></span>Лаборатория</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--sport"></span>Спортзал</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--hall"></span>Актовый зал</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Приёмная</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--library"></span>Библиотека</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--medical"></span>Медпункт</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--food"></span>Буфет</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--garderob"></span>Гардероб</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--wc"></span>Туалет</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--stairs"></span>Лестница</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch--stand"></span>Стенд</span>
+          </div>
+        </details>
       </template>
 
 
@@ -873,33 +877,6 @@ h1 {
 }
 
 /* ── Легенда: какой цвет = какой тип кабинета ── */
-.map-legend {
-  margin: 1rem 0 0;
-  padding: 0.6rem 0.9rem;
-  border-radius: var(--radius);
-  background: var(--surface-strong);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 1rem;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-}
-
-.map-legend-hint {
-  margin: 0.4rem 0 0;
-  padding: 0 0.2rem;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.map-legend-hint b {
-  color: var(--text);
-  font-weight: 700;
-}
-
 .legend-title {
   font-weight: 700;
   color: var(--text);
@@ -932,6 +909,81 @@ h1 {
 .legend-swatch--food       { background: rgba(234, 179, 8, 0.40);   border-color: rgba(161, 98, 7, 0.8); }
 .legend-swatch--garderob   { background: rgba(100, 116, 139, 0.30); border-color: rgba(51, 65, 85, 0.7); }
 .legend-swatch--stand      { background: rgba(37, 99, 235, 0.85);   border-color: #ffffff; box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.8); border-radius: 50%; }
+
+/* Компактная легенда: сворачивающаяся панель вместо большого блока. */
+.map-legend-wrap {
+  margin: 1rem auto 0;
+  max-width: 1100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.map-legend-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  font-weight: 600;
+  user-select: none;
+}
+
+.map-legend-summary::-webkit-details-marker {
+  display: none;
+}
+
+.map-legend-summary::after {
+  content: '▾';
+  margin-left: 0.5rem;
+  opacity: 0.55;
+  transition: transform 0.2s ease;
+}
+
+.map-legend-wrap[open] .map-legend-summary::after {
+  transform: rotate(180deg);
+}
+
+.map-legend-hint-inline {
+  font-weight: 400;
+  font-size: 0.78rem;
+  opacity: 0.75;
+  margin-left: 0.5rem;
+  text-align: right;
+}
+
+.map-legend-wrap .map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.4rem;
+}
+
+.map-legend-wrap .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.map-legend-wrap .legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.map-legend-wrap .legend-swatch--stand {
+  border-radius: 50%;
+}
 
 /* ── Заглушка для 1-го этажа ── */
 .floor-placeholder {

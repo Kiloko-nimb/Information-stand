@@ -162,25 +162,25 @@
           <rect x="61.08" y="710.02" width="100.89" height="39.81" rx="4" ry="4" class="room" v-bind="roomBind('408')"/>
 
           <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
-<text x="506.74" y="203.09" class="room-label">415</text>
-          <text x="507.02" y="294.7" class="room-label">416</text>
-          <text x="293.12" y="203.77" class="room-label">414</text>
-          <text x="292.98" y="294.85" class="room-label">413</text>
-          <text x="293.12" y="413.04" class="room-label">412</text>
-          <text x="506.74" y="413.04" class="room-label">417</text>
-          <text x="293.25" y="521.24" class="room-label">411</text>
-          <text x="140.75" y="683.49" class="room-label">409</text>
-          <text x="133.32" y="797.43" class="room-label">407</text>
-          <text x="253.44" y="797.52" class="room-label">406</text>
-          <text x="368.45" y="797.43" class="room-label">405</text>
-          <text x="505.43" y="797.52" class="room-label">404</text>
-          <text x="667.38" y="797.43" class="room-label">403</text>
-          <text x="668.25" y="683.29" class="room-label">401</text>
-          <text x="712.11" y="738.05" class="room-label">402</text>
-          <text x="545.73" y="683.58" class="room-label">Л</text>
-          <text x="253.44" y="683.78" class="room-label">Л</text>
-          <text x="400.35" y="119.25" class="room-label">Л</text>
-          <text x="111.53" y="737.92" class="room-label">408</text>
+<text x="506.74" y="203.74" class="room-label">415</text>
+          <text x="507.02" y="295.34" class="room-label">416</text>
+          <text x="293.12" y="204.41" class="room-label">414</text>
+          <text x="292.98" y="295.49" class="room-label">413</text>
+          <text x="293.12" y="413.68" class="room-label">412</text>
+          <text x="506.74" y="413.68" class="room-label">417</text>
+          <text x="293.25" y="521.88" class="room-label">411</text>
+          <text x="140.75" y="684.12" class="room-label">409</text>
+          <text x="133.32" y="798.07" class="room-label">407</text>
+          <text x="253.44" y="798.16" class="room-label">406</text>
+          <text x="368.45" y="798.07" class="room-label">405</text>
+          <text x="505.43" y="798.16" class="room-label">404</text>
+          <text x="667.38" y="798.07" class="room-label">403</text>
+          <text x="668.25" y="683.93" class="room-label">401</text>
+          <text x="712.11" y="738.69" class="room-label">402</text>
+          <text x="545.73" y="684.22" class="room-label">Л</text>
+          <text x="253.44" y="684.42" class="room-label">Л</text>
+          <text x="400.35" y="119.89" class="room-label">Л</text>
+          <text x="111.53" y="738.56" class="room-label">408</text>
         </g>
 
         <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->
