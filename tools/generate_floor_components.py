@@ -33,7 +33,11 @@ OUT_DIR = ROOT / "frontend" / "src" / "components"
 NS = {
     "svg": "http://www.w3.org/2000/svg",
     "inkscape": "http://www.inkscape.org/namespaces/inkscape",
-    "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.0.dtd",
+    # Inkscape's own namespace URI for sodipodi:nodetypes etc. has shifted
+    # between Inkscape 0.x and 1.x; both forms appear in the wild. The strip
+    # logic below matches any sodipodi-* URL anyway, but we keep the canonical
+    # one here so ET.register_namespace serializes the prefix.
+    "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
 }
 for prefix, uri in NS.items():
     ET.register_namespace(prefix if prefix != "svg" else "", uri)
@@ -41,8 +45,8 @@ for prefix, uri in NS.items():
 INKSCAPE_LABEL = f"{{{NS['inkscape']}}}label"
 
 # Vue-side labels for named (non-numbered) rects. Keys are the suffix after
-# "rect-" in the Inkscape label. Короткие односимвольные подписи лучше
-# читаются на карте; расшифровка живёт в легенде на странице.
+# "rect-" in the canonical Inkscape label. Короткие односимвольные
+# подписи лучше читаются на карте; расшифровка живёт в легенде на странице.
 NAMED_LABEL_TEXT = {
     "stairs-left": "Л",
     "stairs-center": "Л",
@@ -52,6 +56,25 @@ NAMED_LABEL_TEXT = {
     "reception": "Приёмная",
     "hall": "Актовый зал",
     "gym": "Спортзал",
+    "library": "Библиотека",
+    "reading": "Читальный зал",
+    "medical": "Медпункт",
+    "bufet": "Буфет",
+    "canteen": "Столовая",
+    "garderob": "Гардероб",
+}
+
+# Алиасы для лейблов, которые пользователь может нарисовать без префикса
+# "rect-" и/или в другой раскладке. Ключ — исходный лейбл в ловеркейсе,
+# значение — канонический ключ из NAMED_LABEL_TEXT.
+NAMED_ALIASES = {
+    "assembly-hall": "hall",
+    "sports-hall": "gym",
+    "sport-hall": "gym",
+    "reading-room": "reading",
+    "medical-office": "medical",
+    "stolovai": "canteen",
+    "stolovaya": "canteen",
 }
 
 # Подписи, которые рисуются крупно (как и номера кабинетов) — единичные
@@ -59,7 +82,7 @@ NAMED_LABEL_TEXT = {
 LARGE_NAMED_LABELS = {"Л", "Ж", "М"}
 
 # Russian floor names for the header.
-FLOOR_NAME = {2: "2 этаж", 3: "3 этаж", 4: "4 этаж"}
+FLOOR_NAME = {1: "1 этаж", 2: "2 этаж", 3: "3 этаж", 4: "4 этаж"}
 
 
 def _strip_ns(tag: str) -> str:
@@ -68,15 +91,24 @@ def _strip_ns(tag: str) -> str:
 
 
 def _attrib_no_ns(elem: ET.Element) -> dict[str, str]:
-    """Return element attributes with the inkscape/sodipodi namespace stripped."""
+    """Return element attributes with the inkscape/sodipodi namespace stripped.
+
+    Any attribute key of the form `{namespace-uri}local-name` is rewritten to
+    `prefix:local-name` if the namespace is one of inkscape/sodipodi (those
+    get dropped from output downstream), and dropped entirely otherwise so
+    that no stray Clark-notation keys leak into the rendered Vue template.
+    """
     out: dict[str, str] = {}
     for key, value in elem.attrib.items():
-        if key.startswith(f"{{{NS['inkscape']}}}"):
-            out[f"inkscape:{key.split('}', 1)[1]}"] = value
-        elif key.startswith(f"{{{NS['sodipodi']}}}"):
-            out[f"sodipodi:{key.split('}', 1)[1]}"] = value
-        else:
-            out[key] = value
+        if key.startswith("{") and "}" in key:
+            uri, local = key[1:].split("}", 1)
+            if uri == NS["inkscape"]:
+                out[f"inkscape:{local}"] = value
+            elif "sodipodi.sourceforge.net" in uri:
+                out[f"sodipodi:{local}"] = value
+            # Unknown namespace — silently drop it.
+            continue
+        out[key] = value
     return out
 
 
@@ -136,22 +168,83 @@ def _serialize_element(elem: ET.Element, depth: int = 0) -> str:
 
 
 def _parse_room_rects(root: ET.Element) -> list[tuple[str, dict[str, float], ET.Element]]:
-    """Find all rect[inkscape:label] and return (label, geometry, element).
+    """Find all rect[inkscape:label] and return (canonical_label, geometry, element).
 
-    Skips the unlabeled background rect (820×900 white).
+    Skips the unlabeled background rect (820×900 white) and any rect whose label
+    is not a room (e.g. `stand`, handled separately).
     """
     out = []
     for rect in root.iter(f"{{{NS['svg']}}}rect"):
-        label = rect.attrib.get(INKSCAPE_LABEL)
-        if not label:
+        raw_label = rect.attrib.get(INKSCAPE_LABEL)
+        if not raw_label:
+            continue
+        canonical = _canonicalize_label(raw_label)
+        if canonical is None:
             continue
         geom = _normalize_rect_geometry(rect)
-        out.append((label, geom, rect))
+        out.append((canonical, geom, rect))
     return out
 
 
+def _parse_stand(root: ET.Element) -> dict[str, float] | None:
+    """Find the inkscape:label="stand" element (ellipse/circle/rect).
+
+    Returns its center as {"cx": float, "cy": float} in source-svg coordinates
+    (i.e. before any parent <g transform> is applied; we keep the transform
+    on the wrapper in the rendered output, so coords stay consistent).
+    None if no stand marker was placed on this floor.
+    """
+    for elem in root.iter():
+        if elem.attrib.get(INKSCAPE_LABEL) != "stand":
+            continue
+        tag = _strip_ns(elem.tag)
+        if tag in ("ellipse", "circle"):
+            return {
+                "cx": float(elem.attrib.get("cx", "0")),
+                "cy": float(elem.attrib.get("cy", "0")),
+            }
+        if tag == "rect":
+            geom = _normalize_rect_geometry(elem)
+            return {
+                "cx": geom["x"] + geom["width"] / 2,
+                "cy": geom["y"] + geom["height"] / 2,
+            }
+    return None
+
+
+def _canonicalize_label(label: str) -> str | None:
+    """Bring a free-form Inkscape label to canonical form.
+
+    Returns one of:
+      - "rect<digits>"     for numbered cabinets,
+      - "rect-<key>"       for named rooms (key from NAMED_LABEL_TEXT),
+      - None               for labels we don't care about (e.g. "stand",
+                           which is rendered as a separate marker, not a room).
+
+    Raises if the label looks like a room label but we don't recognize it.
+    """
+    raw = label.strip()
+    if not raw:
+        return None
+    if raw == "stand":
+        return None
+    if re.fullmatch(r"rect\d+", raw):
+        return raw
+    # Strip optional "rect-" prefix and normalize case for named rooms.
+    key = raw[5:] if raw.startswith("rect-") else raw
+    key = key.lower()
+    key = NAMED_ALIASES.get(key, key)
+    if key in NAMED_LABEL_TEXT:
+        return f"rect-{key}"
+    raise RuntimeError(
+        f"Unknown room label {label!r}: not a numbered cabinet (rectNNN) and not"
+        f" a known named-room key (one of {sorted(NAMED_LABEL_TEXT)}) or an alias"
+        f" of one (one of {sorted(NAMED_ALIASES)})."
+    )
+
+
 def _bind_name_for_label(label: str) -> str:
-    """Convert an Inkscape label into the argument passed to roomBind(...) in Vue."""
+    """Convert a canonical label into the argument passed to roomBind(...) in Vue."""
     if re.fullmatch(r"rect\d+", label):
         return label[len("rect"):]  # "rect215" -> "215"
     if label.startswith("rect-"):
@@ -220,26 +313,46 @@ def _is_glyph_path(elem: ET.Element) -> bool:
     return True
 
 
-def _render_non_room_children(root_g: ET.Element, rooms: set[int]) -> str:
+def _is_background_rect(elem: ET.Element, vb_w: float, vb_h: float) -> bool:
+    """True if this is the unlabeled white «page» background rect from Inkscape/Figma.
+
+    Matches either:
+    - the 820×900 rect that Figma exports stuck onto our floors 2–4, or
+    - any «почти весь viewBox» unlabeled rect on other floors.
+    """
+    try:
+        w = float(elem.attrib.get("width", "0"))
+        h = float(elem.attrib.get("height", "0"))
+    except ValueError:
+        return False
+    if w == 820 and h == 900:
+        return True
+    # Tolerate small floating-point noise from Inkscape.
+    if vb_w > 0 and vb_h > 0 and w >= vb_w * 0.95 and h >= vb_h * 0.95:
+        return True
+    return False
+
+
+def _render_non_room_children(root_g: ET.Element, rooms: set[int], vb_w: float, vb_h: float) -> str:
     """Serialize all children of the root <g> except labeled rects.
 
     Also skips:
-    - the unlabeled 820×900 white background rect (we paint our own
+    - the unlabeled near-full-viewBox white background rect (we paint our own
       bg-dots pattern),
     - vectorized glyph paths (room numbers drawn as text in Inkscape and
       converted to outlines) — we add fresh, Vue-controlled <text>
-      labels instead.
+      labels instead,
+    - the `stand` ellipse/rect (rendered separately as a «вы здесь» marker).
     """
     out_parts = []
     for child in root_g:
         if id(child) in rooms:
             continue
+        if child.attrib.get(INKSCAPE_LABEL) == "stand":
+            continue
         tag = _strip_ns(child.tag)
-        if tag == "rect":
-            w = child.attrib.get("width")
-            h = child.attrib.get("height")
-            if w == "820" and h == "900":
-                continue
+        if tag == "rect" and _is_background_rect(child, vb_w, vb_h):
+            continue
         if tag in ("namedview", "metadata", "defs"):
             continue
         if _is_glyph_path(child):
@@ -256,9 +369,9 @@ VUE_TEMPLATE = """<template>
 
     <div class="map-container">
       <svg
-        width="820"
-        height="900"
-        viewBox="0 0 820 900"
+        width="{svg_width}"
+        height="{svg_height}"
+        viewBox="{view_box}"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         @click="handleSvgClick"
@@ -275,16 +388,21 @@ VUE_TEMPLATE = """<template>
           </filter>
         </defs>
 
-        <rect width="820" height="900" fill="url(#bg-dots-{floor_number})"/>
+        <rect x="{vb_x}" y="{vb_y}" width="{vb_w}" height="{vb_h}" fill="url(#bg-dots-{floor_number})"/>
 
-        <!-- Стены, двери и прочая графика из исходного Inkscape-файла. -->
+        <g{wrapper_transform_attr}>
+          <!-- Стены, двери и прочая графика из исходного Inkscape-файла. -->
 {walls}
 
-        <!-- Кабинеты и именованные помещения. -->
+          <!-- Кабинеты и именованные помещения. -->
 {rooms}
 
-        <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
+          <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
 {labels}
+        </g>
+
+        <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->
+{stand_marker}
       </svg>
     </div>
   </div>
@@ -313,6 +431,12 @@ const NAMED_TYPE_KEY = {{
   'rect-stairs-right': 'stairs',
   'rect-hall': 'hall',
   'rect-gym': 'sport',
+  'rect-library': 'library',
+  'rect-reading': 'library',
+  'rect-medical': 'medical',
+  'rect-bufet': 'food',
+  'rect-canteen': 'food',
+  'rect-garderob': 'garderob',
 }}
 
 export default {{
@@ -447,8 +571,42 @@ text {{
 /* Туалеты — отчётливый тёплый розовый, чтобы не сливаться с пустым (--other) и не путаться с лестницей. */
 .room--type-wc         {{ fill: #ec4899; fill-opacity: 0.22; stroke: #be185d; stroke-opacity: 0.7;  stroke-width: 1.3; }}
 .room--type-stairs     {{ fill: #6366f1; fill-opacity: 0.26; stroke: #4338ca; stroke-opacity: 0.75; stroke-width: 1.3; stroke-dasharray: 6 4; }}
+/* Библиотека и читальный зал — бирюзовый. */
+.room--type-library    {{ fill: #14b8a6; fill-opacity: 0.24; stroke: #0f766e; stroke-opacity: 0.75; stroke-width: 1.3; }}
+/* Медпункт — ярко-красный, чтобы было заметно в экстренном случае. */
+.room--type-medical    {{ fill: #ef4444; fill-opacity: 0.22; stroke: #b91c1c; stroke-opacity: 0.8;  stroke-width: 1.3; }}
+/* Буфет и столовая — тёплый жёлтый. */
+.room--type-food       {{ fill: #eab308; fill-opacity: 0.30; stroke: #a16207; stroke-opacity: 0.8;  stroke-width: 1.3; }}
+/* Гардероб — нейтральный сине-серый. */
+.room--type-garderob   {{ fill: #64748b; fill-opacity: 0.20; stroke: #334155; stroke-opacity: 0.7;  stroke-width: 1.3; }}
 /* Кабинеты без известного типа — почти прозрачные, чтобы не конкурировать с цветными типами и не выглядеть «использованной» подсветкой. */
 .room--type-other      {{ fill: #cbd5e1; fill-opacity: 0.10; stroke: #94a3b8; stroke-opacity: 0.55; stroke-width: 1; }}
+
+/* «Вы здесь» — маркер инфо-стенда. */
+.stand-marker {{
+  pointer-events: none;
+}}
+
+.stand-marker .stand-halo {{
+  fill: rgba(37, 99, 235, 0.25);
+  animation: stand-halo-pulse-{floor_number} 1.8s ease-in-out infinite;
+}}
+
+.stand-marker .stand-dot {{
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}}
+
+@keyframes stand-halo-pulse-{floor_number} {{
+  0%, 100% {{ opacity: 0.55; transform: scale(1); }}
+  50%      {{ opacity: 0.15; transform: scale(1.6); }}
+}}
+
+.stand-marker .stand-halo {{
+  transform-origin: center;
+  transform-box: fill-box;
+}}
 
 .room.room--interactive:hover {{
   fill-opacity: 0.25;
@@ -495,14 +653,51 @@ text {{
 """
 
 
+def _parse_view_box(root: ET.Element) -> tuple[float, float, float, float]:
+    """Return (x, y, width, height) from the SVG root's viewBox.
+
+    Falls back to width/height attributes if viewBox is missing.
+    """
+    vb = (root.attrib.get("viewBox") or "").strip()
+    if vb:
+        parts = re.split(r"[\s,]+", vb)
+        if len(parts) == 4:
+            return tuple(float(p) for p in parts)  # type: ignore[return-value]
+    # Fallback: width/height attributes, assume origin (0,0).
+    w = float(root.attrib.get("width", "820") or "820")
+    h = float(root.attrib.get("height", "900") or "900")
+    return (0.0, 0.0, w, h)
+
+
+def _render_stand_marker(stand: dict[str, float] | None) -> str:
+    """Render the info-stand «you-are-here» marker in viewBox coordinates.
+
+    If no `stand` element exists on this floor, return an empty string.
+    Two concentric circles: a faint pulsing halo and a solid centred dot.
+    """
+    if stand is None:
+        return ""
+    cx = round(stand["cx"], 2)
+    cy = round(stand["cy"], 2)
+    return (
+        f"        <g class=\"stand-marker\">\n"
+        f"          <circle class=\"stand-halo\" cx=\"{cx}\" cy=\"{cy}\" r=\"12\"/>\n"
+        f"          <circle class=\"stand-dot\"  cx=\"{cx}\" cy=\"{cy}\" r=\"6\"/>\n"
+        f"        </g>"
+    )
+
+
 def generate_floor(floor_number: int) -> None:
     src = SVG_DIR / f"floor{floor_number}.svg"
     out = OUT_DIR / f"MapFloor{floor_number}.vue"
     tree = ET.parse(src)
     root = tree.getroot()
 
-    # The SVG body lives inside a single root <g clip-path="url(#clip0_9_2)">.
-    # We don't render the clipPath — strip it.
+    # The drawing lives inside the topmost <g> child of <svg>. We propagate
+    # its `transform` attribute (Inkscape sometimes shifts the whole drawing
+    # by translate(...)) onto a wrapper <g> in the output, but we strip the
+    # `clip-path` because Figma exports a dangling reference that clips out
+    # everything we draw outside the original Figma frame.
     root_g = None
     for child in root:
         if _strip_ns(child.tag) == "g":
@@ -510,9 +705,15 @@ def generate_floor(floor_number: int) -> None:
             break
     if root_g is None:
         raise RuntimeError(f"{src}: no top-level <g> found")
+    root_g_transform = root_g.attrib.get("transform", "").strip()
+
+    vb_x, vb_y, vb_w, vb_h = _parse_view_box(root)
+    svg_width = root.attrib.get("width") or f"{vb_w}"
+    svg_height = root.attrib.get("height") or f"{vb_h}"
 
     rooms = _parse_room_rects(root)
     room_ids = {id(elem) for _, _, elem in rooms}
+    stand = _parse_stand(root)
 
     room_blocks = []
     label_blocks = []
@@ -522,21 +723,47 @@ def generate_floor(floor_number: int) -> None:
         if text_markup:
             label_blocks.append(text_markup)
 
-    walls_markup = _render_non_room_children(root_g, room_ids)
+    walls_markup = _render_non_room_children(root_g, room_ids, vb_w, vb_h)
+
+    wrapper_transform_attr = (
+        f' transform="{root_g_transform}"' if root_g_transform else ""
+    )
 
     content = VUE_TEMPLATE.format(
         floor_number=floor_number,
         floor_name=FLOOR_NAME[floor_number],
+        svg_width=svg_width,
+        svg_height=svg_height,
+        view_box=f"{_fmt(vb_x)} {_fmt(vb_y)} {_fmt(vb_w)} {_fmt(vb_h)}",
+        vb_x=_fmt(vb_x),
+        vb_y=_fmt(vb_y),
+        vb_w=_fmt(vb_w),
+        vb_h=_fmt(vb_h),
+        wrapper_transform_attr=wrapper_transform_attr,
         walls=walls_markup,
-        rooms="\n        ".join(room_blocks),
-        labels="\n        ".join(label_blocks),
+        rooms="\n          ".join(room_blocks),
+        labels="\n          ".join(label_blocks),
+        stand_marker=_render_stand_marker(stand),
     )
     out.write_text(content, encoding="utf-8")
-    print(f"Wrote {out} ({len(rooms)} rooms, {len(label_blocks)} labels)")
+    extra = []
+    if stand is not None:
+        extra.append("stand-marker")
+    if root_g_transform:
+        extra.append("transform-preserved")
+    extras = f" [{', '.join(extra)}]" if extra else ""
+    print(f"Wrote {out} ({len(rooms)} rooms, {len(label_blocks)} labels){extras}")
+
+
+def _fmt(value: float) -> str:
+    """Format a float without trailing zeros: 820.0 → '820', 1005.87 → '1005.87'."""
+    if value == int(value):
+        return str(int(value))
+    return f"{value:.4f}".rstrip("0").rstrip(".")
 
 
 def main() -> None:
-    for floor in (2, 3, 4):
+    for floor in (1, 2, 3, 4):
         generate_floor(floor)
 
 

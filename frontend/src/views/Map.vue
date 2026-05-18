@@ -86,12 +86,15 @@
             :class="{ 'is-panning': isPanning }"
             :style="{ transform: `translate3d(${panX}px, ${panY}px, 0) scale(${zoomLevel})` }"
           >
-            <div v-if="currentFloor === 1" class="floor-placeholder">
-              <Icon name="map" :size="48" />
-              <h3>1 этаж</h3>
-              <p>Интерактивная карта 1-го этажа в подготовке.</p>
-              <p class="floor-placeholder-hint">Пока доступны 2, 3 и 4 этажи.</p>
-            </div>
+            <MapFloor1
+              v-if="currentFloor === 1"
+              :highlight-free-rooms="freeRoomsMode"
+              :free-rooms="freeRoomNumbers"
+              :busy-rooms="busyRoomNumbers"
+              :highlighted-room="highlightedRoom"
+              :room-types="roomTypesByFloor[1] || {}"
+              @room-click="onRoomClick"
+            />
             <MapFloor2
               v-else-if="currentFloor === 2"
               :highlight-free-rooms="freeRoomsMode"
@@ -132,17 +135,22 @@
             @close="closeRoomPanel"
           />
         </div>
-        <div v-if="currentFloor !== 1" class="map-legend" aria-label="Легенда по типам кабинетов">
+        <div class="map-legend" aria-label="Легенда по типам кабинетов">
           <span class="legend-title">Цвет кабинета:</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--auditorium"></span>Аудитория</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--lab"></span>Лаборатория</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--sport"></span>Спортзал</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--hall"></span>Актовый зал</span>
-          <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Администрация</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--admin"></span>Приёмная</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--library"></span>Библиотека / читальный зал</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--medical"></span>Медпункт</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--food"></span>Буфет / столовая</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--garderob"></span>Гардероб</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--wc"></span>Туалет (<b>Ж</b>/<b>М</b>)</span>
           <span class="legend-item"><span class="legend-swatch legend-swatch--stairs"></span>Лестница (<b>Л</b>)</span>
+          <span class="legend-item"><span class="legend-swatch legend-swatch--stand"></span>Инфо-стенд («вы здесь»)</span>
         </div>
-        <p v-if="currentFloor !== 1" class="map-legend-hint">
+        <p class="map-legend-hint">
           На карте: <b>Л</b> — лестница, <b>Ж</b> — женский туалет, <b>М</b> — мужской туалет.
         </p>
       </template>
@@ -155,6 +163,7 @@
 <script>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import MapFloor1 from '../components/MapFloor1.vue'
 import MapFloor2 from '../components/MapFloor2.vue'
 import MapFloor3 from '../components/MapFloor3.vue'
 import MapFloor4 from '../components/MapFloor4.vue'
@@ -164,12 +173,12 @@ import DateCarousel from '../components/DateCarousel.vue'
 import api from '../services/api'
 
 // Этажи, для которых есть интерактивная Vue-карта (с подсветкой/кликом).
-// Floor 1 пока заглушка — карта в подготовке.
-const INTERACTIVE_FLOORS = new Set([2, 3, 4])
+const INTERACTIVE_FLOORS = new Set([1, 2, 3, 4])
 
 export default {
   name: 'Map',
   components: {
+    MapFloor1,
     MapFloor2,
     MapFloor3,
     MapFloor4,
@@ -181,8 +190,9 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const floors = [1, 2, 3, 4]
-    // По умолчанию открываем 2-й этаж: 1-й ещё не подготовлен (заглушка).
-    const currentFloor = ref(2)
+    // По умолчанию открываем 1-й этаж — именно там физически стоит инфо-стенд, и
+    // желает посетитель в большинстве случаев сначала видеть своё текущее расположение.
+    const currentFloor = ref(1)
     const highlightedRoom = ref(null)
 
     // Выбранная пользователем дата (для фильтра расписания в поповере).
@@ -917,6 +927,11 @@ h1 {
 .legend-swatch--admin      { background: rgba(245, 158, 11, 0.40);  border-color: rgba(180, 83, 9, 0.8); }
 .legend-swatch--wc         { background: rgba(236, 72, 153, 0.32);  border-color: rgba(190, 24, 93, 0.7); }
 .legend-swatch--stairs     { background: rgba(99, 102, 241, 0.36);  border-color: rgba(67, 56, 202, 0.75); background-image: repeating-linear-gradient(135deg, transparent 0, transparent 3px, rgba(67, 56, 202, 0.6) 3px, rgba(67, 56, 202, 0.6) 4px); }
+.legend-swatch--library    { background: rgba(20, 184, 166, 0.34);  border-color: rgba(15, 118, 110, 0.75); }
+.legend-swatch--medical    { background: rgba(239, 68, 68, 0.32);   border-color: rgba(185, 28, 28, 0.8); }
+.legend-swatch--food       { background: rgba(234, 179, 8, 0.40);   border-color: rgba(161, 98, 7, 0.8); }
+.legend-swatch--garderob   { background: rgba(100, 116, 139, 0.30); border-color: rgba(51, 65, 85, 0.7); }
+.legend-swatch--stand      { background: rgba(37, 99, 235, 0.85);   border-color: #ffffff; box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.8); border-radius: 50%; }
 
 /* ── Заглушка для 1-го этажа ── */
 .floor-placeholder {

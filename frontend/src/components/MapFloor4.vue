@@ -25,9 +25,10 @@
           </filter>
         </defs>
 
-        <rect width="820" height="900" fill="url(#bg-dots-4)"/>
+        <rect x="0" y="0" width="820" height="900" fill="url(#bg-dots-4)"/>
 
-        <!-- Стены, двери и прочая графика из исходного Inkscape-файла. -->
+        <g>
+          <!-- Стены, двери и прочая графика из исходного Inkscape-файла. -->
 <line x1="365" y1="538.75" x2="437" y2="538.75" stroke="#1A1A1A" stroke-width="2.5" id="line1"/>
           <path d="M220 140H365V90H435V140H580V540H435V640H760V830H60V640H365V540H220V140Z" stroke="#1A1A1A" stroke-width="5" stroke-linecap="square" id="path2"/>
           <path d="M365 140V540" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="square" id="path3"/>
@@ -139,47 +140,51 @@
           <path d="M400.5 93V130.5" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="square" id="path129"/>
           <path d="M736 772V757" stroke="#FCFCFC" stroke-width="7" id="path130"/>
 
-        <!-- Кабинеты и именованные помещения. -->
+          <!-- Кабинеты и именованные помещения. -->
 <rect x="435.44" y="140.97" width="142.6" height="108.25" rx="4" ry="4" class="room" v-bind="roomBind('415')"/>
-        <rect x="435.72" y="250.3" width="142.6" height="72.8" rx="4" ry="4" class="room" v-bind="roomBind('416')"/>
-        <rect x="221.68" y="141.51" width="142.88" height="108.52" rx="4" ry="4" class="room" v-bind="roomBind('414')"/>
-        <rect x="221.68" y="250.58" width="142.6" height="72.53" rx="4" ry="4" class="room" v-bind="roomBind('413')"/>
-        <rect x="221.95" y="323.65" width="142.33" height="162.78" rx="4" ry="4" class="room" v-bind="roomBind('412')"/>
-        <rect x="435.44" y="323.65" width="142.6" height="162.78" rx="4" ry="4" class="room" v-bind="roomBind('417')"/>
-        <rect x="221.72" y="487.79" width="143.06" height="50.9" rx="4" ry="4" class="room" v-bind="roomBind('411')"/>
-        <rect x="61.7" y="641.84" width="158.1" height="67.29" rx="4" ry="4" class="room" v-bind="roomBind('409')"/>
-        <rect x="62.08" y="750.39" width="142.48" height="78.08" rx="4" ry="4" class="room" v-bind="roomBind('407')"/>
-        <rect x="205.53" y="750.77" width="95.82" height="77.51" rx="4" ry="4" class="room" v-bind="roomBind('406')"/>
-        <rect x="302.51" y="750.96" width="131.88" height="76.93" rx="4" ry="4" class="room" v-bind="roomBind('405')"/>
-        <rect x="435.73" y="750.96" width="139.4" height="77.12" rx="4" ry="4" class="room" v-bind="roomBind('404')"/>
-        <rect x="576.48" y="750.58" width="181.81" height="77.7" rx="4" ry="4" class="room" v-bind="roomBind('403')"/>
-        <rect x="578.02" y="641.65" width="180.46" height="67.29" rx="4" ry="4" class="room" v-bind="roomBind('401')"/>
-        <rect x="666.32" y="710.48" width="91.58" height="39.14" rx="4" ry="4" class="room" v-bind="roomBind('402')"/>
-        <rect x="514.4" y="641.26" width="62.66" height="68.64" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-right')"/>
-        <rect x="219.99" y="641.84" width="66.9" height="67.87" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-left')"/>
-        <rect x="366.71" y="91.58" width="67.29" height="39.33" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-center')"/>
-        <rect x="61.08" y="710.02" width="100.89" height="39.81" rx="4" ry="4" class="room" v-bind="roomBind('408')"/>
+          <rect x="435.72" y="250.3" width="142.6" height="72.8" rx="4" ry="4" class="room" v-bind="roomBind('416')"/>
+          <rect x="221.68" y="141.51" width="142.88" height="108.52" rx="4" ry="4" class="room" v-bind="roomBind('414')"/>
+          <rect x="221.68" y="250.58" width="142.6" height="72.53" rx="4" ry="4" class="room" v-bind="roomBind('413')"/>
+          <rect x="221.95" y="323.65" width="142.33" height="162.78" rx="4" ry="4" class="room" v-bind="roomBind('412')"/>
+          <rect x="435.44" y="323.65" width="142.6" height="162.78" rx="4" ry="4" class="room" v-bind="roomBind('417')"/>
+          <rect x="221.72" y="487.79" width="143.06" height="50.9" rx="4" ry="4" class="room" v-bind="roomBind('411')"/>
+          <rect x="61.7" y="641.84" width="158.1" height="67.29" rx="4" ry="4" class="room" v-bind="roomBind('409')"/>
+          <rect x="62.08" y="750.39" width="142.48" height="78.08" rx="4" ry="4" class="room" v-bind="roomBind('407')"/>
+          <rect x="205.53" y="750.77" width="95.82" height="77.51" rx="4" ry="4" class="room" v-bind="roomBind('406')"/>
+          <rect x="302.51" y="750.96" width="131.88" height="76.93" rx="4" ry="4" class="room" v-bind="roomBind('405')"/>
+          <rect x="435.73" y="750.96" width="139.4" height="77.12" rx="4" ry="4" class="room" v-bind="roomBind('404')"/>
+          <rect x="576.48" y="750.58" width="181.81" height="77.7" rx="4" ry="4" class="room" v-bind="roomBind('403')"/>
+          <rect x="578.02" y="641.65" width="180.46" height="67.29" rx="4" ry="4" class="room" v-bind="roomBind('401')"/>
+          <rect x="666.32" y="710.48" width="91.58" height="39.14" rx="4" ry="4" class="room" v-bind="roomBind('402')"/>
+          <rect x="514.4" y="641.26" width="62.66" height="68.64" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-right')"/>
+          <rect x="219.99" y="641.84" width="66.9" height="67.87" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-left')"/>
+          <rect x="366.71" y="91.58" width="67.29" height="39.33" rx="4" ry="4" class="room" v-bind="roomBind('rect-stairs-center')"/>
+          <rect x="61.08" y="710.02" width="100.89" height="39.81" rx="4" ry="4" class="room" v-bind="roomBind('408')"/>
 
-        <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
+          <!-- Подписи кабинетов (центрированы поверх прямоугольников). -->
 <text x="506.74" y="203.09" class="room-label">415</text>
-        <text x="507.02" y="294.7" class="room-label">416</text>
-        <text x="293.12" y="203.77" class="room-label">414</text>
-        <text x="292.98" y="294.85" class="room-label">413</text>
-        <text x="293.12" y="413.04" class="room-label">412</text>
-        <text x="506.74" y="413.04" class="room-label">417</text>
-        <text x="293.25" y="521.24" class="room-label">411</text>
-        <text x="140.75" y="683.49" class="room-label">409</text>
-        <text x="133.32" y="797.43" class="room-label">407</text>
-        <text x="253.44" y="797.52" class="room-label">406</text>
-        <text x="368.45" y="797.43" class="room-label">405</text>
-        <text x="505.43" y="797.52" class="room-label">404</text>
-        <text x="667.38" y="797.43" class="room-label">403</text>
-        <text x="668.25" y="683.29" class="room-label">401</text>
-        <text x="712.11" y="738.05" class="room-label">402</text>
-        <text x="545.73" y="683.58" class="room-label">Л</text>
-        <text x="253.44" y="683.78" class="room-label">Л</text>
-        <text x="400.35" y="119.25" class="room-label">Л</text>
-        <text x="111.53" y="737.92" class="room-label">408</text>
+          <text x="507.02" y="294.7" class="room-label">416</text>
+          <text x="293.12" y="203.77" class="room-label">414</text>
+          <text x="292.98" y="294.85" class="room-label">413</text>
+          <text x="293.12" y="413.04" class="room-label">412</text>
+          <text x="506.74" y="413.04" class="room-label">417</text>
+          <text x="293.25" y="521.24" class="room-label">411</text>
+          <text x="140.75" y="683.49" class="room-label">409</text>
+          <text x="133.32" y="797.43" class="room-label">407</text>
+          <text x="253.44" y="797.52" class="room-label">406</text>
+          <text x="368.45" y="797.43" class="room-label">405</text>
+          <text x="505.43" y="797.52" class="room-label">404</text>
+          <text x="667.38" y="797.43" class="room-label">403</text>
+          <text x="668.25" y="683.29" class="room-label">401</text>
+          <text x="712.11" y="738.05" class="room-label">402</text>
+          <text x="545.73" y="683.58" class="room-label">Л</text>
+          <text x="253.44" y="683.78" class="room-label">Л</text>
+          <text x="400.35" y="119.25" class="room-label">Л</text>
+          <text x="111.53" y="737.92" class="room-label">408</text>
+        </g>
+
+        <!-- Точка инфо-стенда («вы здесь») — в координатах viewBox. -->
+
       </svg>
     </div>
   </div>
@@ -208,6 +213,12 @@ const NAMED_TYPE_KEY = {
   'rect-stairs-right': 'stairs',
   'rect-hall': 'hall',
   'rect-gym': 'sport',
+  'rect-library': 'library',
+  'rect-reading': 'library',
+  'rect-medical': 'medical',
+  'rect-bufet': 'food',
+  'rect-canteen': 'food',
+  'rect-garderob': 'garderob',
 }
 
 export default {
@@ -342,8 +353,42 @@ text {
 /* Туалеты — отчётливый тёплый розовый, чтобы не сливаться с пустым (--other) и не путаться с лестницей. */
 .room--type-wc         { fill: #ec4899; fill-opacity: 0.22; stroke: #be185d; stroke-opacity: 0.7;  stroke-width: 1.3; }
 .room--type-stairs     { fill: #6366f1; fill-opacity: 0.26; stroke: #4338ca; stroke-opacity: 0.75; stroke-width: 1.3; stroke-dasharray: 6 4; }
+/* Библиотека и читальный зал — бирюзовый. */
+.room--type-library    { fill: #14b8a6; fill-opacity: 0.24; stroke: #0f766e; stroke-opacity: 0.75; stroke-width: 1.3; }
+/* Медпункт — ярко-красный, чтобы было заметно в экстренном случае. */
+.room--type-medical    { fill: #ef4444; fill-opacity: 0.22; stroke: #b91c1c; stroke-opacity: 0.8;  stroke-width: 1.3; }
+/* Буфет и столовая — тёплый жёлтый. */
+.room--type-food       { fill: #eab308; fill-opacity: 0.30; stroke: #a16207; stroke-opacity: 0.8;  stroke-width: 1.3; }
+/* Гардероб — нейтральный сине-серый. */
+.room--type-garderob   { fill: #64748b; fill-opacity: 0.20; stroke: #334155; stroke-opacity: 0.7;  stroke-width: 1.3; }
 /* Кабинеты без известного типа — почти прозрачные, чтобы не конкурировать с цветными типами и не выглядеть «использованной» подсветкой. */
 .room--type-other      { fill: #cbd5e1; fill-opacity: 0.10; stroke: #94a3b8; stroke-opacity: 0.55; stroke-width: 1; }
+
+/* «Вы здесь» — маркер инфо-стенда. */
+.stand-marker {
+  pointer-events: none;
+}
+
+.stand-marker .stand-halo {
+  fill: rgba(37, 99, 235, 0.25);
+  animation: stand-halo-pulse-4 1.8s ease-in-out infinite;
+}
+
+.stand-marker .stand-dot {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+@keyframes stand-halo-pulse-4 {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.15; transform: scale(1.6); }
+}
+
+.stand-marker .stand-halo {
+  transform-origin: center;
+  transform-box: fill-box;
+}
 
 .room.room--interactive:hover {
   fill-opacity: 0.25;
