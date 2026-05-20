@@ -1116,11 +1116,18 @@ async function saveModal() {
 .data-table tr:hover td {
   background: rgba(255,255,255,0.02);
 }
+/* Ячейка с кнопками действий. Раньше тут было `display: flex`, но это
+   ломает `<td>` как табличную ячейку: бордеры строк не дотягивались
+   до правого края, а сами кнопки визуально «вываливались» из строки
+   (особенно заметно на разделе «Сотрудники»). Возвращаем дефолтный
+   `display: table-cell`, а выравнивание делаем через `text-align` —
+   кнопки внутри уже `inline-flex`. */
 .actions {
   white-space: nowrap;
-  display: flex;
-  gap: 0.3rem;
-  justify-content: flex-end;
+  text-align: right;
+}
+.actions button + button {
+  margin-left: 0.3rem;
 }
 .actions button {
   background: none;

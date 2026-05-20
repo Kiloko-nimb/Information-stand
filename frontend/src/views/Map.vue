@@ -80,7 +80,15 @@
     <div class="map-container">
       <!-- 1–4 этажи — общий контейнер с zoom/pan -->
       <template v-if="floors.includes(currentFloor)">
-        <div class="svg-floor-map" @wheel.prevent="handleWheel" @mousedown="startPan">
+        <div
+          class="svg-floor-map"
+          @wheel.prevent="handleWheel"
+          @pointerdown="startPan"
+          @pointermove="onPointerMove"
+          @pointerup="stopPan"
+          @pointercancel="stopPan"
+          @pointerleave="stopPan"
+        >
           <div
             class="svg-map-wrapper"
             :class="{ 'is-panning': isPanning }"
@@ -299,6 +307,9 @@ export default {
     const isPanning = ref(false)
     const startX = ref(0)
     const startY = ref(0)
+    // pointerId текущего пана. Нужен, чтобы игнорировать второй палец
+    // во время pinch-zoom и чтобы вернуть захват (releasePointerCapture).
+    let activePointerId = null
 
     const MIN_ZOOM = 0.5
     const MAX_ZOOM = 3
@@ -319,43 +330,54 @@ export default {
       panY.value = 0
     }
 
+    // Панование карты реализовано через Pointer Events — это унифицирует
+    // мышь, тач и stylus, не требуя отдельных touch*-хендлеров. До этого
+    // использовались mousedown/mousemove/mouseup, поэтому на сенсорном киоске
+    // карту нельзя было перетаскивать.
     const startPan = (event) => {
-      // Не перехватываем клики с кнопок зума и интерактивных элементов.
-      // .room-info-panel — это выехавшая панель расписания по кабинету:
-      // без этого исключения mousedown на ней срабатывал бы как панование карты,
-      // и при любом движении мыши внутри панели карта бы уезжала в сторону.
+      // Игнорируем панование, если клик/тап начался на интерактивном
+      // элементе: кнопках зума, кабинетах, панели с расписанием и т.п.
       if (event.target && event.target.closest && event.target.closest('.zoom-controls, button, a, [data-room], .room-info-panel, .map-legend')) return
+      // На мыши реагируем только на левую кнопку (button=0).
+      if (event.pointerType === 'mouse' && event.button !== 0) return
+      // Если уже ведём пан другим пальцем — второй pointer не перехватываем
+      // (иначе pinch-zoom браузера будет вызывать пан по второму пальцу).
+      if (activePointerId !== null) return
+      activePointerId = event.pointerId
       isPanning.value = true
       startX.value = event.clientX - panX.value
       startY.value = event.clientY - panY.value
-      document.body.style.cursor = 'grabbing'
+      if (event.pointerType === 'mouse') {
+        document.body.style.cursor = 'grabbing'
+      }
+      // Захватываем pointer на элементе карты — это гарантирует, что move/up
+      // придут даже если палец выходит за пределы элемента.
+      if (event.currentTarget && typeof event.currentTarget.setPointerCapture === 'function') {
+        try { event.currentTarget.setPointerCapture(event.pointerId) } catch (_) { /* ignore */ }
+      }
     }
 
-    const onMouseMove = (event) => {
+    const onPointerMove = (event) => {
       if (!isPanning.value) return
+      if (event.pointerId !== activePointerId) return
       panX.value = event.clientX - startX.value
       panY.value = event.clientY - startY.value
     }
 
-    const onMouseUp = () => {
+    const stopPan = (event) => {
       if (!isPanning.value) return
+      if (event && event.pointerId !== activePointerId) return
       isPanning.value = false
+      activePointerId = null
       document.body.style.cursor = 'default'
+      if (event && event.currentTarget && typeof event.currentTarget.releasePointerCapture === 'function') {
+        try { event.currentTarget.releasePointerCapture(event.pointerId) } catch (_) { /* ignore */ }
+      }
     }
 
     // При смене этажа сбрасываем zoom и позицию
     watch(currentFloor, () => {
       resetView()
-    })
-
-    onMounted(() => {
-      document.addEventListener('mousemove', onMouseMove)
-      document.addEventListener('mouseup', onMouseUp)
-    })
-
-    onUnmounted(() => {
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
     })
 
     // Наведение на кабинет из ?room=XXX. Этаж определяем по первой цифре
@@ -462,6 +484,8 @@ export default {
       panY,
       isPanning,
       startPan,
+      onPointerMove,
+      stopPan,
       resetView,
       freeRoomsMode,
       freeRoomsLoading,
@@ -612,6 +636,20 @@ h1 {
   color: #ffffff;
   border-color: transparent;
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+}
+
+/* Когда тоггл уже в активном (зелёном) состоянии и пользователь снова
+   на него тапает, общий `:hover` ранее перекрашивал фон в --surface-hover
+   (почти белый) при сохранённом белом тексте — кнопка становилась
+   нечитаемой. Удерживаем зелёный градиент и белый текст в обоих
+   состояниях. */
+.free-rooms-toggle.active:hover:not(:disabled),
+.free-rooms-toggle.active:focus,
+.free-rooms-toggle.active:focus-visible {
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.28);
 }
 
 .free-rooms-dot {

@@ -129,13 +129,18 @@ export default {
         }
         // Сохраняем визуальную позицию: после prepend'а scrollLeft нужно
         // сместить на ширину добавленных карточек, иначе «улетим» в начало.
+        // Корректировку делаем без `scroll-behavior: smooth` — иначе сенсорный
+        // экран показывает рывок при инерционной прокрутке к началу.
         const el = dateScrollEl.value
         const before = el ? el.scrollWidth : 0
         dateRange.value = [...head, ...dateRange.value]
         if (el) {
           requestAnimationFrame(() => {
             const delta = el.scrollWidth - before
+            const prevBehavior = el.style.scrollBehavior
+            el.style.scrollBehavior = 'auto'
             el.scrollLeft += delta
+            el.style.scrollBehavior = prevBehavior
           })
         }
       }
@@ -156,10 +161,20 @@ export default {
       if (atStart) extendDateRange('backward')
     }
 
+    // Центрируем активную карточку в видимой области. На сенсорном киоске
+    // делаем это без анимации (CSS `scroll-behavior: smooth` иначе вызывает
+    // лишний пробег после монтирования) и через двойной rAF — чтобы
+    // дождаться завершения раскладки контейнера (его ширина в момент
+    // mounted может быть ещё 0, например внутри скрытой transition).
     const scrollSelectedIntoCenter = () => {
-      nextTick(() => {
+      const run = () => {
         const container = dateScrollEl.value
         if (!container) return
+        // Если контейнер ещё не получил ширину — ждём следующего кадра.
+        if (container.clientWidth === 0) {
+          requestAnimationFrame(run)
+          return
+        }
         const active = container.querySelector('.date-card.active')
         if (!active) return
         const containerRect = container.getBoundingClientRect()
@@ -170,12 +185,21 @@ export default {
         const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth)
         const target = Math.max(0, Math.min(maxScroll, container.scrollLeft + delta))
         suppressScrollEdgeCheck = true
-        container.scrollTo({ left: target, behavior: 'instant' })
+        // CSS свойство `scroll-behavior: smooth` действует на любой scroll-call,
+        // включая программный. На монтировании это вызывает заметный «прыжок»
+        // на сенсорном экране. Временно отключаем smooth для прямой установки.
+        const prevBehavior = container.style.scrollBehavior
+        container.style.scrollBehavior = 'auto'
+        container.scrollLeft = target
+        container.style.scrollBehavior = prevBehavior
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             suppressScrollEdgeCheck = false
           })
         })
+      }
+      nextTick(() => {
+        requestAnimationFrame(run)
       })
     }
 
@@ -397,8 +421,18 @@ export default {
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-snap-type: x mandatory;
+  /* `scroll-snap` на сенсорном киоске вызывал рывки при свайпе:
+     браузер постоянно «возвращал» позицию к ближайшей карточке
+     уже во время инерционного скролла. Также `scroll-snap-align: start`
+     было применено к контейнеру `.date-cards`, а не к самим карточкам.
+     Карусель остаётся плавной без snap — пользователь сам останавливает
+     её в нужной позиции. */
   min-width: 0;
+  /* Сглаживание инерционного скролла на iOS-сафари и тач-устройствах. */
+  -webkit-overflow-scrolling: touch;
+  /* touch-action: pan-x запрещает вертикальный скролл/жесты внутри полосы,
+     чтобы свайп по датам не «дёргал» страницу вверх-вниз. */
+  touch-action: pan-x;
 }
 
 .date-cards-container::-webkit-scrollbar {
@@ -408,7 +442,6 @@ export default {
 .date-cards {
   display: flex;
   gap: 0.6rem;
-  scroll-snap-align: start;
   padding: 0.25rem 0;
   scrollbar-width: none;
 }
