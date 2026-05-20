@@ -37,7 +37,7 @@
     </div>
   </div>
 
-  <BaseModal v-model="passingScoresOpen" title="📊 Проходные баллы" :max-width="680">
+  <BaseModal v-model="passingScoresOpen" title="Проходные баллы" title-icon="barChart" :max-width="680">
     <div class="modal-section">
       <p class="modal-text">
         В ККРИТ нет вступительных экзаменов — зачисление проходит по конкурсу
@@ -47,7 +47,7 @@
       </p>
     </div>
     <div class="modal-section">
-      <h3 class="modal-h3">📈 Средний балл аттестата 2025 (справочно)</h3>
+      <h3 class="modal-h3"><Icon name="trendingUp" :size="18" /> Средний балл аттестата 2025 (справочно)</h3>
       <div class="modal-text modal-text--small">
         • Бюджет (ИТ-специальности): <strong class="modal-accent">4.0–4.5</strong><br>
         • Бюджет (экономика, электроника): <strong class="modal-accent">3.8–4.2</strong><br>
@@ -56,7 +56,7 @@
       </div>
     </div>
     <div class="modal-section">
-      <h3 class="modal-h3">📆 Сроки приёма 2026</h3>
+      <h3 class="modal-h3"><Icon name="calendar" :size="18" /> Сроки приёма 2026</h3>
       <div class="modal-text modal-text--small">
         • Начало приёма: <strong class="modal-accent">15 июня 2026</strong><br>
         • Окончание (основное): <strong class="modal-accent">14 августа 2026</strong><br>
@@ -73,7 +73,7 @@
     :max-width="900"
   >
     <div class="modal-section">
-      <h3 class="modal-h3">📍 пр. Красноярский рабочий, 156 — IT и экономика</h3>
+      <h3 class="modal-h3"><Icon name="mapPin" :size="18" /> пр. Красноярский рабочий, 156 — IT и экономика</h3>
       <div class="modal-text">
         <strong class="modal-accent">Бюджет:</strong><br>
         • 38.02.01 Экономика и бухгалтерский учёт — 25 мест (2 г. 10 мес.)<br>
@@ -87,7 +87,7 @@
       </div>
     </div>
     <div class="modal-section">
-      <h3 class="modal-h3">📍 пр. Свободный, 67 — инфраструктура и электроника</h3>
+      <h3 class="modal-h3"><Icon name="mapPin" :size="18" /> пр. Свободный, 67 — инфраструктура и электроника</h3>
       <div class="modal-text">
         <strong class="modal-accent">Бюджет:</strong><br>
         • 09.02.01 Компьютерные системы и комплексы — 50 мест (3 г. 10 мес.)<br>
@@ -103,13 +103,13 @@
       </div>
     </div>
     <div class="modal-callout">
-      📊 <strong>Итого на 2026/27:</strong> 225 бюджетных + 275 платных мест.<br>
+      <Icon name="barChart" :size="18" /> <strong>Итого на 2026/27:</strong> 225 бюджетных + 275 платных мест.<br>
       Три специальности появились впервые в этом году:
       <strong class="modal-accent">ИИ, игры/AR-VR и веб-разработка</strong>.
     </div>
   </BaseModal>
 
-  <BaseModal v-model="applicationQROpen" title="📱 Подать документы" :max-width="760">
+  <BaseModal v-model="applicationQROpen" title="Подать документы" title-icon="smartphone" :max-width="760">
     <div class="modal-section modal-qr-row">
       <div class="modal-qr-block">
         <img v-if="applicationQR" :src="applicationQR" alt="QR на kraskrit.ru/abitur" class="modal-qr-img"/>
@@ -130,7 +130,7 @@
       </div>
     </div>
     <div class="modal-section">
-      <h3 class="modal-h3">📋 Перечень документов</h3>
+      <h3 class="modal-h3"><Icon name="clipboard" :size="18" /> Перечень документов</h3>
       <div class="modal-text modal-text--small modal-text--loose">
         • Заявление о приёме на обучение (одно на все специальности)<br>
         • Согласие на обработку персональных данных<br>
@@ -145,7 +145,7 @@
       </div>
     </div>
     <div class="modal-callout modal-callout--info">
-      ℹ️ Заявление можно подать <strong>лично</strong> на пр. Свободный 67,
+      <Icon name="info" :size="18" /> Заявление можно подать <strong>лично</strong> на пр. Свободный 67,
       <strong>почтой</strong> или <strong>через Госуслуги</strong> (в тестовом режиме).<br>
       Для зачисления оригинал аттестата нужно сдать до
       <strong>14 августа 2026</strong>.
@@ -343,6 +343,21 @@ export default {
   font-family: 'Manrope', 'Inter', system-ui, sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.modal-h3 :deep(svg) {
+  color: #2563EB;
+  flex-shrink: 0;
+}
+
+.modal-callout :deep(svg) {
+  color: #2563EB;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+  flex-shrink: 0;
 }
 
 .modal-text {

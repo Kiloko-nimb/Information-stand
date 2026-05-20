@@ -30,7 +30,12 @@
         @click.self="close"
       >
         <div class="modal-card" :style="cardStyle">
-          <h2 v-if="title" class="modal-title">{{ title }}</h2>
+          <h2 v-if="title || $slots.title" class="modal-title">
+            <slot name="title">
+              <Icon v-if="titleIcon" :name="titleIcon" :size="26" class="modal-title-icon" />
+              <span>{{ title }}</span>
+            </slot>
+          </h2>
           <p v-if="subtitle" class="modal-subtitle">{{ subtitle }}</p>
           <div class="modal-body">
             <slot />
@@ -46,12 +51,16 @@
 
 <script>
 import { computed, onBeforeUnmount, watch } from 'vue'
+import Icon from './Icon.vue'
 
 export default {
   name: 'BaseModal',
+  components: { Icon },
   props: {
     modelValue: { type: Boolean, default: false },
     title: { type: String, default: '' },
+    /* Имя иконки из Icon.vue для отображения слева от заголовка. */
+    titleIcon: { type: String, default: '' },
     subtitle: { type: String, default: '' },
     maxWidth: { type: [Number, String], default: 760 },
     closeLabel: { type: String, default: 'Закрыть' },
@@ -129,6 +138,16 @@ export default {
   font-weight: 800;
   letter-spacing: -0.02em;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.modal-title-icon {
+  color: #2563EB;
+  flex-shrink: 0;
 }
 
 /* Когда подзаголовка нет — даём заголовку обычный нижний отступ. */
