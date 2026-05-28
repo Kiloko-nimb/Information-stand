@@ -51,3 +51,13 @@ def apply_pending_migrations(engine: Engine) -> None:
     for column, ddl in pending:
         if column not in schedules_columns:
             _add_column(engine, "schedules", column, ddl)
+
+    # --- Миграции таблицы news ---
+    news_columns = _existing_columns(engine, "news")
+    if news_columns:
+        news_pending: Iterable[tuple[str, str]] = (
+            ("image_url", "VARCHAR(500)"),
+        )
+        for column, ddl in news_pending:
+            if column not in news_columns:
+                _add_column(engine, "news", column, ddl)
