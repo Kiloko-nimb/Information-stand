@@ -15,21 +15,21 @@
           :class="['tab-btn', { active: activeRole === 'student' }]" 
           @click="activeRole = 'student'"
         >
-          <Icon name="user" :size="24" />
+          <Icon name="bookOpen" :size="22" />
           <span>Студент</span>
         </button>
         <button 
           :class="['tab-btn', { active: activeRole === 'applicant' }]" 
           @click="activeRole = 'applicant'"
         >
-          <Icon name="graduation-cap" :size="24" />
+          <Icon name="graduationCap" :size="22" />
           <span>Абитуриент</span>
         </button>
         <button 
           :class="['tab-btn', { active: activeRole === 'teacher' }]" 
           @click="activeRole = 'teacher'"
         >
-          <Icon name="users" :size="24" />
+          <Icon name="briefcase" :size="22" />
           <span>Преподаватель</span>
         </button>
       </div>
@@ -57,7 +57,7 @@
         <!-- КОНТЕНТ ДЛЯ ПРЕПОДАВАТЕЛЯ -->
         <div v-else-if="activeRole === 'teacher'" key="teacher" class="role-content">
           <div class="teacher-placeholder">
-            <Icon name="users" :size="48" class="placeholder-icon" />
+            <Icon name="briefcase" :size="48" class="placeholder-icon" />
             <h3>Раздел для преподавателей</h3>
             <p>Здесь скоро появится расписание преподавателей, список кабинетов и важные объявления.</p>
           </div>

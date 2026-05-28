@@ -1,6 +1,6 @@
 <!--
   BellsWidget — расписание звонков (полный список пар на день).
-  С акцентом на переменах между парами (требование №3).
+  Чистый таймлайн с акцентом на переменах.
 -->
 <template>
   <div
@@ -10,36 +10,42 @@
     @click="$router.push('/schedule')"
   >
     <div class="bells-head">
-      <span class="bells-icon"><Icon name="bell" :size="24" /></span>
-      <span class="bells-title">Расписание звонков</span>
+      <div class="bells-head-left">
+        <span class="bells-icon"><Icon name="bell" :size="22" /></span>
+        <span class="bells-title">Расписание звонков</span>
+      </div>
       <span class="bells-day">{{ currentDayName }}</span>
     </div>
-    
+
     <div class="bells-timeline">
       <template v-for="(pair, index) in bellSchedule" :key="'pair-' + pair.start">
-        <!-- Блок самой пары -->
-        <div 
-          class="bell-item"
+        <!-- Карточка пары -->
+        <div
+          class="pair-card"
           :class="{
-            'bell-item--current': pair.lesson_number === currentBellNumber,
-            'bell-item--next': pair.lesson_number === nextBellNumber,
+            'pair-card--current': pair.lesson_number === currentBellNumber,
+            'pair-card--next': pair.lesson_number === nextBellNumber,
           }"
         >
-          <div class="bell-num">{{ pair.lesson_number > 0 ? pair.lesson_number : '·' }}</div>
-          <div class="bell-info">
-            <div class="bell-label">{{ pair.label }}</div>
-            <div class="bell-time">{{ pair.start }} – {{ pair.end }}</div>
+          <div class="pair-num">{{ pair.lesson_number > 0 ? pair.lesson_number : '·' }}</div>
+          <div class="pair-info">
+            <div class="pair-label">{{ pair.label }}</div>
+            <div class="pair-time">{{ pair.start }} — {{ pair.end }}</div>
           </div>
-          <div v-if="pair.lesson_number === currentBellNumber" class="bell-tag bell-tag--now">Сейчас</div>
-          <div v-else-if="pair.lesson_number === nextBellNumber" class="bell-tag bell-tag--next">След.</div>
+          <div v-if="pair.lesson_number === currentBellNumber" class="pair-badge pair-badge--now">
+            <span class="pair-badge-dot"></span>
+            Идёт
+          </div>
+          <div v-else-if="pair.lesson_number === nextBellNumber" class="pair-badge pair-badge--next">
+            Следующая
+          </div>
         </div>
 
-        <!-- Блок перемены (между текущей и следующей парой, если это не последняя пара) -->
-        <div v-if="index < bellSchedule.length - 1" class="break-item">
-          <div class="break-line"></div>
-          <div class="break-content">
+        <!-- Перемена -->
+        <div v-if="index < bellSchedule.length - 1" class="break-row">
+          <div class="break-pill">
             <Icon name="coffee" :size="14" class="break-icon" />
-            <span class="break-text">Перемена {{ calculateBreak(pair.end, bellSchedule[index + 1].start) }}</span>
+            <span class="break-text">Перемена · {{ calculateBreak(pair.end, bellSchedule[index + 1].start) }}</span>
           </div>
         </div>
       </template>
@@ -59,17 +65,12 @@ export default {
     const { bellSchedule, currentBellNumber, nextBellNumber } = useScheduleStatus()
     const { currentDayName } = useClock()
 
-    // Функция для расчета длительности перемены в минутах
     const calculateBreak = (endPrev, startNext) => {
       try {
         const [h1, m1] = endPrev.split(':').map(Number)
         const [h2, m2] = startNext.split(':').map(Number)
-        
-        const minutes1 = h1 * 60 + m1
-        const minutes2 = h2 * 60 + m2
-        
-        const diff = minutes2 - minutes1
-        if (diff > 0) return `${diff} мин.`
+        const diff = (h2 * 60 + m2) - (h1 * 60 + m1)
+        if (diff > 0) return `${diff} мин`
         return ''
       } catch (e) {
         return ''
@@ -83,12 +84,11 @@ export default {
 
 <style scoped>
 .bells-widget {
-  margin: 0 auto;
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem 1.5rem;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem 1.75rem 1.75rem;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: box-shadow var(--transition), border-color var(--transition);
@@ -101,201 +101,246 @@ export default {
   box-shadow: var(--shadow);
 }
 
+/* Шапка виджета */
 .bells-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px dashed var(--border);
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.bells-head-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .bells-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--accent-soft);
   color: var(--accent);
+  border-radius: var(--radius-md);
 }
 
 .bells-title {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--text);
 }
 
 .bells-day {
-  margin-left: auto;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: capitalize;
   background: var(--surface-strong);
-  padding: 0.2rem 0.6rem;
+  padding: 0.3rem 0.75rem;
   border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
 }
 
-/* Изменено отображение с сетки на вертикальный таймлайн */
+/* Таймлайн */
 .bells-timeline {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
-.bell-item {
-  display: flex;
+/* Карточка пары */
+.pair-card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  position: relative;
-  transition: border-color var(--transition), background var(--transition);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
 }
 
-.bell-num {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+.pair-num {
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--surface-strong);
   color: var(--text-muted);
-  border-radius: 50%;
-  font-size: 0.95rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-.bell-info {
+.pair-info {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.2rem;
   min-width: 0;
-  flex: 1;
 }
 
-.bell-label {
-  font-size: 0.9rem;
+.pair-label {
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
-  white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
-.bell-time {
-  font-size: 1.05rem;
+.pair-time {
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text);
   font-variant-numeric: tabular-nums;
-  background: var(--background);
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  letter-spacing: -0.01em;
 }
 
-/* Стили для перемен */
-.break-item {
-  display: flex;
-  align-items: center;
-  margin: 0.25rem 0;
-  padding-left: 1.6rem; /* Выравнивание по центру кружка с номером */
-  opacity: 0.8;
-}
-
-.break-line {
-  width: 2px;
-  height: 20px;
-  background: repeating-linear-gradient(to bottom, var(--border) 0, var(--border) 4px, transparent 4px, transparent 8px);
-  margin-right: 1.2rem;
-}
-
-.break-content {
-  display: flex;
+.pair-badge {
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--surface-strong);
-  padding: 0.2rem 0.6rem;
+  padding: 0.35rem 0.75rem;
   border-radius: var(--radius-pill);
-  color: var(--text-dim);
-}
-
-.break-icon {
-  color: var(--accent-3);
-}
-
-.break-text {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.bell-tag {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.1rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #ffffff;
-  z-index: 2;
-}
-
-.bell-tag--now {
+.pair-badge--now {
   background: var(--accent-gradient);
-  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.5);
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.4);
 }
 
-.bell-tag--next {
-  background: linear-gradient(135deg, var(--accent-3), #EF4444);
+.pair-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
-.bell-item--current {
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.pair-badge--next {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Активная пара */
+.pair-card--current {
   background: var(--accent-soft);
-  border-color: var(--accent-border);
-  transform: scale(1.02);
-  z-index: 1;
-  box-shadow: var(--shadow-sm);
+  border-color: var(--accent);
+  border-width: 2px;
+  padding: calc(0.85rem - 1px) calc(1rem - 1px);
+  box-shadow: 0 6px 20px -8px rgba(37, 99, 235, 0.4);
 }
 
-.bell-item--current .bell-num {
+.pair-card--current .pair-num {
   background: var(--accent-gradient);
-  color: #ffffff;
+  color: #fff;
 }
 
-.bell-item--current .bell-label {
+.pair-card--current .pair-label {
   color: var(--accent);
 }
 
-.bell-item--current .bell-time {
-  background: white;
-  border-color: var(--accent-border);
-  color: var(--accent-strong);
+.pair-card--current .pair-time {
+  color: var(--accent-strong, var(--accent));
 }
 
-.bell-item--next {
-  background: rgba(245, 158, 11, 0.05);
-  border-color: rgba(245, 158, 11, 0.20);
+/* Следующая пара */
+.pair-card--next {
+  background: rgba(245, 158, 11, 0.04);
+  border-color: rgba(245, 158, 11, 0.25);
 }
 
-.bell-item--next .bell-num {
-  background: linear-gradient(135deg, var(--accent-3), #EF4444);
-  color: #ffffff;
+.pair-card--next .pair-num {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
 }
 
+/* Блок перемены */
+.break-row {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  margin: 0.1rem 0;
+}
+
+.break-row::before,
+.break-row::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  align-self: center;
+  margin: 0 0.75rem;
+}
+
+.break-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.85rem;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.break-icon {
+  color: #f59e0b;
+}
+
+.break-text {
+  white-space: nowrap;
+}
+
+/* Портретный режим (киоск) */
 @media (orientation: portrait) and (min-height: 2400px) {
   .bells-widget {
     padding: 2rem 2.25rem;
   }
-  .bell-item {
-    padding: 1rem 1.25rem;
+  .pair-card {
+    padding: 1.1rem 1.25rem;
+    grid-template-columns: 56px 1fr auto;
   }
-  .bell-time {
-    font-size: 1.2rem;
+  .pair-num {
+    width: 56px;
+    height: 56px;
+    font-size: 1.35rem;
+  }
+  .pair-time {
+    font-size: 1.35rem;
+  }
+  .pair-label {
+    font-size: 1rem;
+  }
+  .bells-title {
+    font-size: 1.3rem;
+  }
+  .pair-badge {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
   }
 }
 </style>
