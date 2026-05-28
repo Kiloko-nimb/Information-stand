@@ -34,9 +34,28 @@
               :class="{ selected: answers[currentQuestion.id] === option.id }"
               @click="selectOption(option.id)"
             >
-              <span class="quiz-option-marker"></span>
+              <span class="quiz-option-marker">
+                <Icon v-if="answers[currentQuestion.id] === option.id" name="sparkles" :size="14" />
+              </span>
               <span class="quiz-option-label">{{ option.label }}</span>
             </button>
+          </div>
+
+          <!-- Живой лидерборд -->
+          <div v-if="liveLeaderboard.length > 0" class="quiz-live">
+            <div class="quiz-live-label">Лидируют:</div>
+            <div class="quiz-live-bars">
+              <div
+                v-for="entry in liveLeaderboard"
+                :key="entry.key"
+                class="quiz-live-bar"
+                :style="{ '--accent': entry.spec.accent, '--w': entry.percent + '%' }"
+              >
+                <span class="quiz-live-bar-icon">{{ entry.spec.icon }}</span>
+                <span class="quiz-live-bar-name">{{ entry.spec.name }}</span>
+                <div class="quiz-live-bar-fill"></div>
+              </div>
+            </div>
           </div>
 
           <div class="quiz-actions">
@@ -114,6 +133,13 @@
           <button class="quiz-btn quiz-btn--ghost" @click="restart">
             ↺ Пройти ещё раз
           </button>
+          <button
+            v-if="result?.primary"
+            class="quiz-btn quiz-btn--accent"
+            @click="$router.push(`/specialty/${result.primary}`)"
+          >
+            Подробнее о специальности →
+          </button>
           <button class="quiz-btn quiz-btn--primary" @click="$router.push('/')">
             На главную
           </button>
@@ -166,7 +192,42 @@ export default {
 
     const selectOption = (optionId) => {
       answers.value = { ...answers.value, [currentQuestion.value.id]: optionId }
+      // Авто-переход на следующий вопрос через 500мс для лучшего UX
+      if (!isLastQuestion.value) {
+        setTimeout(() => {
+          if (answers.value[currentQuestion.value.id] === optionId && currentIndex.value < questions.length - 1) {
+            currentIndex.value += 1
+          }
+        }, 500)
+      }
     }
+
+    // Живой пересчёт лидеров на основе текущих ответов
+    const liveLeaderboard = computed(() => {
+      const totals = {}
+      for (const question of questions) {
+        const answerId = answers.value[question.id]
+        if (!answerId) continue
+        const option = question.options.find((o) => o.id === answerId)
+        if (!option) continue
+        for (const [key, score] of Object.entries(option.scores)) {
+          totals[key] = (totals[key] || 0) + score
+        }
+      }
+      const ranked = Object.entries(totals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+      if (ranked.length === 0) return []
+      const maxScore = ranked[0][1] || 1
+      return ranked
+        .filter(([k]) => specialties[k])
+        .map(([key, score]) => ({
+          key,
+          spec: specialties[key],
+          score,
+          percent: Math.round((score / maxScore) * 100),
+        }))
+    })
 
     const nextQuestion = () => {
       if (currentIndex.value < questions.length - 1) {
@@ -210,12 +271,14 @@ export default {
       currentIndex,
       answers,
       finished,
+      result,
       currentQuestion,
       isLastQuestion,
       progressPercent,
       primarySpecialty,
       secondarySpecialty,
       qrCode,
+      liveLeaderboard,
       selectOption,
       nextQuestion,
       previousQuestion,
@@ -655,6 +718,60 @@ export default {
   max-width: 600px;
   margin: 0 auto;
 }
+
+/* === Живой лидерборд внутри карточки квиза === */
+.quiz-live {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--border);
+}
+.quiz-live-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.65rem;
+}
+.quiz-live-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.quiz-live-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  --accent: #2563EB;
+  --w: 0%;
+}
+.quiz-live-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--w);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent) 10%, transparent));
+  z-index: 0;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.quiz-live-bar-icon,
+.quiz-live-bar-name { position: relative; z-index: 1; }
+.quiz-live-bar-icon { font-size: 1.2rem; }
+.quiz-live-bar-name { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+
+/* Дополнительная кнопка результата */
+.quiz-btn--accent {
+  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  color: white;
+  border: none;
+}
+.quiz-btn--accent:hover { transform: translateY(-2px); }
 
 @media (max-width: 600px) {
   .quiz-card {
