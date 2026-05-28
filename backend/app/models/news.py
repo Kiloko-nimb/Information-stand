@@ -12,5 +12,6 @@ class News(Base):
     icon = Column(String(10), default='📰')
     published_date = Column(DateTime)
     source_url = Column(String(500))
+    image_url = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)

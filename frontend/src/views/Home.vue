@@ -1,35 +1,77 @@
 <!--
-  Home — главный экран киоска. Шапка с приветствием и часами,
-  виджет «Сейчас идёт», расписание звонков, контакты, блок
-  «Абитуриенту», навигация по разделам, новости.
-
-  Сами виджеты вынесены в `components/home/*` — этот файл сейчас
-  отвечает только за компоновку и макетные стили
-  (`.top-section` / `.middle-section` / `.bottom-section`).
+  Home — главный экран киоска. 
+  Переработан с использованием системы вкладок (Студент / Абитуриент / Преподаватель)
 -->
 <template>
   <div class="home">
     <div class="top-section">
       <BentoHero />
-      <NowWidget />
-      <BellsWidget />
+    </div>
+
+    <!-- Переключатель ролей (Вкладки) -->
+    <div class="role-tabs-wrapper">
+      <div class="role-tabs">
+        <button 
+          :class="['tab-btn', { active: activeRole === 'student' }]" 
+          @click="activeRole = 'student'"
+        >
+          <Icon name="user" :size="24" />
+          <span>Студент</span>
+        </button>
+        <button 
+          :class="['tab-btn', { active: activeRole === 'applicant' }]" 
+          @click="activeRole = 'applicant'"
+        >
+          <Icon name="graduation-cap" :size="24" />
+          <span>Абитуриент</span>
+        </button>
+        <button 
+          :class="['tab-btn', { active: activeRole === 'teacher' }]" 
+          @click="activeRole = 'teacher'"
+        >
+          <Icon name="users" :size="24" />
+          <span>Преподаватель</span>
+        </button>
+      </div>
     </div>
 
     <div class="middle-section">
-      <!-- Резервное вертикальное пространство между шапкой и контактами -->
-    </div>
+      <!-- КОНТЕНТ ДЛЯ СТУДЕНТА -->
+      <transition name="fade-slide" mode="out-in">
+        <div v-if="activeRole === 'student'" key="student" class="role-content">
+          <div class="widgets-row">
+            <NowWidget />
+            <BellsWidget />
+          </div>
+          <FeatureCards />
+          <NewsSection />
+          <FactWidget />
+        </div>
 
-    <div class="bottom-section">
-      <ContactInfo />
-      <ApplicantSection />
-      <FactWidget />
-      <FeatureCards />
-      <NewsSection />
+        <!-- КОНТЕНТ ДЛЯ АБИТУРИЕНТА -->
+        <div v-else-if="activeRole === 'applicant'" key="applicant" class="role-content">
+          <ApplicantSection />
+          <ContactInfo />
+        </div>
+
+        <!-- КОНТЕНТ ДЛЯ ПРЕПОДАВАТЕЛЯ -->
+        <div v-else-if="activeRole === 'teacher'" key="teacher" class="role-content">
+          <div class="teacher-placeholder">
+            <Icon name="users" :size="48" class="placeholder-icon" />
+            <h3>Раздел для преподавателей</h3>
+            <p>Здесь скоро появится расписание преподавателей, список кабинетов и важные объявления.</p>
+          </div>
+          <div class="widgets-row">
+            <BellsWidget />
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script>
+import { ref } from 'vue'
 import BentoHero from '../components/home/BentoHero.vue'
 import NowWidget from '../components/home/NowWidget.vue'
 import BellsWidget from '../components/home/BellsWidget.vue'
@@ -38,6 +80,7 @@ import ApplicantSection from '../components/home/ApplicantSection.vue'
 import FactWidget from '../components/home/FactWidget.vue'
 import FeatureCards from '../components/home/FeatureCards.vue'
 import NewsSection from '../components/home/NewsSection.vue'
+import Icon from '../components/Icon.vue'
 
 export default {
   name: 'Home',
@@ -50,7 +93,16 @@ export default {
     FactWidget,
     FeatureCards,
     NewsSection,
+    Icon
   },
+  setup() {
+    // По умолчанию показываем вкладку студента (так как это самый частый сценарий для киоска)
+    const activeRole = ref('student')
+
+    return {
+      activeRole
+    }
+  }
 }
 </script>
 
@@ -67,20 +119,100 @@ export default {
   transition: all 0.6s var(--ease);
 }
 
-.middle-section {
-  min-height: 0;
-  transition: min-height 0.6s var(--ease);
+/* Стили для переключателя вкладок */
+.role-tabs-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 3rem;
+  position: relative;
+  z-index: 10;
 }
 
-.bottom-section {
-  transform: translateY(0);
+.role-tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0.5rem;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
-/* ===== Портретный 4K-режим =====
-   На высоком вертикальном стенде (напр. 2160×3840) контент сам по
-   себе не заполняет экран — остаётся огромная пустая область снизу.
-   Делаем .home flex-колонкой на всю высоту, распираем middle-section
-   и разводим ритм по секциям. */
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+
+.tab-btn:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.role-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.widgets-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.teacher-placeholder {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-xl);
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.placeholder-icon {
+  color: var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.teacher-placeholder h3 {
+  color: var(--text);
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Анимация переключения вкладок */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s var(--ease);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* ===== Портретный 4K-режим ===== */
 @media (orientation: portrait) and (min-height: 2400px) {
   .home {
     min-height: 100vh;
@@ -91,38 +223,24 @@ export default {
   .top-section {
     padding: 3rem 0 2rem;
   }
-  .middle-section {
-    flex: 1 1 auto;
-    min-height: 4rem;
+  .role-tabs-wrapper {
+    margin: 3rem 0 4rem;
   }
-  .bottom-section {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
+  .tab-btn {
+    padding: 1.5rem 3rem;
+    font-size: 1.4rem;
+  }
+  .role-content {
+    gap: 3.5rem;
   }
 }
 
-/* Ещё более «растянутый» режим для настоящего 4K-портрета */
 @media (orientation: portrait) and (min-height: 3200px) {
   .top-section {
     padding: 4rem 0 2.5rem;
-  }
-  .bottom-section {
-    gap: 3rem;
   }
   .home {
     padding-bottom: 10rem;
   }
 }
-
-.subtitle {
-  font-size: clamp(1rem, 1.6vw, 1.2rem);
-  color: var(--text-muted);
-  max-width: 640px;
-  margin: 0 auto 2rem;
-  font-weight: 500;
-  line-height: 1.5;
-}
-
 </style>

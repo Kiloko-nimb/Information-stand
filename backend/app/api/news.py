@@ -21,6 +21,7 @@ class NewsResponse(BaseModel):
     icon: str
     published_date: Optional[datetime]
     source_url: Optional[str]
+    image_url: Optional[str] = None
     created_at: datetime
 
     class Config:

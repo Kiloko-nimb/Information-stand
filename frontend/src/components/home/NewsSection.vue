@@ -1,13 +1,12 @@
 <!--
-  NewsSection — карточки с последними новостями kraskrit.ru.
-  Если ни одна новость не загрузилась — секция вообще не рендерится.
-  Сама загружает данные через newsService.
+  NewsSection — карточки с последними новостями из ВК (kraskrit).
+  С поддержкой отображения изображений.
 -->
 <template>
   <section v-if="newsCards.length > 0" class="news-section">
     <div class="news-header">
       <h2><Icon name="newspaper" :size="22" /> Новости колледжа</h2>
-      <a class="news-all-link" href="https://kraskrit.ru/news/" target="_blank" rel="noopener">
+      <a class="news-all-link" href="https://vk.com/kraskrit" target="_blank" rel="noopener">
         Все новости →
       </a>
     </div>
@@ -16,11 +15,17 @@
         v-for="item in newsCards"
         :key="item.id"
         class="news-card"
-        :href="item.source_url || 'https://kraskrit.ru/news/'"
+        :href="item.source_url || 'https://vk.com/kraskrit'"
         target="_blank"
         rel="noopener"
       >
-        <div class="news-icon"><Icon name="newspaper" :size="22" /></div>
+        <div class="news-image-container" v-if="item.image_url">
+          <img :src="item.image_url" alt="News image" class="news-image" />
+        </div>
+        <div class="news-icon" v-else>
+          <Icon name="newspaper" :size="22" />
+        </div>
+        
         <div class="news-body">
           <div class="news-date" v-if="item.published_date">{{ formatNewsDate(item.published_date) }}</div>
           <h3 class="news-title">{{ item.title }}</h3>
@@ -131,8 +136,7 @@ export default {
 
 .news-card {
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -141,7 +145,7 @@ export default {
   transition: background var(--transition), border-color var(--transition),
     transform var(--transition), box-shadow var(--transition);
   box-shadow: var(--shadow-sm);
-  align-items: flex-start;
+  overflow: hidden;
   min-height: 140px;
 }
 
@@ -152,15 +156,29 @@ export default {
   box-shadow: var(--shadow);
 }
 
+.news-image-container {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--background);
+}
+
+.news-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .news-icon {
   font-size: 2rem;
-  flex-shrink: 0;
+  padding: 1.5rem 1.5rem 0 1.5rem;
   line-height: 1;
 }
 
 .news-body {
+  padding: 1.5rem;
   flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -180,7 +198,7 @@ export default {
   color: var(--text);
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -191,7 +209,7 @@ export default {
   color: var(--text-muted);
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
