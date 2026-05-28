@@ -196,6 +196,13 @@ app.include_router(admin.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(market.router, prefix="/api/v1")
 
+# Статическая отдача загруженных файлов (картинки новостей и т.п.)
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path as _PathLib
+_UPLOAD_ROOT = _PathLib(__file__).resolve().parent / "uploads"
+_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_UPLOAD_ROOT)), name="uploads")
+
 
 @app.get("/")
 async def root():

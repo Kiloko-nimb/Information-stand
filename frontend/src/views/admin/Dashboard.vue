@@ -306,7 +306,7 @@
               <span v-if="field.required" class="required-mark" title="Обязательное поле">*</span>
             </label>
             <input
-              v-if="field.type !== 'select' && field.type !== 'textarea'"
+              v-if="field.type !== 'select' && field.type !== 'textarea' && field.type !== 'image'"
               v-model="modalData[field.key]"
               :type="field.type || 'text'"
               :required="field.required"
@@ -320,6 +320,33 @@
               :placeholder="field.placeholder || ''"
               rows="3"
             />
+            <div v-else-if="field.type === 'image'" class="image-field">
+              <input
+                v-model="modalData[field.key]"
+                type="text"
+                :placeholder="field.placeholder || ''"
+              />
+              <div class="image-field-row">
+                <label class="upload-btn">
+                  <Plus :size="14" />
+                  {{ uploadingImage ? 'Загрузка…' : 'Загрузить файл' }}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    @change="(e) => onImageUpload(e, field.key)"
+                    :disabled="uploadingImage"
+                    hidden
+                  />
+                </label>
+                <span v-if="uploadError" class="upload-error">{{ uploadError }}</span>
+              </div>
+              <div v-if="modalData[field.key]" class="image-preview">
+                <img :src="modalData[field.key]" alt="preview" />
+                <button type="button" class="image-clear" @click="modalData[field.key] = ''" title="Удалить картинку">
+                  <X :size="14" />
+                </button>
+              </div>
+            </div>
             <select v-else v-model="modalData[field.key]">
               <option v-for="opt in field.options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
@@ -465,6 +492,8 @@ const modalData = reactive({})
 const modalType = ref('')  // 'news' | 'staff' | 'room'
 const modalEditId = ref(null)
 const saving = ref(false)
+const uploadingImage = ref(false)
+const uploadError = ref('')
 const formError = ref('')
 
 // Toast state
@@ -510,6 +539,34 @@ function cancelConfirm() {
   confirmState.open = false
   if (confirmState.resolve) confirmState.resolve(false)
   confirmState.resolve = null
+}
+
+async function onImageUpload(event, fieldKey) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  uploadError.value = ''
+  uploadingImage.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const token = localStorage.getItem('admin_token') || ''
+    const resp = await fetch('/api/v1/admin/upload-image', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    })
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}))
+      throw new Error(err.detail || `Ошибка загрузки (${resp.status})`)
+    }
+    const data = await resp.json()
+    modalData[fieldKey] = data.url
+  } catch (e) {
+    uploadError.value = e.message || 'Не удалось загрузить файл'
+  } finally {
+    uploadingImage.value = false
+    event.target.value = ''
+  }
 }
 
 onMounted(() => {
@@ -589,6 +646,12 @@ const NEWS_FIELDS = [
     hint: 'Необязательно. Если заполнить, в QR-коде на стенде будет ссылка «Подробнее».',
   },
   {
+    key: 'image_url', label: 'Картинка',
+    type: 'image',
+    placeholder: 'https://... или загрузите файл',
+    hint: 'Можно вставить ссылку или загрузить с компьютера (JPEG/PNG/WebP/GIF, до 5 МБ).',
+  },
+  {
     key: 'is_active', label: 'Статус',
     type: 'select',
     options: [{ value: true, label: 'Активна (видна на стенде)' }, { value: false, label: 'Скрыта (в архиве)' }],
@@ -607,7 +670,7 @@ function openNewsForm(item = null) {
   modalFields.value = NEWS_FIELDS
   Object.keys(modalData).forEach(k => delete modalData[k])
   if (item) {
-    Object.assign(modalData, { title: item.title, description: item.description || '', icon: item.icon, source_url: item.source_url || '', is_active: item.is_active })
+    Object.assign(modalData, { title: item.title, description: item.description || '', icon: item.icon, source_url: item.source_url || '', image_url: item.image_url || '', is_active: item.is_active })
   } else {
     Object.assign(modalData, { title: '', description: '', icon: '📰', source_url: '', is_active: true })
   }
@@ -1483,4 +1546,63 @@ async function saveModal() {
   .nav-item { padding: 0.5rem 0.8rem; font-size: 0.85rem; }
   .admin-main { padding: 1rem; }
 }
+
+/* === Image upload field в формах === */
+.image-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.image-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md, 12px);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.upload-btn:hover { background: var(--surface-hover); }
+.upload-error {
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+.image-preview {
+  position: relative;
+  width: fit-content;
+  max-width: 200px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.image-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.image-clear {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.image-clear:hover { background: rgba(0, 0, 0, 0.85); }
 </style>

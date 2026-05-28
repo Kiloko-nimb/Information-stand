@@ -2,12 +2,15 @@
 Админские CRUD-эндпоинты для управления новостями, сотрудниками и кабинетами.
 Все эндпоинты требуют JWT-авторизацию.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
 from datetime import datetime
+import os
+import uuid
+from pathlib import Path as PathLib
 
 from app.core.database import get_db
 from app.api.auth import require_admin
@@ -34,6 +37,7 @@ class NewsCreate(BaseModel):
     icon: str = "📰"
     published_date: Optional[datetime] = None
     source_url: Optional[str] = None
+    image_url: Optional[str] = None
     is_active: bool = True
 
 
@@ -43,6 +47,7 @@ class NewsUpdate(BaseModel):
     icon: Optional[str] = None
     published_date: Optional[datetime] = None
     source_url: Optional[str] = None
+    image_url: Optional[str] = None
     is_active: Optional[bool] = None
 
 
@@ -53,6 +58,7 @@ class NewsOut(BaseModel):
     icon: str
     published_date: Optional[datetime]
     source_url: Optional[str]
+    image_url: Optional[str] = None
     is_active: bool
     created_at: datetime
 
@@ -500,3 +506,55 @@ async def admin_delete_room(
         raise HTTPException(status_code=404, detail="Кабинет не найден")
     db.delete(room)
     db.commit()
+
+
+# ═══════════════════════════════════════════════════════════
+#  Загрузка изображений (для новостей и др.)
+# ═══════════════════════════════════════════════════════════
+
+UPLOAD_DIR = PathLib(__file__).resolve().parents[2] / "uploads" / "news"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 МБ
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+
+
+@router.post("/upload-image", status_code=status.HTTP_201_CREATED)
+async def admin_upload_image(
+    file: UploadFile = File(...),
+    _admin: Admin = Depends(require_admin),
+):
+    """Загружает изображение в /uploads/news/ и возвращает публичный URL.
+
+    Используется в админке для прикрепления картинок к новостям.
+    """
+    ext = ALLOWED_IMAGE_TYPES.get(file.content_type)
+    if not ext:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неподдерживаемый тип файла: {file.content_type}. "
+                   "Разрешены: JPEG, PNG, WebP, GIF.",
+        )
+
+    # Проверка размера (читаем чанками для экономии памяти)
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Файл слишком большой (макс. {MAX_IMAGE_SIZE // 1024 // 1024} МБ)",
+        )
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    out_path = UPLOAD_DIR / filename
+    out_path.write_bytes(contents)
+
+    return {
+        "url": f"/uploads/news/{filename}",
+        "filename": filename,
+        "size": len(contents),
+    }

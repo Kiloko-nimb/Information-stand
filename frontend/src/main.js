@@ -12,3 +12,21 @@ app.use(pinia)
 app.use(router)
 app.directive('ripple', ripple)
 app.mount('#app')
+
+// PWA: регистрация service worker для офлайн-режима.
+// Полностью игнорируется на dev-сервере — работает только в production-сборке.
+if ('serviceWorker' in navigator) {
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({
+      immediate: true,
+      onRegisteredSW(swUrl, reg) {
+        console.log('[PWA] SW зарегистрирован:', swUrl)
+      },
+      onOfflineReady() {
+        console.log('[PWA] Готов к работе в офлайн-режиме')
+      },
+    })
+  }).catch(() => {
+    // virtual:pwa-register отсутствует в dev — это нормально
+  })
+}
