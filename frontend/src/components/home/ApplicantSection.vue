@@ -25,6 +25,10 @@
           <span class="btn-icon"><Icon name="target" :size="22" /></span>
           <span class="btn-text">Специальности</span>
         </button>
+        <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/admission-calculator')">
+          <span class="btn-icon"><Icon name="calculator" :size="22" /></span>
+          <span class="btn-text">Калькулятор шансов</span>
+        </button>
         <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/specialties/compare')">
           <span class="btn-icon"><Icon name="barChart" :size="22" /></span>
           <span class="btn-text">Сравнить</span>

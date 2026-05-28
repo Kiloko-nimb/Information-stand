@@ -7,6 +7,7 @@ import Quiz from '../views/Quiz.vue'
 import Faq from '../views/Faq.vue'
 import SpecialtyDetails from '../views/SpecialtyDetails.vue'
 import SpecialtiesCompare from '../views/SpecialtiesCompare.vue'
+import AdmissionCalculator from '../views/AdmissionCalculator.vue'
 import AdminLogin from '../views/admin/Login.vue'
 import AdminDashboard from '../views/admin/Dashboard.vue'
 
@@ -50,6 +51,11 @@ const routes = [
     path: '/specialty/:key',
     name: 'SpecialtyDetails',
     component: SpecialtyDetails
+  },
+  {
+    path: '/admission-calculator',
+    name: 'AdmissionCalculator',
+    component: AdmissionCalculator
   },
   {
     path: '/admin/login',

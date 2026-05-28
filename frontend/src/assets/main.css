@@ -105,6 +105,22 @@
   --shadow-lg: 0 28px 64px -22px rgba(0, 0, 0, 0.60);
 }
 
+/* ── Тема: высокий контраст (доступность) ── */
+[data-theme="contrast"] {
+  --bg-base: #FFFFFF;
+  --bg-raised: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F5F5;
+  --surface-strong: #E8E8E8;
+  --surface-elevated: #FFFFFF;
+  --border: #000000;
+  --border-hover: #000000;
+  --border-strong: #000000;
+  --text: #000000;
+  --text-muted: #000000;
+  --text-dim: #1A1A1A;
+}
+
 * {
   box-sizing: border-box;
 }

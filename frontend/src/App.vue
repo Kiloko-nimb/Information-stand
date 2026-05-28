@@ -35,6 +35,7 @@
     </main>
 
     <SnakeGame v-if="snakeOpen" @close="snakeOpen = false" />
+    <SettingsButton />
     <Screensaver />
 
     <transition name="kiosk-fade">
@@ -70,14 +71,17 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SnakeGame from './components/SnakeGame.vue'
 import Screensaver from './components/Screensaver.vue'
+import SettingsButton from './components/SettingsButton.vue'
+import { useSound } from './composables/useSound'
 
 export default {
   name: 'App',
-  components: { SnakeGame, Screensaver },
+  components: { SnakeGame, Screensaver, SettingsButton },
   setup() {
     const isOnline = ref(navigator.onLine)
     const router = useRouter()
     const snakeOpen = ref(false)
+    const { enabled: soundsOn, play } = useSound()
 
     // Пасхалка: 5 быстрых тапов по лого в пределах 1.8с → режим «Для своих».
     const TAP_THRESHOLD = 5
@@ -183,6 +187,16 @@ export default {
     onMounted(() => {
       window.addEventListener('online', () => { isOnline.value = true })
       window.addEventListener('offline', () => { isOnline.value = false })
+
+      // Глобальный звуковой фидбек для тап-целей (кнопки, ссылки)
+      const onTap = (e) => {
+        if (!soundsOn.value) return
+        const t = e.target
+        if (t && t.closest && t.closest('button, a, [role="button"]')) {
+          play.tap()
+        }
+      }
+      document.addEventListener('pointerdown', onTap, true)
 
       events.forEach(event => {
         document.addEventListener(event, handleUserActivity, true)
