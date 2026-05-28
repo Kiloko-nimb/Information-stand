@@ -25,6 +25,10 @@
           <span class="btn-icon"><Icon name="target" :size="22" /></span>
           <span class="btn-text">Специальности</span>
         </button>
+        <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="$router.push('/specialties/compare')">
+          <span class="btn-icon"><Icon name="barChart" :size="22" /></span>
+          <span class="btn-text">Сравнить</span>
+        </button>
         <button class="applicant-btn" v-ripple="{ color: 'rgba(37, 99, 235, 0.22)' }" @click="openApplicationQR">
           <span class="btn-icon"><Icon name="smartphone" :size="22" /></span>
           <span class="btn-text">Подать документы</span>
@@ -69,43 +73,32 @@
   <BaseModal
     v-model="specialtiesOpen"
     title="Специальности ККРИТ 2026/27"
-    subtitle="Поступление на базе 9 классов, срок обучения в скобках"
-    :max-width="900"
+    subtitle="Нажмите на карточку — узнаете о предметах, материалах и рынке труда"
+    :max-width="980"
   >
-    <div class="modal-section">
-      <h3 class="modal-h3"><Icon name="mapPin" :size="18" /> пр. Красноярский рабочий, 156 — IT и экономика</h3>
-      <div class="modal-text">
-        <strong class="modal-accent">Бюджет:</strong><br>
-        • 38.02.01 Экономика и бухгалтерский учёт — 25 мест (2 г. 10 мес.)<br>
-        • 38.02.07 Банковское дело — 25 мест (2 г. 10 мес.)<br><br>
-        <strong class="modal-accent">Платно:</strong><br>
-        • 09.02.09 Веб-разработка — 25 мест (2 г. 10 мес.)<br>
-        • 09.02.09 Веб-разработка (после 11 кл.) — 25 мест (1 г. 10 мес.)<br>
-        • 09.02.10 Разработка игр, AR/VR — 25 мест (3 г. 10 мес.)<br>
-        • 09.02.11 Разработка ПО (программист) — 25 мест (3 г. 10 мес.)<br>
-        • 09.02.13 Искусственный интеллект — 25 мест (3 г. 10 мес.)
-      </div>
-    </div>
-    <div class="modal-section">
-      <h3 class="modal-h3"><Icon name="mapPin" :size="18" /> пр. Свободный, 67 — инфраструктура и электроника</h3>
-      <div class="modal-text">
-        <strong class="modal-accent">Бюджет:</strong><br>
-        • 09.02.01 Компьютерные системы и комплексы — 50 мест (3 г. 10 мес.)<br>
-        • 09.02.06 Сетевое и системное администрирование — 50 мест (3 г. 10 мес.)<br>
-        • 10.02.05 Информационная безопасность АС — 25 мест (3 г. 10 мес.)<br>
-        • 11.02.16 Монтаж электронных приборов — 50 мест (3 г. 10 мес.)<br>
-        • 20.02.04 Пожарная безопасность — 50 мест (3 г. 10 мес.)<br><br>
-        <strong class="modal-accent">Платно:</strong><br>
-        • 09.02.01 Компьютерные системы и комплексы — 25 мест<br>
-        • 09.02.06 Сетевое и системное администрирование — 25 мест<br>
-        • 10.02.05 Информационная безопасность АС — 25 мест<br>
-        • 20.02.04 Пожарная безопасность (после 11 кл.) — 25 мест (2 г. 10 мес.)
-      </div>
+    <div class="spec-grid">
+      <button
+        v-for="s in specialtyList"
+        :key="s.key"
+        class="spec-card"
+        :style="{ '--accent': s.accent }"
+        @click="goToSpecialty(s.key)"
+      >
+        <div class="spec-card-icon">{{ s.icon }}</div>
+        <div class="spec-card-body">
+          <div class="spec-card-code">{{ s.code }}</div>
+          <div class="spec-card-name">{{ s.name }}</div>
+          <div class="spec-card-meta">
+            <span><Icon name="clock" :size="12" /> {{ s.duration }}</span>
+            <span v-if="s.note" class="spec-card-note">{{ s.note }}</span>
+          </div>
+        </div>
+        <Icon name="arrowRight" :size="18" class="spec-card-arrow" />
+      </button>
     </div>
     <div class="modal-callout">
-      <Icon name="barChart" :size="18" /> <strong>Итого на 2026/27:</strong> 225 бюджетных + 275 платных мест.<br>
-      Три специальности появились впервые в этом году:
-      <strong class="modal-accent">ИИ, игры/AR-VR и веб-разработка</strong>.
+      <Icon name="info" :size="18" /> Кликайте по специальности — увидите учебные предметы, полезные материалы и
+      актуальные вакансии с зарплатами.
     </div>
   </BaseModal>
 
@@ -158,6 +151,8 @@ import { ref, onMounted } from 'vue'
 import Icon from '../Icon.vue'
 import BaseModal from '../BaseModal.vue'
 import { generateQRCode } from '../../utils/qrGenerator'
+import { useRouter } from 'vue-router'
+import { specialtyList } from '../../data/specialties'
 
 const ADMISSION_DATE = new Date('2026-06-15') // приём документов начинается 15 июня
 
@@ -165,11 +160,17 @@ export default {
   name: 'ApplicantSection',
   components: { Icon, BaseModal },
   setup() {
+    const router = useRouter()
     const passingScoresOpen = ref(false)
     const specialtiesOpen = ref(false)
     const applicationQROpen = ref(false)
     const applicationQR = ref('')
     const daysUntilAdmission = ref(0)
+
+    const goToSpecialty = (key) => {
+      specialtiesOpen.value = false
+      router.push(`/specialty/${key}`)
+    }
 
     const calculateDaysUntilAdmission = () => {
       const today = new Date()
@@ -197,6 +198,8 @@ export default {
       applicationQROpen,
       applicationQR,
       openApplicationQR,
+      specialtyList,
+      goToSpecialty,
     }
   },
 }
@@ -445,5 +448,80 @@ export default {
   .bottom-widgets {
     grid-template-columns: 1fr;
   }
+}
+
+/* === Grid карточек специальностей в модалке === */
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.spec-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+.spec-card:hover {
+  border-color: var(--accent, #2563EB);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--accent, #2563EB) 50%, transparent);
+}
+.spec-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent, #2563EB) 15%, transparent);
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.spec-card-body { min-width: 0; }
+.spec-card-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent, #2563EB);
+  letter-spacing: 0.04em;
+}
+.spec-card-name {
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: var(--text);
+  margin: 0.15rem 0 0.35rem;
+  line-height: 1.25;
+}
+.spec-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.spec-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.spec-card-note {
+  color: #92400E;
+  background: #FEF3C7;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.spec-card-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 </style>

@@ -5,6 +5,8 @@ import Staff from '../views/Staff.vue'
 import Map from '../views/Map.vue'
 import Quiz from '../views/Quiz.vue'
 import Faq from '../views/Faq.vue'
+import SpecialtyDetails from '../views/SpecialtyDetails.vue'
+import SpecialtiesCompare from '../views/SpecialtiesCompare.vue'
 import AdminLogin from '../views/admin/Login.vue'
 import AdminDashboard from '../views/admin/Dashboard.vue'
 
@@ -38,6 +40,16 @@ const routes = [
     path: '/faq',
     name: 'Faq',
     component: Faq
+  },
+  {
+    path: '/specialties/compare',
+    name: 'SpecialtiesCompare',
+    component: SpecialtiesCompare
+  },
+  {
+    path: '/specialty/:key',
+    name: 'SpecialtyDetails',
+    component: SpecialtyDetails
   },
   {
     path: '/admin/login',

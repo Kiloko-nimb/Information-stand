@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import asyncio
 import os
 from pathlib import Path
-from app.api import bells, schedule, staff, rooms, news, auth, admin, analytics
+from app.api import bells, schedule, staff, rooms, news, auth, admin, analytics, market
 from app.core.config import settings
 from app.core.database import SessionLocal, engine
 from app.core.migrations import apply_pending_migrations
@@ -194,6 +194,7 @@ app.include_router(news.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(market.router, prefix="/api/v1")
 
 
 @app.get("/")
