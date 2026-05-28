@@ -3,9 +3,15 @@
     <Transition name="screensaver">
       <div v-if="isIdle" class="screensaver" @click="handleDismiss" @touchstart="handleDismiss">
         <div class="screensaver-content">
+          <div class="screensaver-logo-wrap">
+            <img :src="logoSrc" alt="ККРИТ" class="screensaver-logo" />
+          </div>
           <div class="clock-display">
             <div class="clock-time">{{ timeStr }}</div>
             <div class="clock-date">{{ dateStr }}</div>
+          </div>
+          <div class="screensaver-college">
+            Красноярский колледж радиоэлектроники<br>и информационных технологий
           </div>
           <div class="screensaver-hint">Нажмите, чтобы начать</div>
         </div>
@@ -18,6 +24,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useScreensaver } from '../composables/useScreensaver'
+import logoSrc from '../assets/logo.png'
 
 const router = useRouter()
 const { isIdle, dismiss } = useScreensaver()
@@ -63,10 +70,46 @@ onUnmounted(() => {
 .screensaver-content {
   text-align: center;
   animation: screensaver-pulse 4s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.screensaver-logo-wrap {
+  width: clamp(180px, 22vw, 280px);
+  height: clamp(180px, 22vw, 280px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 70%, rgba(255, 255, 255, 0) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 20px 50px rgba(99, 102, 241, 0.35));
+  animation: logo-float 6s ease-in-out infinite;
+}
+
+.screensaver-logo {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.screensaver-college {
+  font-size: clamp(0.95rem, 1.4vw, 1.25rem);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(226, 232, 240, 0.85);
+  line-height: 1.4;
+  margin-top: -0.5rem;
 }
 
 .clock-display {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .clock-time {

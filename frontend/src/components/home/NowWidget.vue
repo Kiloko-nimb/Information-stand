@@ -1,12 +1,12 @@
 <!--
   NowWidget — карточка «Что сейчас идёт».
-  Большой акцентный блок с иконкой, статусом и таймером.
+  Большой акцентный блок с иконкой, статусом, таймером и мини-лентой новостей.
 -->
 <template>
-  <div v-if="widget" class="now-widget" :class="`now-widget--${widget.variant}`" @click="$router.push('/schedule')">
+  <div v-if="widget" class="now-widget" :class="`now-widget--${widget.variant}`">
     <div class="now-glow"></div>
 
-    <div class="now-content">
+    <div class="now-content" @click="$router.push('/schedule')">
       <div class="now-header">
         <div class="now-icon-wrap">
           <Icon :name="widget.icon" :size="28" />
@@ -23,19 +23,66 @@
         <div class="now-timer-label">{{ widget.timer.label }}</div>
       </div>
     </div>
+
+    <!-- Мини-лента новостей внутри NowWidget -->
+    <div v-if="newsItems.length > 0" class="now-news">
+      <div class="now-news-head">
+        <Icon name="newspaper" :size="16" />
+        <span>Свежие новости</span>
+      </div>
+      <a
+        v-for="item in newsItems"
+        :key="item.id"
+        class="now-news-item"
+        :href="item.source_url || 'https://kraskrit.ru/news/'"
+        target="_blank"
+        rel="noopener"
+        @click.stop
+      >
+        <div class="now-news-thumb">
+          <img v-if="item.image_url" :src="item.image_url" :alt="item.title" />
+          <Icon v-else name="newspaper" :size="18" />
+        </div>
+        <div class="now-news-body">
+          <div class="now-news-title">{{ item.title }}</div>
+          <div class="now-news-meta">{{ formatDate(item.published_date) }}</div>
+        </div>
+      </a>
+    </div>
   </div>
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import Icon from '../Icon.vue'
 import { useScheduleStatus } from '../../composables/useScheduleStatus'
+import { fetchNews } from '../../services/newsService'
 
 export default {
   name: 'NowWidget',
   components: { Icon },
   setup() {
     const { nowStatus } = useScheduleStatus()
+    const newsItems = ref([])
+
+    onMounted(async () => {
+      try {
+        const items = await fetchNews()
+        newsItems.value = (items || []).slice(0, 3)
+      } catch (e) {
+        newsItems.value = []
+      }
+    })
+
+    function formatDate(dateStr) {
+      if (!dateStr) return ''
+      try {
+        const d = new Date(dateStr)
+        return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+      } catch {
+        return ''
+      }
+    }
 
     const widget = computed(() => {
       const s = nowStatus.value
@@ -104,7 +151,7 @@ export default {
       return null
     })
 
-    return { widget }
+    return { widget, newsItems, formatDate }
   },
 }
 
@@ -317,14 +364,90 @@ function formatMinutes(mins) {
   border: 1px solid var(--border);
 }
 
+/* === Мини-лента новостей внутри NowWidget === */
+.now-news {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.now-news-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.now-news-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  background: var(--surface-strong, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+.now-news-item:hover {
+  background: var(--surface-hover, rgba(37, 99, 235, 0.04));
+  border-color: rgba(37, 99, 235, 0.25);
+  transform: translateX(2px);
+}
+.now-news-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-strong, rgba(0, 0, 0, 0.04));
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.now-news-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.now-news-body {
+  min-width: 0;
+}
+.now-news-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 0.15rem;
+}
+.now-news-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 @media (orientation: portrait) and (min-height: 2400px) {
-  .now-widget {
-    padding: 2rem;
-    min-height: 280px;
+  .now-news-title {
+    font-size: 1rem;
   }
-  .now-icon-wrap {
-    width: 64px;
-    height: 64px;
+  .now-news-thumb {
+    width: 56px;
+    height: 56px;
   }
 }
 </style>
